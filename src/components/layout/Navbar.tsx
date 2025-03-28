@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,24 +14,9 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 
 const Navbar = () => {
-  const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const { isAuthenticated, isAdmin } = useAuth();
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const isScrolled = window.scrollY > 20;
-      if (isScrolled !== scrolled) {
-        setScrolled(isScrolled);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, [scrolled]);
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -39,13 +24,7 @@ const Navbar = () => {
 
   return (
     <header
-      className={cn(
-        "fixed top-0 left-0 right-0 w-full z-50 transition-all duration-300",
-        {
-          "bg-white shadow-md": scrolled,
-          "bg-transparent": !scrolled,
-        }
-      )}
+      className="fixed top-0 left-0 right-0 w-full z-50 bg-white shadow-md"
     >
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
@@ -152,19 +131,25 @@ const Navbar = () => {
           <button
             className="md:hidden text-rekaland-black focus:outline-none"
             onClick={toggleMobileMenu}
+            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
           >
             {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu - Improved */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-white shadow-lg animate-slide-in">
+        <div className="md:hidden bg-white shadow-lg">
           <div className="px-4 py-3 space-y-3">
             <Link
               to="/"
-              className="block py-2 text-rekaland-black hover:text-rekaland-orange"
+              className={cn(
+                "block py-3 px-2 rounded-md hover:bg-gray-100",
+                {
+                  "bg-gray-100 text-rekaland-orange": location.pathname === "/",
+                }
+              )}
               onClick={toggleMobileMenu}
             >
               Beranda
@@ -172,7 +157,12 @@ const Navbar = () => {
             
             <Link
               to="/produk"
-              className="block py-2 text-rekaland-black hover:text-rekaland-orange"
+              className={cn(
+                "block py-3 px-2 rounded-md hover:bg-gray-100",
+                {
+                  "bg-gray-100 text-rekaland-orange": location.pathname.includes("/produk"),
+                }
+              )}
               onClick={toggleMobileMenu}
             >
               Produk
@@ -180,7 +170,12 @@ const Navbar = () => {
             
             <Link
               to="/informasi"
-              className="block py-2 text-rekaland-black hover:text-rekaland-orange"
+              className={cn(
+                "block py-3 px-2 rounded-md hover:bg-gray-100",
+                {
+                  "bg-gray-100 text-rekaland-orange": location.pathname.includes("/informasi"),
+                }
+              )}
               onClick={toggleMobileMenu}
             >
               Informasi
@@ -188,7 +183,12 @@ const Navbar = () => {
             
             <Link
               to="/tentang"
-              className="block py-2 text-rekaland-black hover:text-rekaland-orange"
+              className={cn(
+                "block py-3 px-2 rounded-md hover:bg-gray-100",
+                {
+                  "bg-gray-100 text-rekaland-orange": location.pathname === "/tentang",
+                }
+              )}
               onClick={toggleMobileMenu}
             >
               Tentang
