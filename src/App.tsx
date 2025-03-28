@@ -11,6 +11,8 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import ProfilePage from "./pages/ProfilePage";
 import AdminPage from "./pages/AdminPage";
+import ProductsPage from "./pages/ProductsPage";
+import InformationPage from "./pages/InformationPage";
 import EmptyLotPage from "./pages/products/EmptyLotPage";
 import SemiFinishedLotPage from "./pages/products/SemiFinishedLotPage";
 import ReadyToOccupyPage from "./pages/products/ReadyToOccupyPage";
@@ -30,6 +32,8 @@ const App = () => (
           <Route path="/daftar" element={<RegisterPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/admin" element={<AdminPage />} />
+          <Route path="/produk" element={<ProductsPage />} />
+          <Route path="/informasi" element={<InformationPage />} />
           <Route path="/produk/kavling-kosongan" element={<EmptyLotPage />} />
           <Route path="/produk/kavling-setengah-jadi" element={<SemiFinishedLotPage />} />
           <Route path="/produk/kavling-siap-huni" element={<ReadyToOccupyPage />} />
