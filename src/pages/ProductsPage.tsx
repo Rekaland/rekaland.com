@@ -139,7 +139,7 @@ const ProductsPage = () => {
                   <SelectValue placeholder="Pilih rentang harga" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Semua Harga</SelectItem>
+                  <SelectItem value="all">Semua Harga</SelectItem>
                   <SelectItem value="< 1.5 Milyar">{"< 1.5 Milyar"}</SelectItem>
                   <SelectItem value="1.5 - 2 Milyar">1.5 - 2 Milyar</SelectItem>
                   <SelectItem value="> 2 Milyar">{"> 2 Milyar"}</SelectItem>
@@ -154,7 +154,7 @@ const ProductsPage = () => {
                   <SelectValue placeholder="Pilih lokasi" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Semua Lokasi</SelectItem>
+                  <SelectItem value="all">Semua Lokasi</SelectItem>
                   <SelectItem value="Jakarta Selatan">Jakarta Selatan</SelectItem>
                   <SelectItem value="Jakarta Timur">Jakarta Timur</SelectItem>
                   <SelectItem value="Bogor">Bogor</SelectItem>
