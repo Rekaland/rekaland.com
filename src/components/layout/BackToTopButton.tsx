@@ -31,7 +31,7 @@ export const BackToTopButton = () => {
       onClick={scrollToTop}
       className={`${
         isVisible ? "opacity-100" : "opacity-0"
-      } fixed bottom-20 right-4 z-40 p-2 rounded-full bg-rekaland-orange text-white shadow-lg transition-all duration-300 hover:bg-orange-600 focus:outline-none`}
+      } fixed right-4 top-1/2 transform -translate-y-1/2 z-40 p-2 rounded-full bg-rekaland-orange text-white shadow-lg transition-all duration-300 hover:bg-orange-600 focus:outline-none pulse-animation`}
       aria-label="Kembali ke atas"
     >
       <ArrowUp size={20} />

@@ -109,7 +109,7 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
-/* Animasi untuk mobile menu */
+/* Fade in animation */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -125,7 +125,7 @@
   animation: fadeIn 0.3s ease-out forwards;
 }
 
-/* Perbaikan kontras untuk mode gelap */
+/* Dark mode improvements */
 .dark .text-rekaland-black {
   @apply text-gray-100;
 }
@@ -134,7 +134,7 @@
   @apply text-orange-400;
 }
 
-/* Perbaikan hover untuk menu */
+/* Menu hover improvements */
 .menu-item {
   @apply transition-colors duration-200;
 }
@@ -145,4 +145,41 @@
 
 .menu-item-hover:hover {
   @apply bg-gray-100 dark:bg-gray-800 text-rekaland-orange;
+}
+
+/* Line clamp utilities */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+/* Card transitions */
+.card-transition {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+/* For horizontally scrolling containers */
+.scroll-snap-x {
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scroll-snap-x > * {
+  scroll-snap-align: start;
 }

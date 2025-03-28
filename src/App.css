@@ -21,7 +21,7 @@ body {
   padding-bottom: 2rem; /* Add space for mobile bottom navigation */
 }
 
-/* Perbaikan untuk UI yang lebih responsif */
+/* Responsive UI fixes */
 @media (max-width: 768px) {
   .main-content {
     margin-top: 3.5rem;
@@ -29,7 +29,7 @@ body {
   }
 }
 
-/* Perbaikan kontras untuk mode terang dan gelap */
+/* Better contrast for light and dark modes */
 .dark .bg-rekaland-orange {
   background-color: #ff8c38;
 }
@@ -119,4 +119,50 @@ body {
   .mobile-menu-item:active {
     transform: scale(0.98);
   }
+}
+
+/* Remove scrollbar but keep functionality */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Image hover effects */
+.img-hover-zoom {
+  overflow: hidden;
+}
+
+.img-hover-zoom img {
+  transition: transform 0.5s ease;
+}
+
+.img-hover-zoom:hover img {
+  transform: scale(1.1);
+}
+
+/* Card hover effects */
+.card-hover {
+  transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Glass morphism effect */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark .glass-effect {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
