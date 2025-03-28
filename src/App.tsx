@@ -25,35 +25,33 @@ import HelpPage from "./pages/HelpPage";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/tentang" element={<AboutPage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/daftar" element={<RegisterPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/settings" element={<SettingsPage />} />
-              <Route path="/help" element={<HelpPage />} />
-              <Route path="/admin" element={<AdminPage />} />
-              <Route path="/produk" element={<ProductsPage />} />
-              <Route path="/informasi" element={<InformationPage />} />
-              <Route path="/produk/kavling-kosongan" element={<EmptyLotPage />} />
-              <Route path="/produk/kavling-setengah-jadi" element={<SemiFinishedLotPage />} />
-              <Route path="/produk/kavling-siap-huni" element={<ReadyToOccupyPage />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </AuthProvider>
-    </QueryClientProvider>
-  </React.StrictMode>
+  <QueryClientProvider client={queryClient}>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/tentang" element={<AboutPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/daftar" element={<RegisterPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/help" element={<HelpPage />} />
+            <Route path="/admin" element={<AdminPage />} />
+            <Route path="/produk" element={<ProductsPage />} />
+            <Route path="/informasi" element={<InformationPage />} />
+            <Route path="/produk/kavling-kosongan" element={<EmptyLotPage />} />
+            <Route path="/produk/kavling-setengah-jadi" element={<SemiFinishedLotPage />} />
+            <Route path="/produk/kavling-siap-huni" element={<ReadyToOccupyPage />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
+  </QueryClientProvider>
 );
 
 export default App;
