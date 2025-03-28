@@ -1,23 +1,16 @@
 
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { User } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { UserProfileMenu } from "./UserProfileMenu";
 
-interface AuthButtonsProps {
-  isAuthenticated: boolean;
-  isAdmin: boolean;
-}
+export const AuthButtons = () => {
+  const { isAuthenticated } = useAuth();
 
-export const AuthButtons = ({ isAuthenticated, isAdmin }: AuthButtonsProps) => {
   return (
     <>
       {isAuthenticated ? (
-        <Link to="/profile">
-          <Button variant="ghost" className="flex items-center gap-2">
-            <User size={18} />
-            <span>Profil</span>
-          </Button>
-        </Link>
+        <UserProfileMenu />
       ) : (
         <>
           <Link to="/login">
@@ -34,13 +27,6 @@ export const AuthButtons = ({ isAuthenticated, isAdmin }: AuthButtonsProps) => {
             </Button>
           </Link>
         </>
-      )}
-      {isAdmin && (
-        <Link to="/admin">
-          <Button variant="outline" className="border-rekaland-orange text-rekaland-orange hover:bg-orange-50">
-            Admin
-          </Button>
-        </Link>
       )}
     </>
   );

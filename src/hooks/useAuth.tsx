@@ -1,28 +1,39 @@
 
-import { useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { toast } from "@/hooks/use-toast";
+
+interface User {
+  name: string;
+  email: string;
+  role: "user" | "admin";
+  avatar: string;
+}
 
 interface AuthState {
   isAuthenticated: boolean;
   isAdmin: boolean;
-  user: {
-    name?: string;
-    email?: string;
-    role?: string;
-    avatar?: string;
-  } | null;
+  user: User | null;
 }
 
-export function useAuth() {
-  // This is a simplified mock implementation
-  // In a real app, this would check tokens, session cookies, etc.
+interface AuthContextType extends AuthState {
+  login: (email: string, password: string) => boolean;
+  loginWithGoogle: () => boolean;
+  register: (name: string, email: string, password: string) => boolean;
+  logout: () => void;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [authState, setAuthState] = useState<AuthState>(() => {
     const savedAuth = localStorage.getItem("auth");
-    return savedAuth ? JSON.parse(savedAuth) : {
-      isAuthenticated: false,
-      isAdmin: false,
-      user: null,
-    };
+    return savedAuth 
+      ? JSON.parse(savedAuth) 
+      : {
+          isAuthenticated: false,
+          isAdmin: false,
+          user: null,
+        };
   });
 
   useEffect(() => {
@@ -31,7 +42,6 @@ export function useAuth() {
 
   const login = (email: string, password: string) => {
     // Simplified mock login
-    // In a real app, this would make an API request
     if (email === "gueadmin" && password === "gueadmin") {
       const newState = {
         isAuthenticated: true,
@@ -71,7 +81,7 @@ export function useAuth() {
   };
 
   const loginWithGoogle = () => {
-    // Mock Google login (in a real app, this would use OAuth)
+    // Mock Google login
     const randomEmail = `user${Math.floor(Math.random() * 1000)}@gmail.com`;
     const newState = {
       isAuthenticated: true,
@@ -92,7 +102,7 @@ export function useAuth() {
   };
 
   const register = (name: string, email: string, password: string) => {
-    // Mock registration (in a real app, this would make an API request)
+    // Mock registration
     const newState = {
       isAuthenticated: true,
       isAdmin: false,
@@ -117,13 +127,31 @@ export function useAuth() {
       isAdmin: false,
       user: null,
     });
+    toast({
+      title: "Berhasil Keluar",
+      description: "Anda telah keluar dari akun.",
+    });
   };
 
-  return {
-    ...authState,
-    login,
-    loginWithGoogle,
-    register,
-    logout,
-  };
-}
+  return (
+    <AuthContext.Provider
+      value={{
+        ...authState,
+        login,
+        loginWithGoogle,
+        register,
+        logout,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+};

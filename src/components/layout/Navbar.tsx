@@ -2,15 +2,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { ChevronDown, Search, User, Menu, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Menu, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { NavLinks } from "./NavLinks";
 import { MobileMenu } from "./MobileMenu";
@@ -46,10 +38,7 @@ const Navbar = () => {
 
           {/* Auth Buttons - Desktop */}
           <div className="hidden md:flex items-center space-x-2">
-            <AuthButtons 
-              isAuthenticated={isAuthenticated} 
-              isAdmin={isAdmin} 
-            />
+            <AuthButtons />
           </div>
 
           {/* Mobile Menu Button */}
@@ -67,8 +56,6 @@ const Navbar = () => {
       {mobileMenuOpen && (
         <MobileMenu 
           location={location} 
-          isAuthenticated={isAuthenticated} 
-          isAdmin={isAdmin} 
           toggleMobileMenu={toggleMobileMenu} 
         />
       )}

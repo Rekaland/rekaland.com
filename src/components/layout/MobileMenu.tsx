@@ -4,22 +4,22 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+import { UserProfileMenu } from "./UserProfileMenu";
 
 interface MobileMenuProps {
   location: {
     pathname: string;
   };
-  isAuthenticated: boolean;
-  isAdmin: boolean;
   toggleMobileMenu: () => void;
 }
 
 export const MobileMenu = ({ 
   location, 
-  isAuthenticated, 
-  isAdmin, 
   toggleMobileMenu 
 }: MobileMenuProps) => {
+  const { isAuthenticated } = useAuth();
+  
   return (
     <div className="md:hidden bg-white shadow-lg">
       <div className="px-4 py-3 space-y-3">
@@ -86,12 +86,9 @@ export const MobileMenu = ({
 
         <div className="pt-3 mt-3 border-t border-gray-100 space-y-2">
           {isAuthenticated ? (
-            <Link to="/profile" onClick={toggleMobileMenu}>
-              <Button variant="ghost" className="w-full justify-start">
-                <User size={18} className="mr-2" />
-                Profil
-              </Button>
-            </Link>
+            <div className="flex justify-center py-2">
+              <UserProfileMenu />
+            </div>
           ) : (
             <>
               <Link to="/login" onClick={toggleMobileMenu}>
@@ -105,16 +102,6 @@ export const MobileMenu = ({
                 </Button>
               </Link>
             </>
-          )}
-          {isAdmin && (
-            <Link to="/admin" onClick={toggleMobileMenu}>
-              <Button
-                variant="outline"
-                className="w-full mt-2 border-rekaland-orange text-rekaland-orange"
-              >
-                Admin
-              </Button>
-            </Link>
           )}
         </div>
       </div>
