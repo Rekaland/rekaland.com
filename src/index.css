@@ -108,3 +108,41 @@
 .card-shadow {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
+
+/* Animasi untuk mobile menu */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* Perbaikan kontras untuk mode gelap */
+.dark .text-rekaland-black {
+  @apply text-gray-100;
+}
+
+.dark .text-rekaland-orange {
+  @apply text-orange-400;
+}
+
+/* Perbaikan hover untuk menu */
+.menu-item {
+  @apply transition-colors duration-200;
+}
+
+.menu-item-active {
+  @apply bg-orange-100 dark:bg-orange-900/20 text-rekaland-orange font-medium;
+}
+
+.menu-item-hover:hover {
+  @apply bg-gray-100 dark:bg-gray-800 text-rekaland-orange;
+}

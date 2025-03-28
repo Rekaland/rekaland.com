@@ -21,15 +21,15 @@ export const MobileMenu = ({
   const { isAuthenticated } = useAuth();
   
   return (
-    <div className="md:hidden bg-white shadow-lg">
-      <div className="px-4 py-3 space-y-3">
+    <div className="md:hidden bg-background border-t border-border shadow-lg animate-fade-in">
+      <div className="px-4 py-6 space-y-4">
         <Link
           to="/"
           className={cn(
-            "block py-3 px-2 rounded-md hover:bg-gray-100",
-            {
-              "bg-gray-100 text-rekaland-orange": location.pathname === "/",
-            }
+            "block py-3 px-4 rounded-md transition-colors",
+            location.pathname === "/" 
+              ? "bg-orange-100 dark:bg-orange-900/20 text-rekaland-orange font-medium" 
+              : "hover:bg-muted text-foreground hover:text-rekaland-orange"
           )}
           onClick={toggleMobileMenu}
         >
@@ -39,10 +39,10 @@ export const MobileMenu = ({
         <Link
           to="/produk"
           className={cn(
-            "block py-3 px-2 rounded-md hover:bg-gray-100",
-            {
-              "bg-gray-100 text-rekaland-orange": location.pathname.includes("/produk"),
-            }
+            "block py-3 px-4 rounded-md transition-colors",
+            location.pathname.includes("/produk")
+              ? "bg-orange-100 dark:bg-orange-900/20 text-rekaland-orange font-medium"
+              : "hover:bg-muted text-foreground hover:text-rekaland-orange"
           )}
           onClick={toggleMobileMenu}
         >
@@ -52,10 +52,10 @@ export const MobileMenu = ({
         <Link
           to="/informasi"
           className={cn(
-            "block py-3 px-2 rounded-md hover:bg-gray-100",
-            {
-              "bg-gray-100 text-rekaland-orange": location.pathname.includes("/informasi"),
-            }
+            "block py-3 px-4 rounded-md transition-colors",
+            location.pathname.includes("/informasi")
+              ? "bg-orange-100 dark:bg-orange-900/20 text-rekaland-orange font-medium"
+              : "hover:bg-muted text-foreground hover:text-rekaland-orange"
           )}
           onClick={toggleMobileMenu}
         >
@@ -65,39 +65,44 @@ export const MobileMenu = ({
         <Link
           to="/tentang"
           className={cn(
-            "block py-3 px-2 rounded-md hover:bg-gray-100",
-            {
-              "bg-gray-100 text-rekaland-orange": location.pathname === "/tentang",
-            }
+            "block py-3 px-4 rounded-md transition-colors",
+            location.pathname === "/tentang"
+              ? "bg-orange-100 dark:bg-orange-900/20 text-rekaland-orange font-medium"
+              : "hover:bg-muted text-foreground hover:text-rekaland-orange"
           )}
           onClick={toggleMobileMenu}
         >
           Tentang
         </Link>
 
-        <div className="relative mt-3">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+        <div className="relative mt-5">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
           <Input
             type="search"
             placeholder="Cari..."
-            className="pl-10 w-full bg-gray-100"
+            className="pl-10 w-full bg-muted/50 border-border"
           />
         </div>
 
-        <div className="pt-3 mt-3 border-t border-gray-100 space-y-2">
+        <div className="pt-4 mt-4 border-t border-border space-y-3">
           {isAuthenticated ? (
             <div className="flex justify-center py-2">
               <UserProfileMenu />
             </div>
           ) : (
             <>
-              <Link to="/login" onClick={toggleMobileMenu}>
-                <Button variant="ghost" className="w-full justify-start hover:bg-gray-100 hover:text-rekaland-orange">
+              <Link to="/login" onClick={toggleMobileMenu} className="block w-full">
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-center hover:text-rekaland-orange hover:bg-orange-100 dark:hover:bg-orange-900/20"
+                >
                   Masuk
                 </Button>
               </Link>
-              <Link to="/daftar" onClick={toggleMobileMenu}>
-                <Button className="w-full bg-rekaland-orange hover:bg-orange-600">
+              <Link to="/daftar" onClick={toggleMobileMenu} className="block w-full">
+                <Button 
+                  className="w-full bg-rekaland-orange hover:bg-orange-600 text-white border-transparent"
+                >
                   Daftar
                 </Button>
               </Link>

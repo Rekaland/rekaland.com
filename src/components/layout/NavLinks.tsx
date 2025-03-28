@@ -14,9 +14,9 @@ export const NavLinks = ({ location }: NavLinksProps) => {
       <Link
         to="/"
         className={cn(
-          "text-rekaland-black hover:text-rekaland-orange transition-colors",
+          "text-foreground hover:text-rekaland-orange transition-colors px-3 py-2 rounded-md",
           {
-            "text-rekaland-orange font-medium": location.pathname === "/",
+            "text-rekaland-orange font-medium bg-orange-100/50 dark:bg-orange-900/20": location.pathname === "/",
           }
         )}
       >
@@ -26,9 +26,9 @@ export const NavLinks = ({ location }: NavLinksProps) => {
       <Link
         to="/produk"
         className={cn(
-          "text-rekaland-black hover:text-rekaland-orange transition-colors",
+          "text-foreground hover:text-rekaland-orange transition-colors px-3 py-2 rounded-md",
           {
-            "text-rekaland-orange font-medium": location.pathname.includes("/produk"),
+            "text-rekaland-orange font-medium bg-orange-100/50 dark:bg-orange-900/20": location.pathname.includes("/produk"),
           }
         )}
       >
@@ -38,9 +38,9 @@ export const NavLinks = ({ location }: NavLinksProps) => {
       <Link
         to="/informasi"
         className={cn(
-          "text-rekaland-black hover:text-rekaland-orange transition-colors",
+          "text-foreground hover:text-rekaland-orange transition-colors px-3 py-2 rounded-md",
           {
-            "text-rekaland-orange font-medium": location.pathname.includes("/informasi"),
+            "text-rekaland-orange font-medium bg-orange-100/50 dark:bg-orange-900/20": location.pathname.includes("/informasi"),
           }
         )}
       >
@@ -50,10 +50,9 @@ export const NavLinks = ({ location }: NavLinksProps) => {
       <Link
         to="/tentang"
         className={cn(
-          "text-rekaland-black hover:text-rekaland-orange transition-colors",
+          "text-foreground hover:text-rekaland-orange transition-colors px-3 py-2 rounded-md",
           {
-            "text-rekaland-orange font-medium":
-              location.pathname === "/tentang",
+            "text-rekaland-orange font-medium bg-orange-100/50 dark:bg-orange-900/20": location.pathname === "/tentang",
           }
         )}
       >

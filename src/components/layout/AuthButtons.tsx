@@ -16,13 +16,13 @@ export const AuthButtons = () => {
           <Link to="/login">
             <Button 
               variant="ghost" 
-              className="text-rekaland-black hover:bg-gray-100 hover:text-rekaland-orange active:bg-gray-200"
+              className="text-foreground hover:text-rekaland-orange hover:bg-orange-100 dark:hover:bg-orange-900/20"
             >
               Masuk
             </Button>
           </Link>
           <Link to="/daftar">
-            <Button className="bg-rekaland-orange hover:bg-orange-600 text-white">
+            <Button className="bg-rekaland-orange hover:bg-orange-600 text-white border-transparent">
               Daftar
             </Button>
           </Link>
