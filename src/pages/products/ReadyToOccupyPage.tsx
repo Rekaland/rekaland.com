@@ -1,196 +1,151 @@
 
-import { useState } from "react";
-import Layout from "@/components/layout/Layout";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useEffect } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
+import MainLayout from "@/layouts/MainLayout";
+import { MapPin, ArrowRight, Info, Check } from "lucide-react";
 
 const ReadyToOccupyPage = () => {
-  const [priceFilter, setPriceFilter] = useState("");
-  const [locationFilter, setLocationFilter] = useState("");
+  useEffect(() => {
+    // Scroll to top when page loads
+    window.scrollTo(0, 0);
+  }, []);
 
-  const readyToOccupyProperties = [
+  // Sample data for kavling siap huni
+  const readyToOccupyLots = [
     {
       id: 1,
-      title: "Rumah Modern Jakarta Timur",
-      location: "Jakarta Timur",
-      price: 2500000000,
-      size: "120m²",
-      bedrooms: 3,
-      bathrooms: 2,
-      image: "https://i.pravatar.cc/300?img=35",
-      features: ["Taman luas", "Carport 2 mobil", "Fully furnished"],
+      title: "Villa Asri Bali",
+      location: "Tabanan, Bali",
+      price: "Rp1.2 milyar",
+      area: "250 m²",
+      image: "https://images.unsplash.com/photo-1721322800607-8c38375eef04?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxfDB8MXxyYW5kb218MHx8fHx8fHx8MTYzMjg1MTUzMQ&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=700",
+      features: ["Fully furnished", "View pegunungan", "Keamanan 24 jam"]
     },
     {
       id: 2,
-      title: "Rumah Asri Bogor",
-      location: "Bogor",
-      price: 1800000000,
-      size: "150m²",
-      bedrooms: 4,
-      bathrooms: 3,
-      image: "https://i.pravatar.cc/300?img=36",
-      features: ["Swimming pool", "Taman belakang", "Smart home system"],
+      title: "Rumah Mewah Jakarta Selatan",
+      location: "Kebayoran Baru, Jakarta Selatan",
+      price: "Rp3.5 milyar",
+      area: "350 m²",
+      image: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxfDB8MXxyYW5kb218MHx8fHx8fHx8MTYzMjg1MTUyNg&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=700",
+      features: ["5 kamar tidur", "Smart home", "Kolam renang"]
     },
     {
       id: 3,
-      title: "Rumah Minimalis Bekasi",
-      location: "Bekasi",
-      price: 1200000000,
-      size: "100m²",
-      bedrooms: 3,
-      bathrooms: 2,
-      image: "https://i.pravatar.cc/300?img=37",
-      features: ["Keamanan 24 jam", "Cluster premium", "Dekat tol"],
+      title: "Apartemen Mewah Surabaya",
+      location: "Surabaya, Jawa Timur",
+      price: "Rp900 juta",
+      area: "90 m²",
+      image: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxfDB8MXxyYW5kb218MHx8fHx8fHx8MTYzMjg1MTUyNw&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=700",
+      features: ["2 kamar tidur", "Fasilitas lengkap", "View kota"]
     },
+    {
+      id: 4,
+      title: "Cluster Modern BSD",
+      location: "BSD City, Tangerang Selatan",
+      price: "Rp1.5 milyar",
+      area: "180 m²",
+      image: "https://images.unsplash.com/photo-1721322800607-8c38375eef04?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxfDB8MXxyYW5kb218MHx8fHx8fHx8MTYzMjg1MTUzMQ&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=700",
+      features: ["One gate system", "Taman bermain", "Clubhouse"]
+    },
+    {
+      id: 5,
+      title: "Rumah Premium Sentul",
+      location: "Sentul City, Bogor",
+      price: "Rp2.2 milyar",
+      area: "300 m²",
+      image: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxfDB8MXxyYW5kb218MHx8fHx8fHx8MTYzMjg1MTUyNg&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=700",
+      features: ["4 kamar tidur", "Udara sejuk", "View golf"]
+    }
   ];
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 0,
-    }).format(price);
-  };
-
-  const filteredProperties = readyToOccupyProperties.filter(property => {
-    let matchesPrice = true;
-    let matchesLocation = true;
-    
-    if (priceFilter) {
-      if (priceFilter === "< 1.5 Milyar") {
-        matchesPrice = property.price < 1500000000;
-      } else if (priceFilter === "1.5 - 2 Milyar") {
-        matchesPrice = property.price >= 1500000000 && property.price <= 2000000000;
-      } else if (priceFilter === "> 2 Milyar") {
-        matchesPrice = property.price > 2000000000;
-      }
-    }
-    
-    if (locationFilter && locationFilter !== "Semua Lokasi") {
-      matchesLocation = property.location === locationFilter;
-    }
-    
-    return matchesPrice && matchesLocation;
-  });
-
   return (
-    <Layout>
-      <div className="container mx-auto px-4 py-16">
-        <div className="mb-10">
-          <h1 className="text-3xl font-bold mb-2">Rumah Siap Huni</h1>
-          <p className="text-gray-600 max-w-3xl">
-            Temukan rumah impian yang siap untuk Anda tempati. Berbagai pilihan desain modern dengan fasilitas lengkap dan lokasi strategis di seluruh Indonesia.
-          </p>
-        </div>
-        
-        {/* Filter Section */}
-        <div className="bg-gray-50 p-6 rounded-lg mb-10">
-          <h2 className="font-semibold mb-4">Filter Pencarian</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="price-range">Rentang Harga</Label>
-              <Select value={priceFilter} onValueChange={setPriceFilter}>
-                <SelectTrigger id="price-range">
-                  <SelectValue placeholder="Pilih rentang harga" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Semua Harga</SelectItem>
-                  <SelectItem value="< 1.5 Milyar">{"< 1.5 Milyar"}</SelectItem>
-                  <SelectItem value="1.5 - 2 Milyar">1.5 - 2 Milyar</SelectItem>
-                  <SelectItem value="> 2 Milyar">{"> 2 Milyar"}</SelectItem>
-                </SelectContent>
-              </Select>
+    <MainLayout>
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
+          <div>
+            <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
+              <Link to="/" className="hover:text-rekaland-orange">Beranda</Link>
+              <span>/</span>
+              <Link to="/produk" className="hover:text-rekaland-orange">Produk</Link>
+              <span>/</span>
+              <span className="text-rekaland-orange">Kavling Siap Huni</span>
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="location">Lokasi</Label>
-              <Select value={locationFilter} onValueChange={setLocationFilter}>
-                <SelectTrigger id="location">
-                  <SelectValue placeholder="Pilih lokasi" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Semua Lokasi</SelectItem>
-                  <SelectItem value="Jakarta Timur">Jakarta Timur</SelectItem>
-                  <SelectItem value="Bekasi">Bekasi</SelectItem>
-                  <SelectItem value="Bogor">Bogor</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="search">Kata Kunci</Label>
-              <Input id="search" placeholder="Cari berdasarkan nama" />
-            </div>
+            <h1 className="text-3xl font-bold mb-2">Kavling Siap Huni</h1>
+            <p className="text-gray-600 dark:text-gray-300 max-w-2xl">
+              Properti yang sudah selesai dibangun dan siap untuk dihuni, dengan desain modern dan fasilitas lengkap.
+            </p>
+          </div>
+          <div className="mt-4 md:mt-0">
+            <Link to="/produk">
+              <Button variant="outline" className="border-rekaland-orange text-rekaland-orange hover:bg-rekaland-orange hover:text-white">
+                Lihat Semua Kategori
+              </Button>
+            </Link>
           </div>
         </div>
         
-        {/* Listings */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProperties.map((property) => (
-            <Card key={property.id} className="overflow-hidden">
-              <div className="h-48 overflow-hidden">
+        <div className="mb-8 p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
+          <div className="flex items-start gap-3">
+            <Info className="h-5 w-5 text-rekaland-orange mt-0.5" />
+            <div>
+              <h3 className="font-semibold mb-1">Tentang Kavling Siap Huni</h3>
+              <p className="text-sm text-gray-700 dark:text-gray-300">
+                Kavling siap huni adalah properti yang telah selesai dibangun dan siap untuk ditempati. 
+                Anda dapat langsung menempati properti tanpa perlu renovasi atau pembangunan lebih lanjut.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+          {readyToOccupyLots.map((property) => (
+            <Card key={property.id} className="overflow-hidden hover:shadow-lg transition-all duration-300 border-0">
+              <div className="relative h-60">
                 <img 
                   src={property.image} 
                   alt={property.title} 
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover" 
                 />
+                <span className="absolute top-3 left-3 bg-rekaland-orange text-white px-3 py-1 text-sm rounded-full">
+                  Siap Huni
+                </span>
               </div>
-              <CardHeader>
-                <CardTitle>{property.title}</CardTitle>
-                <CardDescription>{property.location} - {property.size}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-xl font-semibold text-rekaland-orange mb-2">
-                  {formatPrice(property.price)}
-                </p>
-                <div className="flex items-center gap-4 mb-3">
-                  <div className="flex items-center gap-1">
-                    <span className="font-medium">{property.bedrooms}</span> Kamar
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="font-medium">{property.bathrooms}</span> Kamar Mandi
-                  </div>
+              <CardContent className="p-4">
+                <h3 className="font-bold text-lg mb-2">{property.title}</h3>
+                <div className="flex items-center mb-3 text-gray-500">
+                  <MapPin size={16} className="mr-1" />
+                  <span className="text-sm">{property.location}</span>
                 </div>
-                <div className="mt-2">
-                  <h4 className="text-sm font-medium mb-1">Fitur:</h4>
-                  <ul className="text-sm text-gray-600">
+                
+                <div className="flex justify-between mb-4">
+                  <span className="font-bold text-rekaland-orange">{property.price}</span>
+                  <span className="text-gray-500">{property.area}</span>
+                </div>
+                
+                <div className="border-t border-gray-100 pt-3 mt-2">
+                  <div className="grid grid-cols-1 gap-1 mb-3">
                     {property.features.map((feature, index) => (
-                      <li key={index} className="flex items-center gap-1 mb-1">
-                        <span className="text-green-500 text-lg">•</span> {feature}
-                      </li>
+                      <div key={index} className="flex items-center text-sm text-gray-600">
+                        <Check size={14} className="text-green-500 mr-2" />
+                        {feature}
+                      </div>
                     ))}
-                  </ul>
+                  </div>
+                  <Link to={`/produk/detail/${property.id}`}>
+                    <Button className="w-full bg-gray-100 text-rekaland-black hover:bg-rekaland-orange hover:text-white transition-colors">
+                      Lihat Detail <ArrowRight size={16} className="ml-2" />
+                    </Button>
+                  </Link>
                 </div>
               </CardContent>
-              <CardFooter>
-                <Button className="w-full bg-rekaland-orange hover:bg-orange-600">
-                  Lihat Detail
-                </Button>
-              </CardFooter>
             </Card>
           ))}
         </div>
-        
-        {filteredProperties.length === 0 && (
-          <div className="text-center py-10">
-            <h3 className="text-xl font-medium mb-2">Tidak ada properti yang sesuai dengan filter Anda</h3>
-            <p className="text-gray-500 mb-4">Coba ubah filter pencarian untuk melihat hasil lainnya</p>
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                setPriceFilter("");
-                setLocationFilter("");
-              }}
-            >
-              Reset Filter
-            </Button>
-          </div>
-        )}
       </div>
-    </Layout>
+    </MainLayout>
   );
 };
 
