@@ -16,7 +16,8 @@ const WelcomeToast = () => {
         toast({
           title: "Selamat Datang",
           description: `Halo, ${user.name || "Pengguna"}! Senang melihat Anda kembali.`,
-          duration: 2000,
+          duration: 1000,
+          className: "bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0 shadow-lg animate-in fade-in-80 slide-in-from-bottom-10",
         });
         setShowWelcome(false);
       }, 500);

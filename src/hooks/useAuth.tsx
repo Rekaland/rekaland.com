@@ -57,6 +57,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       toast({
         title: "Selamat Datang Admin!",
         description: "Anda berhasil masuk sebagai admin.",
+        duration: 1000,
+        className: "bg-gradient-to-r from-blue-500 to-purple-600 text-white border-none",
       });
       return true;
     } else if (email && password) {
@@ -74,6 +76,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       toast({
         title: "Selamat Datang!",
         description: "Anda berhasil masuk.",
+        duration: 1000,
+        className: "bg-gradient-to-r from-green-500 to-teal-500 text-white border-none",
       });
       return true;
     }
@@ -97,6 +101,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     toast({
       title: "Selamat Datang!",
       description: "Anda berhasil masuk dengan Google.",
+      duration: 1000,
+      className: "bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-none",
     });
     return true;
   };
@@ -117,6 +123,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     toast({
       title: "Registrasi Berhasil!",
       description: "Selamat datang di Rekaland.",
+      duration: 1000,
+      className: "bg-gradient-to-r from-orange-500 to-amber-500 text-white border-none",
     });
     return true;
   };
@@ -126,10 +134,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       isAuthenticated: false,
       isAdmin: false,
       user: null,
-    });
-    toast({
-      title: "Berhasil Keluar",
-      description: "Anda telah keluar dari akun.",
     });
   };
 
