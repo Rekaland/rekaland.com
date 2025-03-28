@@ -1,15 +1,17 @@
 
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MainLayout from "@/layouts/MainLayout";
-import { ArrowRight, Filter, Search, Grid3X3, Home, Building, Map } from "lucide-react";
+import { Grid3X3, Home, Building, Map } from "lucide-react";
+import { PropertyCategoryCard } from "@/components/products/PropertyCategoryCard";
+import { PropertyCard } from "@/components/products/PropertyCard";
 
 const ProductsPage = () => {
-  const [activeTab, setActiveTab] = useState("all");
+  const location = useLocation();
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("all");
 
   const productCategories = [
     {
@@ -45,13 +47,88 @@ const ProductsPage = () => {
   useEffect(() => {
     // Scroll to top when page loads
     window.scrollTo(0, 0);
-  }, []);
+    
+    // Set active tab based on path
+    const path = location.pathname;
+    if (path === "/produk") setActiveTab("all");
+    else if (path.includes("kavling-kosongan")) setActiveTab("empty");
+    else if (path.includes("kavling-setengah-jadi")) setActiveTab("semifinished");
+    else if (path.includes("kavling-siap-huni")) setActiveTab("ready");
+  }, [location.pathname]);
 
-  const handleCategoryClick = (path) => {
-    navigate(path);
-    // Ensure we scroll to top when changing categories
-    window.scrollTo(0, 0);
-  };
+  // Sample properties data
+  const properties = [
+    {
+      id: 1,
+      title: "Properti Premium Jakarta",
+      location: "Jakarta Selatan",
+      type: "Kavling Kosongan",
+      price: "Rp 350jt",
+      area: "120 m²",
+      image: "https://source.unsplash.com/random/300x200?property&sig=1",
+      features: ["Akses tol", "Dekat stasiun", "SHM"]
+    },
+    {
+      id: 2,
+      title: "Kavling Strategis BSD",
+      location: "Tangerang Selatan",
+      type: "Kavling Kosongan",
+      price: "Rp 400jt",
+      area: "150 m²",
+      image: "https://source.unsplash.com/random/300x200?property&sig=2",
+      features: ["Bebas banjir", "Lokasi premium", "ROI tinggi"]
+    },
+    {
+      id: 3,
+      title: "Rumah Setengah Jadi Bekasi",
+      location: "Bekasi",
+      type: "Kavling Bangunan",
+      price: "Rp 550jt",
+      area: "180 m²",
+      image: "https://source.unsplash.com/random/300x200?property&sig=3",
+      features: ["Struktur kokoh", "Desain modern", "Lingkungan asri"]
+    },
+    {
+      id: 4,
+      title: "Villa Siap Huni Cisarua",
+      location: "Cisarua, Lampung Selatan",
+      type: "Kavling Siap Huni",
+      price: "Rp 1.2M",
+      area: "250 m²",
+      image: "https://source.unsplash.com/random/300x200?property&sig=4",
+      features: ["Fully furnished", "View pegunungan", "Keamanan 24 jam"]
+    },
+    {
+      id: 5,
+      title: "Kavling Premium Lampung",
+      location: "Lampung Selatan",
+      type: "Kavling Kosongan",
+      price: "Rp 280jt",
+      area: "110 m²",
+      image: "https://source.unsplash.com/random/300x200?property&sig=5",
+      features: ["Akses mudah", "Sertifikat SHM", "Lokasi berkembang"]
+    },
+    {
+      id: 6,
+      title: "Rumah Modern Cisarua",
+      location: "Cisarua, Lampung Selatan",
+      type: "Kavling Siap Huni",
+      price: "Rp 950jt",
+      area: "220 m²",
+      image: "https://source.unsplash.com/random/300x200?property&sig=6",
+      features: ["3 kamar tidur", "2 kamar mandi", "Kolam renang"]
+    }
+  ];
+
+  // Filter properties based on active tab
+  const filteredProperties = activeTab === "all" 
+    ? properties 
+    : properties.filter(property => {
+        if (activeTab === "empty" && property.type === "Kavling Kosongan") return true;
+        if (activeTab === "semifinished" && property.type === "Kavling Bangunan") return true;
+        if (activeTab === "ready" && property.type === "Kavling Siap Huni") return true;
+        return false;
+      });
 
   return (
     <MainLayout>
@@ -69,31 +146,12 @@ const ProductsPage = () => {
               <h2 className="text-xl font-bold mb-4">Kategori Properti</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {productCategories.map((category) => (
-                  <div 
+                  <PropertyCategoryCard
                     key={category.id}
-                    onClick={() => handleCategoryClick(category.path)}
-                    className={`
-                      cursor-pointer p-4 rounded-lg transition-all 
-                      ${activeTab === category.id 
-                        ? 'bg-rekaland-orange text-white' 
-                        : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700'
-                      }
-                    `}
-                  >
-                    <div className="flex items-center mb-2">
-                      <div className={`
-                        p-2 rounded-full mr-3 
-                        ${activeTab === category.id 
-                          ? 'bg-white/20' 
-                          : 'bg-white dark:bg-gray-700'
-                        }
-                      `}>
-                        {category.icon}
-                      </div>
-                      <h3 className="font-semibold">{category.title}</h3>
-                    </div>
-                    <p className="text-sm opacity-80">{category.description}</p>
-                  </div>
+                    category={category}
+                    isActive={activeTab === category.id}
+                    onClick={() => navigate(category.path)}
+                  />
                 ))}
               </div>
             </CardContent>
@@ -101,34 +159,8 @@ const ProductsPage = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Placeholder for product cards */}
-          {Array(6).fill(0).map((_, index) => (
-            <Card key={index} className="overflow-hidden hover:shadow-lg transition-all duration-300 border-0">
-              <div className="relative h-60">
-                <img 
-                  src={`https://source.unsplash.com/random/300x200?property&sig=${index}`} 
-                  alt="Property" 
-                  className="w-full h-full object-cover" 
-                />
-                <span className="absolute top-3 left-3 bg-rekaland-orange text-white px-3 py-1 text-sm rounded-full">
-                  {index % 3 === 0 ? "Kavling Kosongan" : index % 3 === 1 ? "Kavling Bangunan" : "Siap Huni"}
-                </span>
-              </div>
-              <CardContent className="p-4">
-                <h3 className="font-bold text-lg mb-2">Properti Premium {index + 1}</h3>
-                <p className="text-gray-500 mb-2 flex items-center">
-                  <span className="flex items-center text-sm">
-                    {index % 2 === 0 ? "Jakarta Selatan" : "Tangerang Selatan"}
-                  </span>
-                </p>
-                <div className="flex justify-between items-center mt-4">
-                  <span className="font-bold text-rekaland-orange">Rp {(300 + index * 50).toLocaleString()}jt</span>
-                  <Button size="sm" className="bg-rekaland-orange hover:bg-orange-600">
-                    Detail <ArrowRight size={16} className="ml-1" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+          {filteredProperties.map(property => (
+            <PropertyCard key={property.id} property={property} />
           ))}
         </div>
       </div>

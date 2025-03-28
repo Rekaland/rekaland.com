@@ -5,6 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 const Footer = () => {
+  const openWhatsApp = () => {
+    const text = encodeURIComponent(
+      "Halo, saya tertarik dengan properti RekaLand dan ingin berkonsultasi untuk mendapatkan informasi lebih lanjut."
+    );
+    window.open(`https://wa.me/6282177968062?text=${text}`, '_blank');
+  };
+
   return (
     <footer className="bg-rekaland-black text-white pt-16 pb-8">
       <div className="container mx-auto px-4">
@@ -30,7 +37,7 @@ const Footer = () => {
                 <Facebook size={18} />
               </a>
               <a
-                href="https://instagram.com"
+                href="https://instagram.com/rekaland.idn"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-gray-800 hover:bg-rekaland-orange p-2 rounded-full transition-colors duration-300"
@@ -71,7 +78,7 @@ const Footer = () => {
                   className="text-gray-400 hover:text-rekaland-orange transition-colors duration-300 flex items-center"
                 >
                   <ArrowRight size={14} className="mr-2" />
-                  Kavling Setengah Jadi
+                  Kavling Bangunan
                 </Link>
               </li>
               <li>
@@ -105,18 +112,29 @@ const Footer = () => {
               <li className="flex items-start">
                 <MapPin size={18} className="text-rekaland-orange mr-3 mt-1 flex-shrink-0" />
                 <span className="text-gray-400">
-                  Jl. Properti Masa Depan No. 123, Jakarta Selatan, Indonesia
+                  Cisarua, Lampung Selatan, Lampung, Indonesia
                 </span>
               </li>
               <li className="flex items-center">
                 <Phone size={18} className="text-rekaland-orange mr-3 flex-shrink-0" />
-                <span className="text-gray-400">+62 812 3456 7890</span>
+                <a 
+                  href="tel:+6282177968062" 
+                  className="text-gray-400 hover:text-rekaland-orange transition-colors"
+                >
+                  +62 821 7796 8062
+                </a>
               </li>
               <li className="flex items-center">
                 <Mail size={18} className="text-rekaland-orange mr-3 flex-shrink-0" />
                 <span className="text-gray-400">info@rekaland.id</span>
               </li>
             </ul>
+            <Button 
+              onClick={openWhatsApp}
+              className="mt-6 bg-rekaland-orange hover:bg-orange-600 text-white"
+            >
+              Chat di WhatsApp
+            </Button>
           </div>
 
           {/* Newsletter */}

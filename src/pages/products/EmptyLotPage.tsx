@@ -1,12 +1,47 @@
 
 import { useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import MainLayout from "@/layouts/MainLayout";
-import { MapPin, ArrowRight, Info, Check } from "lucide-react";
+import { MapPin, ArrowRight, Info, Check, Grid3X3, Home, Building, Map } from "lucide-react";
+import { PropertyCategoryCard } from "@/components/products/PropertyCategoryCard";
+import { PropertyCard } from "@/components/products/PropertyCard";
 
 const EmptyLotPage = () => {
+  const navigate = useNavigate();
+  
+  const productCategories = [
+    {
+      id: "all",
+      title: "Semua Kavling",
+      icon: <Grid3X3 className="h-5 w-5" />,
+      description: "Lihat semua properti yang tersedia",
+      path: "/produk"
+    },
+    {
+      id: "empty",
+      title: "Kavling Kosongan",
+      icon: <Map className="h-5 w-5" />,
+      description: "Tanah kavling siap bangun",
+      path: "/produk/kavling-kosongan"
+    },
+    {
+      id: "semifinished",
+      title: "Kavling Bangunan",
+      icon: <Building className="h-5 w-5" />,
+      description: "Kavling dengan struktur bangunan dasar",
+      path: "/produk/kavling-setengah-jadi"
+    },
+    {
+      id: "ready",
+      title: "Kavling Siap Huni",
+      icon: <Home className="h-5 w-5" />,
+      description: "Properti siap untuk ditempati",
+      path: "/produk/kavling-siap-huni"
+    }
+  ];
+
   useEffect(() => {
     // Scroll to top when page loads
     window.scrollTo(0, 0);
@@ -20,6 +55,7 @@ const EmptyLotPage = () => {
       location: "Cisauk, Tangerang",
       price: "Rp350 juta",
       area: "120 m²",
+      type: "Kavling Kosongan",
       image: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxfDB8MXxyYW5kb218MHx8fHx8fHx8MTYzMjg1MTUyNg&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=700",
       features: ["Akses tol", "Dekat stasiun KRL", "SHM"]
     },
@@ -29,6 +65,7 @@ const EmptyLotPage = () => {
       location: "Serpong, Tangerang Selatan",
       price: "Rp425 juta",
       area: "150 m²",
+      type: "Kavling Kosongan",
       image: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxfDB8MXxyYW5kb218MHx8fHx8fHx8MTYzMjg1MTUyNg&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=700",
       features: ["Dekat kampus", "Area komersial", "Bebas banjir"]
     },
@@ -38,6 +75,7 @@ const EmptyLotPage = () => {
       location: "Cibubur, Jakarta Timur",
       price: "Rp500 juta",
       area: "180 m²",
+      type: "Kavling Kosongan",
       image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxfDB8MXxyYW5kb218MHx8fHx8fHx8MTYzMjg1MTUyOQ&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=700",
       features: ["Lingkungan asri", "Dekat tol", "Area berkembang"]
     },
@@ -47,15 +85,17 @@ const EmptyLotPage = () => {
       location: "BSD City, Tangerang Selatan",
       price: "Rp600 juta",
       area: "200 m²",
+      type: "Kavling Kosongan",
       image: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxfDB8MXxyYW5kb218MHx8fHx8fHx8MTYzMjg1MTUyNg&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=700",
       features: ["Kawasan elit", "Dekat mall", "Infrastruktur lengkap"]
     },
     {
       id: 5,
-      title: "Kavling Investasi Sentul",
-      location: "Sentul, Bogor",
+      title: "Kavling Investasi Lampung",
+      location: "Cisarua, Lampung Selatan",
       price: "Rp300 juta",
       area: "150 m²",
+      type: "Kavling Kosongan",
       image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxfDB8MXxyYW5kb218MHx8fHx8fHx8MTYzMjg1MTUyOQ&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=700",
       features: ["Prospek berkembang", "View pegunungan", "Udara sejuk"]
     },
@@ -65,6 +105,7 @@ const EmptyLotPage = () => {
       location: "Bekasi Timur",
       price: "Rp275 juta",
       area: "120 m²",
+      type: "Kavling Kosongan",
       image: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxfDB8MXxyYW5kb218MHx8fHx8fHx8MTYzMjg1MTUyNg&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=700",
       features: ["Akses tol", "Dekat stasiun LRT", "Area berkembang"]
     }
@@ -87,13 +128,24 @@ const EmptyLotPage = () => {
               Investasi tanah kavling dengan lokasi strategis dan sertifikat legal yang dapat Anda kembangkan sesuai kebutuhan dan keinginan.
             </p>
           </div>
-          <div className="mt-4 md:mt-0">
-            <Link to="/produk">
-              <Button variant="outline" className="border-rekaland-orange text-rekaland-orange hover:bg-rekaland-orange hover:text-white">
-                Lihat Semua Kategori
-              </Button>
-            </Link>
-          </div>
+        </div>
+        
+        <div className="mb-8">
+          <Card className="border-0 shadow-md overflow-hidden">
+            <CardContent className="p-6">
+              <h2 className="text-xl font-bold mb-4">Kategori Properti</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {productCategories.map((category) => (
+                  <PropertyCategoryCard
+                    key={category.id}
+                    category={category}
+                    isActive={category.id === "empty"}
+                    onClick={() => navigate(category.path)}
+                  />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </div>
         
         <div className="mb-8 p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
@@ -111,46 +163,7 @@ const EmptyLotPage = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           {emptyLots.map((property) => (
-            <Card key={property.id} className="overflow-hidden hover:shadow-lg transition-all duration-300 border-0">
-              <div className="relative h-60">
-                <img 
-                  src={property.image} 
-                  alt={property.title} 
-                  className="w-full h-full object-cover" 
-                />
-                <span className="absolute top-3 left-3 bg-rekaland-orange text-white px-3 py-1 text-sm rounded-full">
-                  Kavling Kosongan
-                </span>
-              </div>
-              <CardContent className="p-4">
-                <h3 className="font-bold text-lg mb-2">{property.title}</h3>
-                <div className="flex items-center mb-3 text-gray-500">
-                  <MapPin size={16} className="mr-1" />
-                  <span className="text-sm">{property.location}</span>
-                </div>
-                
-                <div className="flex justify-between mb-4">
-                  <span className="font-bold text-rekaland-orange">{property.price}</span>
-                  <span className="text-gray-500">{property.area}</span>
-                </div>
-                
-                <div className="border-t border-gray-100 pt-3 mt-2">
-                  <div className="grid grid-cols-1 gap-1 mb-3">
-                    {property.features.map((feature, index) => (
-                      <div key={index} className="flex items-center text-sm text-gray-600">
-                        <Check size={14} className="text-green-500 mr-2" />
-                        {feature}
-                      </div>
-                    ))}
-                  </div>
-                  <Link to={`/produk/detail/${property.id}`}>
-                    <Button className="w-full bg-gray-100 text-rekaland-black hover:bg-rekaland-orange hover:text-white transition-colors">
-                      Lihat Detail <ArrowRight size={16} className="ml-2" />
-                    </Button>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
+            <PropertyCard key={property.id} property={property} />
           ))}
         </div>
       </div>
