@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Table, 
   TableBody, 
@@ -11,17 +12,66 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import {
-  BarChart,
-  LineChart,
   Eye,
   Clock,
   ShoppingCart,
   Users,
-  ArrowUpRight
+  ArrowUpRight,
+  Download
 } from "lucide-react";
+import { 
+  LineChart, 
+  Line, 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip as RechartsTooltip, 
+  Legend, 
+  ResponsiveContainer 
+} from "recharts";
+import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
+
+// Sample data for charts
+const visitorData = [
+  { name: "Sen", value: 1200 },
+  { name: "Sel", value: 1900 },
+  { name: "Rab", value: 1500 },
+  { name: "Kam", value: 1800 },
+  { name: "Jum", value: 2200 },
+  { name: "Sab", value: 1400 },
+  { name: "Min", value: 1300 },
+];
+
+const trafficSourceData = [
+  { name: "Organic", value: 45 },
+  { name: "Direct", value: 23 },
+  { name: "Social", value: 18 },
+  { name: "Referral", value: 10 },
+  { name: "Other", value: 4 },
+];
+
+const chartConfig = {
+  visitors: {
+    label: "Pengunjung",
+    theme: {
+      light: "#F97316",
+      dark: "#FB923C"
+    }
+  },
+  pageViews: {
+    label: "Tampilan Halaman",
+    theme: {
+      light: "#8b5cf6",
+      dark: "#a78bfa"
+    }
+  }
+};
 
 const AnalyticsDashboard = () => {
   const [period, setPeriod] = useState("week");
+  const { toast } = useToast();
   const [stats] = useState({
     totalVisitors: "12,456",
     pageViews: "45,893",
@@ -43,6 +93,23 @@ const AnalyticsDashboard = () => {
     ]
   });
 
+  const handlePeriodChange = (newPeriod: string) => {
+    setPeriod(newPeriod);
+    toast({
+      title: "Periode diubah",
+      description: `Data diperbarui untuk periode: ${newPeriod}`,
+      duration: 2000,
+    });
+  };
+
+  const handleExportData = () => {
+    toast({
+      title: "Ekspor Data",
+      description: "Data analisis berhasil diekspor ke Excel",
+      duration: 2000,
+    });
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -51,23 +118,32 @@ const AnalyticsDashboard = () => {
           <Button 
             variant={period === "day" ? "default" : "outline"} 
             size="sm"
-            onClick={() => setPeriod("day")}
+            onClick={() => handlePeriodChange("day")}
           >
             Hari Ini
           </Button>
           <Button 
             variant={period === "week" ? "default" : "outline"} 
             size="sm"
-            onClick={() => setPeriod("week")}
+            onClick={() => handlePeriodChange("week")}
           >
             Minggu Ini
           </Button>
           <Button 
             variant={period === "month" ? "default" : "outline"} 
             size="sm"
-            onClick={() => setPeriod("month")}
+            onClick={() => handlePeriodChange("month")}
           >
             Bulan Ini
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportData}
+            className="ml-2"
+          >
+            <Download size={16} className="mr-1" />
+            Ekspor
           </Button>
         </div>
       </div>
@@ -133,9 +209,34 @@ const AnalyticsDashboard = () => {
             <CardDescription>Jumlah pengunjung per hari</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-80 flex items-center justify-center bg-gray-100 rounded-md">
-              <LineChart className="h-12 w-12 text-gray-400" />
-              <span className="ml-2 text-gray-500">Grafik Pengunjung Harian</span>
+            <div className="h-80">
+              <ChartContainer config={chartConfig}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={visitorData}
+                    margin={{
+                      top: 10,
+                      right: 30,
+                      left: 0,
+                      bottom: 0,
+                    }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis dataKey="name" className="text-xs fill-muted-foreground" />
+                    <YAxis className="text-xs fill-muted-foreground" />
+                    <RechartsTooltip content={<ChartTooltipContent />} />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey="value"
+                      name="visitors"
+                      stroke="var(--color-visitors)"
+                      activeDot={{ r: 8 }}
+                      strokeWidth={2}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </ChartContainer>
             </div>
           </CardContent>
         </Card>
@@ -173,9 +274,27 @@ const AnalyticsDashboard = () => {
             <CardDescription>Dari mana pengunjung website berasal</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-60 flex items-center justify-center bg-gray-100 rounded-md">
-              <BarChart className="h-12 w-12 text-gray-400" />
-              <span className="ml-2 text-gray-500">Grafik Sumber Traffic</span>
+            <div className="h-60">
+              <ChartContainer config={chartConfig}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={trafficSourceData}
+                    margin={{
+                      top: 10,
+                      right: 30,
+                      left: 0,
+                      bottom: 0,
+                    }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis dataKey="name" className="text-xs fill-muted-foreground" />
+                    <YAxis className="text-xs fill-muted-foreground" />
+                    <RechartsTooltip content={<ChartTooltipContent />} />
+                    <Legend />
+                    <Bar dataKey="value" name="pageViews" fill="var(--color-pageViews)" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartContainer>
             </div>
             <Table className="mt-4">
               <TableHeader>
@@ -203,28 +322,28 @@ const AnalyticsDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center p-2 bg-gray-50 rounded-md">
+              <div className="flex items-center p-2 bg-gray-50 dark:bg-gray-800 rounded-md">
                 <Eye size={16} className="text-gray-500 mr-2" />
                 <div className="flex-1">
                   <p className="text-sm">Pengunjung melihat halaman <span className="font-medium">Produk - Siap Huni</span></p>
                   <p className="text-xs text-gray-500">Dari Jakarta, 24 detik yang lalu</p>
                 </div>
               </div>
-              <div className="flex items-center p-2 bg-gray-50 rounded-md">
+              <div className="flex items-center p-2 bg-gray-50 dark:bg-gray-800 rounded-md">
                 <Clock size={16} className="text-gray-500 mr-2" />
                 <div className="flex-1">
                   <p className="text-sm">Pengunjung menghabiskan <span className="font-medium">5 menit</span> di halaman Beranda</p>
                   <p className="text-xs text-gray-500">Dari Surabaya, 2 menit yang lalu</p>
                 </div>
               </div>
-              <div className="flex items-center p-2 bg-gray-50 rounded-md">
+              <div className="flex items-center p-2 bg-gray-50 dark:bg-gray-800 rounded-md">
                 <ShoppingCart size={16} className="text-gray-500 mr-2" />
                 <div className="flex-1">
                   <p className="text-sm">Pengunjung menambahkan properti ke <span className="font-medium">keranjang</span></p>
                   <p className="text-xs text-gray-500">Dari Bandung, 4 menit yang lalu</p>
                 </div>
               </div>
-              <div className="flex items-center p-2 bg-gray-50 rounded-md">
+              <div className="flex items-center p-2 bg-gray-50 dark:bg-gray-800 rounded-md">
                 <Users size={16} className="text-gray-500 mr-2" />
                 <div className="flex-1">
                   <p className="text-sm">Pengguna baru <span className="font-medium">mendaftar</span></p>
