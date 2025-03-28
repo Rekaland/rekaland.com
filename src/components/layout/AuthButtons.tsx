@@ -12,21 +12,25 @@ export const AuthButtons = () => {
       {isAuthenticated ? (
         <UserProfileMenu />
       ) : (
-        <>
+        <div className="flex items-center gap-2">
           <Link to="/login">
             <Button 
               variant="ghost" 
-              className="text-foreground hover:text-rekaland-orange hover:bg-orange-100 dark:hover:bg-orange-900/20"
+              className="text-gray-700 hover:text-rekaland-orange hover:bg-orange-50"
+              size="sm"
             >
               Masuk
             </Button>
           </Link>
           <Link to="/daftar">
-            <Button className="bg-rekaland-orange hover:bg-orange-600 text-white border-transparent">
+            <Button 
+              className="bg-rekaland-orange hover:bg-orange-600 text-white border-transparent"
+              size="sm"
+            >
               Daftar
             </Button>
           </Link>
-        </>
+        </div>
       )}
     </>
   );

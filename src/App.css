@@ -29,25 +29,25 @@ body {
   }
 }
 
-/* Better contrast for light and dark modes */
-.dark .bg-rekaland-orange {
+/* Better contrast for light mode */
+.bg-rekaland-orange {
   background-color: #ff8c38;
 }
 
-.dark .hover\:bg-orange-600:hover {
+.hover\:bg-orange-600:hover {
   background-color: #e67a2e;
 }
 
-.dark .text-foreground {
-  color: #f1f5f9;
+.text-foreground {
+  color: #1f2937;
 }
 
-.dark .border-border {
-  border-color: rgba(255, 255, 255, 0.1);
+.border-border {
+  border-color: rgba(0, 0, 0, 0.1);
 }
 
-.dark .bg-muted {
-  background-color: rgba(255, 255, 255, 0.05);
+.bg-muted {
+  background-color: #f9fafb;
 }
 
 /* Mobile menu improvements */
@@ -160,9 +160,4 @@ body {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.dark .glass-effect {
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.05);
 }
