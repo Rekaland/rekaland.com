@@ -69,48 +69,29 @@ const Navbar = () => {
               Beranda
             </Link>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger className="flex items-center focus:outline-none">
-                <span
-                  className={cn(
-                    "text-rekaland-black hover:text-rekaland-orange transition-colors",
-                    {
-                      "text-rekaland-orange font-medium":
-                        location.pathname.includes("/produk"),
-                    }
-                  )}
-                >
-                  Produk
-                </span>
-                <ChevronDown className="ml-1 w-4 h-4" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="center" className="bg-white w-60">
-                <DropdownMenuItem asChild>
-                  <Link
-                    to="/produk/kavling-kosongan"
-                    className="w-full cursor-pointer hover:bg-rekaland-gray hover:text-rekaland-orange"
-                  >
-                    Kavling Kosongan
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link
-                    to="/produk/kavling-setengah-jadi"
-                    className="w-full cursor-pointer hover:bg-rekaland-gray hover:text-rekaland-orange"
-                  >
-                    Kavling dan Bangunan Setengah Jadi
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link
-                    to="/produk/kavling-siap-huni"
-                    className="w-full cursor-pointer hover:bg-rekaland-gray hover:text-rekaland-orange"
-                  >
-                    Kavling Siap Huni
-                  </Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Link
+              to="/produk"
+              className={cn(
+                "text-rekaland-black hover:text-rekaland-orange transition-colors",
+                {
+                  "text-rekaland-orange font-medium": location.pathname.includes("/produk"),
+                }
+              )}
+            >
+              Produk
+            </Link>
+
+            <Link
+              to="/informasi"
+              className={cn(
+                "text-rekaland-black hover:text-rekaland-orange transition-colors",
+                {
+                  "text-rekaland-orange font-medium": location.pathname.includes("/informasi"),
+                }
+              )}
+            >
+              Informasi
+            </Link>
 
             <Link
               to="/tentang"
@@ -188,35 +169,23 @@ const Navbar = () => {
             >
               Beranda
             </Link>
-            <div className="py-2">
-              <div className="flex justify-between items-center">
-                <span className="text-rekaland-black">Produk</span>
-                <ChevronDown className="w-4 h-4" />
-              </div>
-              <div className="pl-4 mt-2 space-y-2">
-                <Link
-                  to="/produk/kavling-kosongan"
-                  className="block py-1 text-rekaland-black hover:text-rekaland-orange"
-                  onClick={toggleMobileMenu}
-                >
-                  Kavling Kosongan
-                </Link>
-                <Link
-                  to="/produk/kavling-setengah-jadi"
-                  className="block py-1 text-rekaland-black hover:text-rekaland-orange"
-                  onClick={toggleMobileMenu}
-                >
-                  Kavling dan Bangunan Setengah Jadi
-                </Link>
-                <Link
-                  to="/produk/kavling-siap-huni"
-                  className="block py-1 text-rekaland-black hover:text-rekaland-orange"
-                  onClick={toggleMobileMenu}
-                >
-                  Kavling Siap Huni
-                </Link>
-              </div>
-            </div>
+            
+            <Link
+              to="/produk"
+              className="block py-2 text-rekaland-black hover:text-rekaland-orange"
+              onClick={toggleMobileMenu}
+            >
+              Produk
+            </Link>
+            
+            <Link
+              to="/informasi"
+              className="block py-2 text-rekaland-black hover:text-rekaland-orange"
+              onClick={toggleMobileMenu}
+            >
+              Informasi
+            </Link>
+            
             <Link
               to="/tentang"
               className="block py-2 text-rekaland-black hover:text-rekaland-orange"
