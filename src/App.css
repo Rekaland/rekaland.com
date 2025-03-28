@@ -18,6 +18,7 @@ body {
 .main-content {
   margin-top: 4rem;
   min-height: calc(100vh - 4rem);
+  padding-bottom: 2rem; /* Add space for mobile bottom navigation */
 }
 
 /* Perbaikan untuk UI yang lebih responsif */
@@ -49,6 +50,29 @@ body {
   background-color: rgba(255, 255, 255, 0.05);
 }
 
+/* Mobile menu improvements */
+.mobile-menu-container {
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+}
+
+/* Back to top button pulse animation */
+@keyframes buttonPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 140, 56, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(255, 140, 56, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 140, 56, 0);
+  }
+}
+
+.pulse-animation {
+  animation: buttonPulse 2s infinite;
+}
+
 /* Animations */
 .fade-in {
   animation: fadeIn 0.3s ease-out forwards;
@@ -62,5 +86,37 @@ body {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* Sticky menu animation */
+.navbar-sticky {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* Improved readability for mobile */
+@media (max-width: 768px) {
+  h1, h2, h3 {
+    word-break: break-word;
+  }
+  
+  .mobile-menu-item {
+    padding: 0.75rem 1rem;
+    border-radius: 0.375rem;
+    transition: all 0.2s ease;
+  }
+  
+  .mobile-menu-item:active {
+    transform: scale(0.98);
   }
 }

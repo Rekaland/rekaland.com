@@ -2,10 +2,12 @@
 import { Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, User } from "lucide-react";
+import { Search, User, Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { UserProfileMenu } from "./UserProfileMenu";
+import { useTheme } from "@/hooks/useTheme";
+import { Switch } from "@/components/ui/switch";
 
 interface MobileMenuProps {
   location: {
@@ -19,10 +21,30 @@ export const MobileMenu = ({
   toggleMobileMenu 
 }: MobileMenuProps) => {
   const { isAuthenticated } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   
   return (
-    <div className="md:hidden bg-background border-t border-border shadow-lg animate-fade-in">
+    <div className="md:hidden bg-background border-t border-border shadow-lg animate-fade-in max-h-[calc(100vh-4rem)] overflow-y-auto">
       <div className="px-4 py-6 space-y-4">
+        {/* Theme Toggle */}
+        <div className="flex items-center justify-between p-3 mb-2 bg-muted/50 rounded-lg">
+          <div className="flex items-center space-x-3">
+            {theme === "dark" ? (
+              <Moon size={18} className="text-foreground" />
+            ) : (
+              <Sun size={18} className="text-rekaland-orange" />
+            )}
+            <span className="text-foreground">
+              Mode {theme === "dark" ? "Gelap" : "Terang"}
+            </span>
+          </div>
+          <Switch 
+            checked={theme === "dark"} 
+            onCheckedChange={toggleTheme}
+            className="data-[state=checked]:bg-rekaland-orange"
+          />
+        </div>
+        
         <Link
           to="/"
           className={cn(
