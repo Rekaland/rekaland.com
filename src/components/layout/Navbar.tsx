@@ -37,12 +37,14 @@ const Navbar = () => {
           isScrolled ? "shadow-md" : "border-b border-border"
         }`}
       >
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <Link to="/" className="flex items-center">
-              <h1 className="text-2xl font-bold dark:text-white text-rekaland-black">
-                REKA<span className="text-rekaland-orange">LAND</span>
-              </h1>
+              <img 
+                src="/lovable-uploads/rekaland-logo.png" 
+                alt="RekaLand Logo" 
+                className="h-10 mr-2" 
+              />
             </Link>
 
             {/* Desktop Navigation */}

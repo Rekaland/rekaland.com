@@ -1,5 +1,6 @@
 
 import { Button } from "@/components/ui/button";
+import { ArrowRight, MessageCircle } from "lucide-react";
 
 const CtaSection = () => {
   const openWhatsApp = () => {
@@ -28,7 +29,7 @@ const CtaSection = () => {
               className="bg-white text-rekaland-orange hover:bg-gray-100 min-w-40"
               onClick={openWhatsApp}
             >
-              Hubungi Kami
+              <MessageCircle className="mr-2 h-5 w-5" /> Hubungi Kami
             </Button>
             <Button 
               size="lg" 
@@ -36,7 +37,7 @@ const CtaSection = () => {
               className="bg-transparent border-white text-white hover:bg-white hover:text-rekaland-orange min-w-40"
               onClick={handleCatalogClick}
             >
-              Lihat Katalog
+              Lihat Katalog <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </div>
         </div>
