@@ -49,7 +49,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         user: {
           name: "Admin User",
           email: "gueadmin",
-          role: "admin",
+          role: "admin" as "admin", // Explicitly cast as "admin"
           avatar: "https://i.pravatar.cc/150?u=admin",
         },
       };
@@ -66,7 +66,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         user: {
           name: "Regular User",
           email,
-          role: "user",
+          role: "user" as "user", // Explicitly cast as "user"
           avatar: `https://i.pravatar.cc/150?u=${email}`,
         },
       };
@@ -89,7 +89,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       user: {
         name: "Google User",
         email: randomEmail,
-        role: "user",
+        role: "user" as "user", // Explicitly cast as "user"
         avatar: `https://i.pravatar.cc/150?u=${randomEmail}`,
       },
     };
@@ -109,7 +109,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       user: {
         name,
         email,
-        role: "user",
+        role: "user" as "user", // Explicitly cast as "user"
         avatar: `https://i.pravatar.cc/150?u=${email}`,
       },
     };
