@@ -4,14 +4,25 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import MainLayout from "@/layouts/MainLayout";
-import { Grid3X3, Home, Building, Map } from "lucide-react";
+import { Grid3X3, Home, Building, Map, Search } from "lucide-react";
 import { PropertyCategoryCard } from "@/components/products/PropertyCategoryCard";
 import { PropertyCard } from "@/components/products/PropertyCard";
+import { Input } from "@/components/ui/input";
 
 const ProductsPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Parse search query from URL on page load
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const search = searchParams.get('search');
+    if (search) {
+      setSearchTerm(search);
+    }
+  }, [location.search]);
 
   const productCategories = [
     {
@@ -120,15 +131,45 @@ const ProductsPage = () => {
     }
   ];
 
-  // Filter properties based on active tab
-  const filteredProperties = activeTab === "all" 
-    ? properties 
-    : properties.filter(property => {
-        if (activeTab === "empty" && property.type === "Kavling Kosongan") return true;
-        if (activeTab === "semifinished" && property.type === "Kavling Bangunan") return true;
-        if (activeTab === "ready" && property.type === "Kavling Siap Huni") return true;
-        return false;
-      });
+  // Function to handle search form submission
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    navigate(`/produk?search=${encodeURIComponent(searchTerm)}`);
+  };
+
+  // Function to check if property matches search term
+  const matchesSearch = (property: any) => {
+    if (!searchTerm) return true;
+    
+    const searchLower = searchTerm.toLowerCase();
+    
+    // Check title, location, type
+    if (property.title.toLowerCase().includes(searchLower)) return true;
+    if (property.location.toLowerCase().includes(searchLower)) return true;
+    if (property.type.toLowerCase().includes(searchLower)) return true;
+    
+    // Check features
+    if (property.features.some((feature: string) => 
+      feature.toLowerCase().includes(searchLower))) return true;
+    
+    // Check price text
+    if (property.price.toLowerCase().includes(searchLower)) return true;
+    
+    return false;
+  };
+
+  // Filter properties based on active tab AND search term
+  const filteredProperties = properties
+    .filter(property => {
+      // Filter by category
+      if (activeTab === "all") return true;
+      if (activeTab === "empty" && property.type === "Kavling Kosongan") return true;
+      if (activeTab === "semifinished" && property.type === "Kavling Bangunan") return true;
+      if (activeTab === "ready" && property.type === "Kavling Siap Huni") return true;
+      return false;
+    })
+    // Then filter by search term
+    .filter(matchesSearch);
 
   return (
     <MainLayout>
@@ -138,6 +179,24 @@ const ProductsPage = () => {
           <p className="text-gray-600 dark:text-gray-300">
             Temukan berbagai pilihan kavling dan properti dengan lokasi strategis dan harga terjangkau
           </p>
+        </div>
+
+        <div className="mb-6">
+          <form onSubmit={handleSearch} className="relative flex mb-4">
+            <Input
+              type="search"
+              placeholder="Cari properti berdasarkan nama, lokasi, atau fitur..."
+              className="w-full pr-12"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <Button 
+              type="submit" 
+              className="absolute right-0 top-0 h-full px-3 rounded-l-none bg-rekaland-orange hover:bg-orange-600"
+            >
+              <Search className="h-5 w-5" />
+            </Button>
+          </form>
         </div>
 
         <div className="mb-8">
@@ -158,11 +217,32 @@ const ProductsPage = () => {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProperties.map(property => (
-            <PropertyCard key={property.id} property={property} />
-          ))}
-        </div>
+        {filteredProperties.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredProperties.map(property => (
+              <PropertyCard key={property.id} property={property} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <div className="mx-auto mb-4 bg-gray-100 rounded-full p-3 w-16 h-16 flex items-center justify-center">
+              <Search className="h-8 w-8 text-gray-400" />
+            </div>
+            <h3 className="text-xl font-semibold mb-2">Tidak Ada Properti Ditemukan</h3>
+            <p className="text-gray-500 mb-4">
+              Tidak ada properti yang sesuai dengan kriteria pencarian Anda.
+            </p>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setSearchTerm("");
+                navigate("/produk");
+              }}
+            >
+              Reset Pencarian
+            </Button>
+          </div>
+        )}
       </div>
     </MainLayout>
   );

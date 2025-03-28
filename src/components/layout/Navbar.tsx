@@ -5,11 +5,13 @@ import { Search, Menu, X, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AuthButtons } from "./AuthButtons";
 import { cn } from "@/lib/utils";
+import { SearchBar } from "./SearchBar";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState("");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const location = useLocation();
 
   // Deteksi scroll untuk tampilan sticky
@@ -25,6 +27,7 @@ const Navbar = () => {
   useEffect(() => {
     setIsMenuOpen(false);
     setDropdownOpen("");
+    setIsSearchOpen(false);
   }, [location.pathname]);
 
   const toggleMenu = () => {
@@ -34,6 +37,10 @@ const Navbar = () => {
 
   const toggleDropdown = (dropdown: string) => {
     setDropdownOpen(dropdownOpen === dropdown ? "" : dropdown);
+  };
+
+  const toggleSearch = () => {
+    setIsSearchOpen(!isSearchOpen);
   };
 
   const navLinks = [
@@ -68,9 +75,9 @@ const Navbar = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center">
             <img 
-              src="/lovable-uploads/rekaland-logo-full.png" 
+              src="/lovable-uploads/b486d576-e0ba-4dde-92b2-dcac9a60c681.png" 
               alt="Rekaland Logo" 
-              className="h-10 md:h-12" 
+              className="h-8 md:h-10" 
             />
           </Link>
 
@@ -122,13 +129,19 @@ const Navbar = () => {
             ))}
           </nav>
 
-          {/* Right Section - Auth & Icons */}
+          {/* Right Section - Search & Auth */}
           <div className="flex items-center space-x-2">
-            {/* Search Icon */}
+            {/* Desktop Search */}
+            <div className="hidden md:block w-56 lg:w-64">
+              <SearchBar />
+            </div>
+
+            {/* Mobile Search Icon */}
             <Button
               variant="ghost"
               size="icon"
-              className="text-gray-700 hover:text-rekaland-orange hover:bg-orange-50"
+              className="md:hidden text-gray-700 hover:text-rekaland-orange hover:bg-orange-50"
+              onClick={toggleSearch}
               aria-label="Search"
             >
               <Search className="h-5 w-5" />
@@ -152,6 +165,13 @@ const Navbar = () => {
           </div>
         </div>
       </div>
+
+      {/* Mobile Search Bar */}
+      {isSearchOpen && (
+        <div className="md:hidden bg-white py-3 px-4 shadow-md">
+          <SearchBar focusOnMount closeSheet={() => setIsSearchOpen(false)} />
+        </div>
+      )}
 
       {/* Mobile Menu */}
       {isMenuOpen && (
