@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import Layout from "@/components/layout/Layout";
+import MainLayout from "@/layouts/MainLayout";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -81,7 +81,7 @@ const InformationPage = () => {
   });
 
   return (
-    <Layout>
+    <MainLayout>
       <div className="container mx-auto px-4 py-16">
         <div className="mb-10">
           <h1 className="text-3xl font-bold mb-2">Informasi & Artikel</h1>
@@ -226,7 +226,7 @@ const InformationPage = () => {
           </div>
         </div>
       </div>
-    </Layout>
+    </MainLayout>
   );
 };
 

@@ -1,13 +1,10 @@
 
 import { Link } from "react-router-dom";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, User, Moon, Sun, Instagram, MapPin, Phone } from "lucide-react";
+import { Instagram, MapPin, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { UserProfileMenu } from "./UserProfileMenu";
-import { useTheme } from "@/hooks/useTheme";
-import { Switch } from "@/components/ui/switch";
 
 interface MobileMenuProps {
   location: {
@@ -21,7 +18,6 @@ export const MobileMenu = ({
   toggleMobileMenu 
 }: MobileMenuProps) => {
   const { isAuthenticated } = useAuth();
-  const { theme, toggleTheme } = useTheme();
   
   const openWhatsApp = () => {
     const text = encodeURIComponent(
@@ -37,25 +33,6 @@ export const MobileMenu = ({
   return (
     <div className="md:hidden bg-background border-t border-border shadow-lg animate-fade-in max-h-[calc(100vh-4rem)] overflow-y-auto">
       <div className="px-4 py-6 space-y-4">
-        {/* Theme Toggle */}
-        <div className="flex items-center justify-between p-3 mb-2 bg-muted/50 rounded-lg">
-          <div className="flex items-center space-x-3">
-            {theme === "dark" ? (
-              <Moon size={18} className="text-foreground" />
-            ) : (
-              <Sun size={18} className="text-rekaland-orange" />
-            )}
-            <span className="text-foreground">
-              Mode {theme === "dark" ? "Gelap" : "Terang"}
-            </span>
-          </div>
-          <Switch 
-            checked={theme === "dark"} 
-            onCheckedChange={toggleTheme}
-            className="data-[state=checked]:bg-rekaland-orange"
-          />
-        </div>
-        
         <Link
           to="/"
           className={cn(
@@ -107,15 +84,6 @@ export const MobileMenu = ({
         >
           Tentang
         </Link>
-
-        <div className="relative mt-5">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-          <Input
-            type="search"
-            placeholder="Cari..."
-            className="pl-10 w-full bg-muted/50 border-border"
-          />
-        </div>
 
         {/* Contact Info */}
         <div className="mt-6 space-y-3 bg-muted/30 p-4 rounded-lg">

@@ -7,7 +7,13 @@ interface MainLayoutProps {
 }
 
 const MainLayout = ({ children }: MainLayoutProps) => {
-  return <Layout>{children}</Layout>;
+  return (
+    <Layout>
+      <div className="w-full">
+        {children}
+      </div>
+    </Layout>
+  );
 };
 
 export default MainLayout;
