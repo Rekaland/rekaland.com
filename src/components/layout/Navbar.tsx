@@ -107,8 +107,11 @@ const Navbar = () => {
             ) : (
               <>
                 <Link to="/login">
-                  <Button variant="ghost" className="text-rekaland-black hover:text-rekaland-orange">
-                    Login
+                  <Button 
+                    variant="ghost" 
+                    className="text-rekaland-black hover:bg-gray-100 hover:text-rekaland-orange active:bg-gray-200"
+                  >
+                    Masuk
                   </Button>
                 </Link>
                 <Link to="/daftar">
@@ -214,8 +217,8 @@ const Navbar = () => {
               ) : (
                 <>
                   <Link to="/login" onClick={toggleMobileMenu}>
-                    <Button variant="ghost" className="w-full justify-start">
-                      Login
+                    <Button variant="ghost" className="w-full justify-start hover:bg-gray-100 hover:text-rekaland-orange">
+                      Masuk
                     </Button>
                   </Link>
                   <Link to="/daftar" onClick={toggleMobileMenu}>
