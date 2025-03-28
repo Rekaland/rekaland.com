@@ -41,10 +41,19 @@ const Navbar = () => {
           <div className="flex items-center justify-between">
             <Link to="/" className="flex items-center">
               <img 
-                src="/lovable-uploads/rekaland-logo.png" 
+                src="/lovable-uploads/00cd7c13-64b6-4964-ab06-13691f814c9b.png" 
                 alt="RekaLand Logo" 
-                className="h-10 mr-2" 
+                className="h-12 sm:h-14 mr-2" 
+                onError={(e) => {
+                  console.error("Logo failed to load");
+                  e.currentTarget.src = "/placeholder.svg";
+                  e.currentTarget.alt = "RekaLand Logo (fallback)";
+                }}
               />
+              <div className="hidden sm:flex flex-col">
+                <span className="font-bold text-base text-rekaland-orange leading-tight">REKALAND</span>
+                <span className="text-xs text-gray-600 dark:text-gray-400 leading-tight">Invest In Land, Invest In Tomorrow</span>
+              </div>
             </Link>
 
             {/* Desktop Navigation */}

@@ -19,7 +19,7 @@ const SettingsManagement = () => {
           <div className="space-y-4">
             <div>
               <Label htmlFor="site-title">Judul Website</Label>
-              <Input id="site-title" defaultValue="REKALAND - Solusi Properti Anda" />
+              <Input id="site-title" defaultValue="Rekaland: Invest In Land, Invest In Tomorrow" />
             </div>
             <div>
               <Label htmlFor="site-desc">Deskripsi</Label>
@@ -27,13 +27,13 @@ const SettingsManagement = () => {
             </div>
             <div>
               <Label htmlFor="site-keywords">Keywords</Label>
-              <Input id="site-keywords" defaultValue="properti, kavling, rumah, investasi, tanah" />
+              <Input id="site-keywords" defaultValue="properti, kavling, rumah, investasi, tanah, rekaland, lampung" />
             </div>
             <div>
               <Label htmlFor="site-favicon">Favicon</Label>
               <div className="flex items-center mt-2">
                 <div className="h-10 w-10 bg-gray-200 rounded-md flex items-center justify-center mr-4">
-                  <img src="/favicon.ico" alt="Favicon" className="h-6 w-6" />
+                  <img src="/lovable-uploads/00cd7c13-64b6-4964-ab06-13691f814c9b.png" alt="Favicon" className="h-8 w-8" />
                 </div>
                 <Button variant="outline" size="sm">Ganti Favicon</Button>
               </div>
@@ -56,15 +56,15 @@ const SettingsManagement = () => {
             </div>
             <div>
               <Label htmlFor="phone">Telepon</Label>
-              <Input id="phone" defaultValue="021-123456" />
+              <Input id="phone" defaultValue="+62 821-7796-8062" />
             </div>
             <div>
               <Label htmlFor="address">Alamat</Label>
-              <Textarea id="address" defaultValue="Jl. Properti No. 123, Jakarta 12345, Indonesia" />
+              <Textarea id="address" defaultValue="Cisarua, Lampung Selatan, Lampung" />
             </div>
             <div>
               <Label htmlFor="instagram">Instagram</Label>
-              <Input id="instagram" defaultValue="@rekaland_id" />
+              <Input id="instagram" defaultValue="@rekaland.idn" />
             </div>
             <div>
               <Label htmlFor="facebook">Facebook</Label>
@@ -72,7 +72,7 @@ const SettingsManagement = () => {
             </div>
             <div>
               <Label htmlFor="whatsapp">WhatsApp</Label>
-              <Input id="whatsapp" defaultValue="+62812345678" />
+              <Input id="whatsapp" defaultValue="+6282177968062" />
             </div>
             <Button>Simpan Perubahan</Button>
           </div>
