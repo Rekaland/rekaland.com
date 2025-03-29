@@ -18,6 +18,18 @@ interface SupabaseConnectionProps {
   isConnected?: boolean;
 }
 
+// Define a type for the valid table names
+type TableName = "properties" | "profiles" | "inquiries";
+
+// Type for table status
+type TableStatus = "pending" | "checking" | "available" | "unavailable";
+
+// Table interface
+interface TableInfo {
+  name: TableName;
+  status: TableStatus;
+}
+
 const SupabaseConnection = ({ onPublish, onConnectionChange, isConnected: initialIsConnected }: SupabaseConnectionProps) => {
   const { toast } = useToast();
   const [showApiKey, setShowApiKey] = useState(false);
@@ -37,7 +49,7 @@ const SupabaseConnection = ({ onPublish, onConnectionChange, isConnected: initia
   });
   
   // Tables status
-  const [tables, setTables] = useState([
+  const [tables, setTables] = useState<TableInfo[]>([
     { name: "properties", status: "pending" },
     { name: "profiles", status: "pending" },
     { name: "inquiries", status: "pending" }
@@ -90,12 +102,19 @@ const SupabaseConnection = ({ onPublish, onConnectionChange, isConnected: initia
         updatedTables[i].status = "checking";
         setTables([...updatedTables]);
         
-        const { data, error } = await supabase
-          .from(updatedTables[i].name)
-          .select('count')
-          .limit(1);
+        const tableName = updatedTables[i].name;
+        let result;
         
-        if (error) {
+        // Type-safe table query based on table name
+        if (tableName === "properties") {
+          result = await supabase.from("properties").select('count').limit(1);
+        } else if (tableName === "profiles") {
+          result = await supabase.from("profiles").select('count').limit(1);
+        } else if (tableName === "inquiries") {
+          result = await supabase.from("inquiries").select('count').limit(1);
+        }
+        
+        if (result?.error) {
           updatedTables[i].status = "unavailable";
         } else {
           updatedTables[i].status = "available";
@@ -527,3 +546,4 @@ const SupabaseConnection = ({ onPublish, onConnectionChange, isConnected: initia
 };
 
 export default SupabaseConnection;
+
