@@ -3,11 +3,12 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, Globe, Database } from "lucide-react";
+import { Eye, Globe, Database, AlertTriangle } from "lucide-react";
 import DeploymentStatus from "./publication/DeploymentStatus";
 import DeploymentHistory from "./publication/DeploymentHistory";
 import ChangeHistory from "./publication/ChangeHistory";
 import SupabaseConnection from "./publication/SupabaseConnection";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 // Simulasi data untuk riwayat deployment
 const mockDeploymentHistory = [
@@ -17,12 +18,42 @@ const mockDeploymentHistory = [
   { id: 4, version: "v1.2.0", timestamp: "1 Jun 2023 10:15", status: "Sukses", author: "Admin User", changes: 23 },
 ];
 
-const PublicationPanel = () => {
+interface PublicationPanelProps {
+  hasUnsavedChanges?: boolean;
+  lastSaved?: string | null;
+}
+
+const PublicationPanel = ({ hasUnsavedChanges, lastSaved }: PublicationPanelProps) => {
   const { toast } = useToast();
   const [deploymentHistory, setDeploymentHistory] = useState(mockDeploymentHistory);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [activeTab, setActiveTab] = useState("deployment");
   
   const handlePublish = async () => {
+    // Periksa koneksi terlebih dahulu
+    if (!isConnected) {
+      toast({
+        title: "Koneksi Supabase tidak ditemukan",
+        description: "Silakan hubungkan ke Supabase terlebih dahulu.",
+        variant: "destructive",
+        duration: 5000,
+      });
+      setActiveTab("connection");
+      return;
+    }
+    
+    // Periksa perubahan yang belum disimpan
+    if (hasUnsavedChanges) {
+      toast({
+        title: "Perubahan belum disimpan",
+        description: "Harap simpan perubahan sebelum publikasi",
+        variant: "destructive",
+        duration: 5000,
+      });
+      return;
+    }
+    
     setIsPublishing(true);
     
     toast({
@@ -73,6 +104,11 @@ const PublicationPanel = () => {
       setIsPublishing(false);
     }
   };
+  
+  // Saat menghubungkan ke Supabase
+  const handleConnectionUpdate = (status: boolean) => {
+    setIsConnected(status);
+  };
 
   return (
     <div className="space-y-6">
@@ -101,7 +137,7 @@ const PublicationPanel = () => {
           </Button>
           <Button 
             onClick={handlePublish}
-            disabled={isPublishing}
+            disabled={isPublishing || hasUnsavedChanges || !isConnected}
             className="bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0 hover:from-orange-600 hover:to-amber-600 flex items-center gap-2"
           >
             {isPublishing ? (
@@ -119,7 +155,27 @@ const PublicationPanel = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="deployment">
+      {hasUnsavedChanges && (
+        <Alert variant="warning" className="bg-amber-50 border-amber-200">
+          <AlertTriangle className="h-4 w-4 text-amber-500" />
+          <AlertTitle className="text-amber-800">Perubahan belum disimpan</AlertTitle>
+          <AlertDescription className="text-amber-700">
+            Anda memiliki perubahan yang belum disimpan. Harap simpan perubahan sebelum publikasi.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {!isConnected && (
+        <Alert variant="warning" className="bg-blue-50 border-blue-200">
+          <Database className="h-4 w-4 text-blue-500" />
+          <AlertTitle className="text-blue-800">Koneksi Supabase diperlukan</AlertTitle>
+          <AlertDescription className="text-blue-700">
+            Hubungkan ke Supabase terlebih dahulu melalui tab Koneksi Supabase di bawah ini.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid grid-cols-3 mb-4">
           <TabsTrigger value="deployment">Status Deployment</TabsTrigger>
           <TabsTrigger value="history">Riwayat Perubahan</TabsTrigger>
@@ -127,7 +183,7 @@ const PublicationPanel = () => {
         </TabsList>
 
         <TabsContent value="deployment" className="space-y-4">
-          <DeploymentStatus />
+          <DeploymentStatus isConnected={isConnected} lastSaved={lastSaved} />
           <DeploymentHistory deploymentHistory={deploymentHistory} />
         </TabsContent>
 
@@ -136,7 +192,7 @@ const PublicationPanel = () => {
         </TabsContent>
 
         <TabsContent value="connection" className="space-y-4">
-          <SupabaseConnection onPublish={handlePublish} />
+          <SupabaseConnection onPublish={handlePublish} onConnectionUpdate={handleConnectionUpdate} />
         </TabsContent>
       </Tabs>
     </div>
