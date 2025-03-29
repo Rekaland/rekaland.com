@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Database, Eye, FileText, RefreshCw, Check, X, Save, Globe, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -13,15 +12,16 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface SupabaseConnectionProps {
   onPublish?: () => void;
-  onConnectionUpdate?: (status: boolean) => void;
+  onConnectionChange?: (connected: boolean) => void;
+  isConnected?: boolean;
 }
 
-const SupabaseConnection = ({ onPublish, onConnectionUpdate }: SupabaseConnectionProps) => {
+const SupabaseConnection = ({ onPublish, onConnectionChange, isConnected: initialIsConnected }: SupabaseConnectionProps) => {
   const { toast } = useToast();
   const [showApiKey, setShowApiKey] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSync, setLastSync] = useState("Belum pernah disinkronkan");
-  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'pending'>('pending');
+  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'pending'>(initialIsConnected ? 'connected' : 'pending');
   const [connectionInProgress, setConnectionInProgress] = useState(false);
   
   // Form state
@@ -43,10 +43,10 @@ const SupabaseConnection = ({ onPublish, onConnectionUpdate }: SupabaseConnectio
   
   useEffect(() => {
     // Notify parent component about connection status
-    if (onConnectionUpdate) {
-      onConnectionUpdate(connectionStatus === 'connected');
+    if (onConnectionChange) {
+      onConnectionChange(connectionStatus === 'connected');
     }
-  }, [connectionStatus, onConnectionUpdate]);
+  }, [connectionStatus, onConnectionChange]);
   
   const handleConnect = async () => {
     // Validasi form

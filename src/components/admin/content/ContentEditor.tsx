@@ -16,9 +16,10 @@ interface ContentData {
 
 interface ContentEditorProps {
   initialContent: ContentData;
+  onSave?: (content: ContentData) => void;
 }
 
-export const ContentEditor = ({ initialContent }: ContentEditorProps) => {
+export const ContentEditor = ({ initialContent, onSave }: ContentEditorProps) => {
   const { toast } = useToast();
   const [content, setContent] = useState<ContentData>(initialContent);
 
@@ -34,6 +35,11 @@ export const ContentEditor = ({ initialContent }: ContentEditorProps) => {
 
   const handleSaveContent = (e: React.MouseEvent) => {
     e.preventDefault();
+    
+    if (onSave) {
+      onSave(content);
+    }
+    
     toast({
       title: "Konten tersimpan!",
       description: "Perubahan pada konten berhasil disimpan",

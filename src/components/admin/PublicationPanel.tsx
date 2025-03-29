@@ -182,7 +182,10 @@ const PublicationPanel = ({ hasUnsavedChanges, lastSaved }: PublicationPanelProp
         </TabsContent>
         
         <TabsContent value="connection">
-          <SupabaseConnection onConnectionChange={handleConnectionChange} isConnected={isConnected} />
+          <SupabaseConnection 
+            onConnectionChange={handleConnectionChange} 
+            isConnected={isConnected}
+          />
         </TabsContent>
         
         <TabsContent value="history">

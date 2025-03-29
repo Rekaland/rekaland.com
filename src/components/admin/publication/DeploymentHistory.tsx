@@ -14,11 +14,39 @@ interface DeploymentRecord {
   changes: number;
 }
 
-interface DeploymentHistoryProps {
+export interface DeploymentHistoryProps {
   deploymentHistory: DeploymentRecord[];
 }
 
-const DeploymentHistory = ({ deploymentHistory }: DeploymentHistoryProps) => {
+// Sample data for deployment history
+const defaultDeploymentHistory: DeploymentRecord[] = [
+  {
+    id: 1,
+    version: "v1.2.0",
+    timestamp: "15 Jun 2023 13:45",
+    status: "Sukses",
+    author: "Admin",
+    changes: 12
+  },
+  {
+    id: 2,
+    version: "v1.1.5",
+    timestamp: "10 Jun 2023 09:20",
+    status: "Sukses",
+    author: "Admin",
+    changes: 5
+  },
+  {
+    id: 3,
+    version: "v1.1.0",
+    timestamp: "05 Jun 2023 16:30",
+    status: "Sukses",
+    author: "Admin",
+    changes: 8
+  }
+];
+
+const DeploymentHistory = ({ deploymentHistory = defaultDeploymentHistory }: DeploymentHistoryProps) => {
   return (
     <Card>
       <CardHeader className="pb-2">
