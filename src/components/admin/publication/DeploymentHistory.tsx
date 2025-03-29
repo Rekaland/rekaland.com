@@ -2,10 +2,9 @@
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-interface DeploymentRecord {
+export interface DeploymentRecord {
   id: number;
   version: string;
   timestamp: string;
@@ -15,7 +14,7 @@ interface DeploymentRecord {
 }
 
 export interface DeploymentHistoryProps {
-  deploymentHistory: DeploymentRecord[];
+  deploymentHistory?: DeploymentRecord[];
 }
 
 // Sample data for deployment history

@@ -10,7 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import DeploymentStatus from "./publication/DeploymentStatus";
-import DeploymentHistory from "./publication/DeploymentHistory";
+import DeploymentHistory, { DeploymentRecord } from "./publication/DeploymentHistory";
 import SupabaseConnection from "./publication/SupabaseConnection";
 
 interface PublicationPanelProps {
@@ -24,6 +24,34 @@ const PublicationPanel = ({ hasUnsavedChanges, lastSaved }: PublicationPanelProp
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishProgress, setPublishProgress] = useState(0);
   const [activeTab, setActiveTab] = useState("status");
+  
+  // Sample deployment history data
+  const deploymentHistoryData: DeploymentRecord[] = [
+    {
+      id: 1,
+      version: "v1.2.0",
+      timestamp: "15 Jun 2023 13:45",
+      status: "Sukses",
+      author: "Admin",
+      changes: 12
+    },
+    {
+      id: 2,
+      version: "v1.1.5",
+      timestamp: "10 Jun 2023 09:20",
+      status: "Sukses",
+      author: "Admin",
+      changes: 5
+    },
+    {
+      id: 3,
+      version: "v1.1.0",
+      timestamp: "05 Jun 2023 16:30",
+      status: "Sukses",
+      author: "Admin",
+      changes: 8
+    }
+  ];
   
   // Function to handle supabase connection state update
   const handleConnectionChange = (connected: boolean) => {
@@ -189,7 +217,7 @@ const PublicationPanel = ({ hasUnsavedChanges, lastSaved }: PublicationPanelProp
         </TabsContent>
         
         <TabsContent value="history">
-          <DeploymentHistory />
+          <DeploymentHistory deploymentHistory={deploymentHistoryData} />
         </TabsContent>
       </Tabs>
     </div>
