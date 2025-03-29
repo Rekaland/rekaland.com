@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +14,16 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Cek apakah ada redirect_to parameter
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    const redirectTo = queryParams.get('redirect_to');
+    if (redirectTo) {
+      localStorage.setItem('redirectAfterLogin', redirectTo);
+    }
+  }, [location]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,18 +33,18 @@ const LoginPage = () => {
       const success = login(email, password);
       
       if (success) {
-        navigate("/");
+        handlePostLoginActions();
       } else {
         toast({
-          title: "Login Gagal",
-          description: "Email atau password tidak valid",
+          title: "Gagal Masuk",
+          description: "Email atau kata sandi tidak valid",
           variant: "destructive",
         });
       }
     } catch (error) {
       toast({
         title: "Error",
-        description: "Terjadi kesalahan saat login",
+        description: "Terjadi kesalahan saat masuk",
         variant: "destructive",
       });
     } finally {
@@ -49,16 +59,49 @@ const LoginPage = () => {
       const success = loginWithGoogle();
       
       if (success) {
-        navigate("/");
+        handlePostLoginActions();
       }
     } catch (error) {
       toast({
         title: "Error",
-        description: "Terjadi kesalahan saat login dengan Google",
+        description: "Terjadi kesalahan saat masuk dengan Google",
         variant: "destructive",
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePostLoginActions = () => {
+    // Cek apakah ada properti yang ingin disimpan sebelum login
+    const propertyToSave = localStorage.getItem('lastPropertyToSave');
+    if (propertyToSave) {
+      // Simulasi menyimpan properti
+      const propertyId = parseInt(propertyToSave);
+      const savedProperties = JSON.parse(localStorage.getItem(`savedProperties_${email}`) || '[]');
+      
+      if (!savedProperties.includes(propertyId)) {
+        savedProperties.push(propertyId);
+        localStorage.setItem(`savedProperties_${email}`, JSON.stringify(savedProperties));
+        
+        toast({
+          title: "Properti Disimpan",
+          description: "Properti telah ditambahkan ke daftar yang Anda minati",
+          className: "bg-gradient-to-r from-green-500 to-green-600 text-white border-0",
+        });
+      }
+      
+      // Hapus properti dari localStorage
+      localStorage.removeItem('lastPropertyToSave');
+    }
+    
+    // Cek apakah ada halaman redirect setelah login
+    const redirectPath = localStorage.getItem('redirectAfterLogin');
+    if (redirectPath) {
+      localStorage.removeItem('redirectAfterLogin');
+      navigate(redirectPath);
+    } else {
+      navigate("/");
     }
   };
 
@@ -100,11 +143,11 @@ const LoginPage = () => {
                   className="mt-1"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Gunakan 'gueadmin' untuk login sebagai admin
+                  Gunakan 'gueadmin' untuk masuk sebagai admin
                 </p>
               </div>
               <div>
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">Kata Sandi</Label>
                 <Input
                   id="password"
                   name="password"
@@ -116,7 +159,7 @@ const LoginPage = () => {
                   className="mt-1"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Gunakan 'gueadmin' untuk login sebagai admin
+                  Gunakan 'gueadmin' untuk masuk sebagai admin
                 </p>
               </div>
             </div>
@@ -142,7 +185,7 @@ const LoginPage = () => {
                   href="#"
                   className="font-medium text-rekaland-orange hover:text-orange-500"
                 >
-                  Lupa password?
+                  Lupa kata sandi?
                 </a>
               </div>
             </div>

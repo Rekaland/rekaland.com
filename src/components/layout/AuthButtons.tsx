@@ -13,7 +13,7 @@ export const AuthButtons = () => {
         <UserProfileMenu />
       ) : (
         <div className="flex items-center gap-2">
-          <Link to="/login">
+          <Link to="/login?redirect_to=/produk">
             <Button 
               variant="ghost" 
               className="text-gray-700 hover:text-rekaland-orange hover:bg-orange-50"

@@ -8,10 +8,12 @@ import { Grid3X3, Home, Building, Map, Search } from "lucide-react";
 import { PropertyCategoryCard } from "@/components/products/PropertyCategoryCard";
 import { PropertyCard } from "@/components/products/PropertyCard";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/hooks/useAuth";
 
 const ProductsPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { isAuthenticated, user } = useAuth();
   const [activeTab, setActiveTab] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -21,8 +23,32 @@ const ProductsPage = () => {
     const search = searchParams.get('search');
     if (search) {
       setSearchTerm(search);
+      
+      // Jika user sudah login, tambahkan ke riwayat pencarian
+      if (isAuthenticated && user) {
+        const searchHistory = JSON.parse(localStorage.getItem(`searchHistory_${user.email}`) || '[]');
+        
+        // Cek jika pencarian ini belum ada di riwayat
+        if (!searchHistory.some((item: any) => 
+          item.type === 'search' && item.keyword === search)) {
+          
+          const historyItem = { 
+            id: Date.now(), 
+            type: 'search', 
+            keyword: search, 
+            timestamp: new Date().toISOString() 
+          };
+          
+          searchHistory.unshift(historyItem);
+          
+          // Batasi riwayat pencarian hingga 20 item
+          if (searchHistory.length > 20) searchHistory.pop();
+          
+          localStorage.setItem(`searchHistory_${user.email}`, JSON.stringify(searchHistory));
+        }
+      }
     }
-  }, [location.search]);
+  }, [location.search, isAuthenticated, user]);
 
   const productCategories = [
     {
@@ -65,6 +91,9 @@ const ProductsPage = () => {
     else if (path.includes("kavling-kosongan")) setActiveTab("empty");
     else if (path.includes("kavling-setengah-jadi")) setActiveTab("semifinished");
     else if (path.includes("kavling-siap-huni")) setActiveTab("ready");
+    
+    // Menyimpan semua properti dalam localStorage untuk diakses dari halaman lain
+    localStorage.setItem('allProperties', JSON.stringify(properties));
   }, [location.pathname]);
 
   // Sample properties data
@@ -134,6 +163,29 @@ const ProductsPage = () => {
   // Function to handle search form submission
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    // Jika user sudah login, tambahkan ke riwayat pencarian
+    if (isAuthenticated && user && searchTerm) {
+      const searchHistory = JSON.parse(localStorage.getItem(`searchHistory_${user.email}`) || '[]');
+      
+      const historyItem = { 
+        id: Date.now(), 
+        type: 'search', 
+        keyword: searchTerm, 
+        timestamp: new Date().toISOString() 
+      };
+      
+      searchHistory.unshift(historyItem);
+      
+      // Batasi riwayat pencarian hingga 20 item
+      if (searchHistory.length > 20) searchHistory.pop();
+      
+      localStorage.setItem(`searchHistory_${user.email}`, JSON.stringify(searchHistory));
+    } else if (!isAuthenticated && searchTerm) {
+      // Jika belum login dan mencoba mencari, simpan kata kunci untuk disimpan setelah login
+      localStorage.setItem('lastSearchKeyword', searchTerm);
+    }
+    
     navigate(`/produk?search=${encodeURIComponent(searchTerm)}`);
   };
 
