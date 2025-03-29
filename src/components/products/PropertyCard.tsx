@@ -3,7 +3,7 @@ import { FC, useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, ArrowRight, Check, Bookmark } from "lucide-react";
+import { MapPin, ArrowRight, Check, Bookmark, Heart, Eye, Share2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 
@@ -27,6 +27,7 @@ export const PropertyCard: FC<PropertyCardProps> = ({ property }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isSaved, setIsSaved] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   
   // Cek apakah properti sudah tersimpan oleh user
   useEffect(() => {
@@ -111,54 +112,88 @@ export const PropertyCard: FC<PropertyCardProps> = ({ property }) => {
   };
 
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 border-0">
-      <div className="relative h-60">
-        <img 
-          src={property.image} 
-          alt={property.title} 
-          className="w-full h-full object-cover" 
-        />
-        <span className="absolute top-3 left-3 bg-rekaland-orange text-white px-3 py-1 text-sm rounded-full">
+    <Card 
+      className="overflow-hidden hover:shadow-lg transition-all duration-300 border border-gray-200 rounded-xl"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className="relative h-56">
+        {/* Gambar dengan hover zoom effect */}
+        <div className="absolute inset-0 overflow-hidden">
+          <img 
+            src={property.image} 
+            alt={property.title} 
+            className={`w-full h-full object-cover transition-transform duration-500 ${isHovered ? 'scale-110' : 'scale-100'}`}
+          />
+        </div>
+        
+        {/* Overlay gradient pada hover */}
+        <div className={`absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-${isHovered ? '100' : '70'} transition-opacity duration-300`}></div>
+        
+        {/* Label properti */}
+        <span className="absolute top-3 left-3 bg-rekaland-orange text-white px-3 py-1 text-sm font-medium rounded-full shadow-md">
           {property.type}
         </span>
+        
+        {/* Tombol simpan */}
         <Button 
           variant="ghost"
           size="icon"
-          className={`absolute top-3 right-3 rounded-full p-1 bg-white ${isSaved ? 'text-rekaland-orange' : 'text-gray-500'} hover:text-rekaland-orange hover:bg-white/90`}
+          className={`absolute top-3 right-3 rounded-full p-1.5 bg-white shadow-md ${isSaved ? 'text-rekaland-orange' : 'text-gray-500'} hover:text-rekaland-orange hover:bg-white/90 transition-all duration-300`}
           onClick={handleSaveProperty}
         >
-          <Bookmark 
+          <Heart 
             size={18} 
             className={isSaved ? "fill-current" : ""} 
           />
         </Button>
+        
+        {/* Action buttons yang muncul pada hover */}
+        <div className={`absolute bottom-3 right-3 flex gap-2 transition-all duration-300 ${isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full bg-white/90 shadow-md hover:bg-white text-gray-700 hover:text-rekaland-orange"
+            onClick={() => navigate(`/produk/detail/${property.id}`)}
+          >
+            <Eye size={16} />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full bg-white/90 shadow-md hover:bg-white text-gray-700 hover:text-rekaland-orange"
+          >
+            <Share2 size={16} />
+          </Button>
+        </div>
       </div>
+      
       <CardContent className="p-4">
-        <h3 className="font-bold text-lg mb-2">{property.title}</h3>
+        <h3 className="font-bold text-lg mb-2 line-clamp-1 group-hover:text-rekaland-orange transition-colors">{property.title}</h3>
         <div className="flex items-center mb-3 text-gray-500">
-          <MapPin size={16} className="mr-1" />
-          <span className="text-sm">{property.location}</span>
+          <MapPin size={16} className="mr-1 text-rekaland-orange flex-shrink-0" />
+          <span className="text-sm line-clamp-1">{property.location}</span>
         </div>
         
         <div className="flex justify-between mb-4">
-          <span className="font-bold text-rekaland-orange">{property.price}</span>
-          <span className="text-gray-500">{property.area}</span>
+          <span className="font-bold text-rekaland-orange text-lg">{property.price}</span>
+          <span className="text-gray-700 font-medium">{property.area}</span>
         </div>
         
         <div className="border-t border-gray-100 pt-3 mt-2">
           <div className="grid grid-cols-1 gap-1 mb-3">
-            {property.features.map((feature, index) => (
+            {property.features.slice(0, 3).map((feature, index) => (
               <div key={index} className="flex items-center text-sm text-gray-600">
-                <Check size={14} className="text-green-500 mr-2" />
-                {feature}
+                <Check size={14} className="text-green-500 mr-2 flex-shrink-0" />
+                <span className="line-clamp-1">{feature}</span>
               </div>
             ))}
           </div>
           <Button 
             onClick={openWhatsApp}
-            className="w-full bg-gray-100 text-rekaland-black hover:bg-rekaland-orange hover:text-white transition-colors"
+            className="w-full bg-gray-100 text-rekaland-black hover:bg-rekaland-orange hover:text-white transition-colors font-medium"
           >
-            Hubungi Kami <ArrowRight size={16} className="ml-2" />
+            Hubungi Agen <ArrowRight size={16} className="ml-2" />
           </Button>
         </div>
       </CardContent>
