@@ -35,9 +35,11 @@ export const useSupabaseConnection = (initialIsConnected?: boolean) => {
 
   const checkSupabaseConnection = async () => {
     try {
-      const { data, error } = await supabase.from('properties').select('count').limit(1);
+      // Gunakan properti yang pasti ada di tabel
+      const { data, error } = await supabase.from('properties').select('id').limit(1);
       
       if (error) {
+        console.error("Connection error:", error.message);
         setConnectionStatus('disconnected');
         throw error;
       }
@@ -73,11 +75,11 @@ export const useSupabaseConnection = (initialIsConnected?: boolean) => {
         
         // Type-safe table query based on table name
         if (tableName === "properties") {
-          result = await supabase.from("properties").select('count').limit(1);
+          result = await supabase.from("properties").select('id').limit(1);
         } else if (tableName === "profiles") {
-          result = await supabase.from("profiles").select('count').limit(1);
+          result = await supabase.from("profiles").select('id').limit(1);
         } else if (tableName === "inquiries") {
-          result = await supabase.from("inquiries").select('count').limit(1);
+          result = await supabase.from("inquiries").select('id').limit(1);
         }
         
         if (result?.error) {

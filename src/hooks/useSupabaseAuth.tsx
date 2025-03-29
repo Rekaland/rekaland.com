@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Session, User } from "@supabase/supabase-js";
+import { Session } from "@supabase/supabase-js";
 import { supabase, ExtendedUser } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -22,12 +22,16 @@ export const useSupabaseAuth = () => {
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         if (session) {
+          console.log("Auth state change event:", event);
+          console.log("Session user:", session.user);
+          
           // Create extended user with basic info
           const extendedUser: ExtendedUser = {
             id: session.user.id,
             email: session.user.email,
+            name: session.user?.user_metadata?.full_name,
           };
 
           setAuthState(prevState => ({
@@ -56,10 +60,13 @@ export const useSupabaseAuth = () => {
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
+        console.log("Found existing session:", session);
+        
         // Create extended user with basic info
         const extendedUser: ExtendedUser = {
           id: session.user.id,
           email: session.user.email,
+          name: session.user?.user_metadata?.full_name,
         };
 
         setAuthState(prevState => ({
@@ -83,6 +90,8 @@ export const useSupabaseAuth = () => {
 
   const fetchUserProfile = async (userId: string) => {
     try {
+      console.log("Fetching profile for user:", userId);
+      
       // Ambil profil pengguna
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
@@ -90,13 +99,23 @@ export const useSupabaseAuth = () => {
         .eq('id', userId)
         .single();
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+        throw profileError;
+      }
+      
+      console.log("User profile data:", profile);
 
       // Cek apakah pengguna adalah admin
       const { data: isAdminData, error: isAdminError } = await supabase
         .rpc('is_admin', { user_id: userId });
 
-      if (isAdminError) throw isAdminError;
+      if (isAdminError) {
+        console.error("Error checking admin status:", isAdminError);
+        throw isAdminError;
+      }
+      
+      console.log("Is user admin:", isAdminData);
 
       // Update user with profile data
       setAuthState(prevState => {
