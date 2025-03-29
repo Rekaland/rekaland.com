@@ -20,6 +20,7 @@ import SemiFinishedLotPage from "./pages/products/SemiFinishedLotPage";
 import ReadyToOccupyPage from "./pages/products/ReadyToOccupyPage";
 import SettingsPage from "./pages/SettingsPage";
 import HelpPage from "./pages/HelpPage";
+import AuthPage from "./pages/AuthPage";
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient();
@@ -34,8 +35,8 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/tentang" element={<AboutPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/daftar" element={<RegisterPage />} />
+            <Route path="/login" element={<AuthPage />} />
+            <Route path="/daftar" element={<AuthPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/help" element={<HelpPage />} />

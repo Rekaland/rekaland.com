@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Database, Eye, FileText, RefreshCw, Check, X, Save, Globe, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SupabaseConnectionProps {
   onPublish?: () => void;
@@ -25,9 +27,9 @@ const SupabaseConnection = ({ onPublish, onConnectionChange, isConnected: initia
   const [connectionInProgress, setConnectionInProgress] = useState(false);
   
   // Form state
-  const [projectId, setProjectId] = useState("");
-  const [apiUrl, setApiUrl] = useState("");
-  const [apiKey, setApiKey] = useState("");
+  const [projectId, setProjectId] = useState("qnzmhgvpynokshnlbsiw");
+  const [apiUrl, setApiUrl] = useState("https://qnzmhgvpynokshnlbsiw.supabase.co");
+  const [apiKey, setApiKey] = useState("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuem1oZ3ZweW5va3Nobmxic2l3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyNzI3NTUsImV4cCI6MjA1ODg0ODc1NX0.viIBr28yGeY9SaD9tYejkQ-5_Ihk69VygMYh6l-VThA");
   const [formErrors, setFormErrors] = useState({
     projectId: false,
     apiUrl: false,
@@ -37,8 +39,8 @@ const SupabaseConnection = ({ onPublish, onConnectionChange, isConnected: initia
   // Tables status
   const [tables, setTables] = useState([
     { name: "properties", status: "pending" },
-    { name: "users", status: "pending" },
-    { name: "content", status: "pending" }
+    { name: "profiles", status: "pending" },
+    { name: "inquiries", status: "pending" }
   ]);
   
   useEffect(() => {
@@ -47,6 +49,64 @@ const SupabaseConnection = ({ onPublish, onConnectionChange, isConnected: initia
       onConnectionChange(connectionStatus === 'connected');
     }
   }, [connectionStatus, onConnectionChange]);
+  
+  // Periksa koneksi Supabase saat komponen dimuat
+  useEffect(() => {
+    checkSupabaseConnection();
+  }, []);
+
+  const checkSupabaseConnection = async () => {
+    try {
+      const { data, error } = await supabase.from('properties').select('count').limit(1);
+      
+      if (error) {
+        setConnectionStatus('disconnected');
+        throw error;
+      }
+      
+      setConnectionStatus('connected');
+      fetchTablesStatus();
+      
+      const now = new Date();
+      const formattedDate = now.toLocaleDateString('id-ID', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      setLastSync(formattedDate);
+    } catch (error) {
+      console.error("Connection check failed:", error);
+      setConnectionStatus('disconnected');
+    }
+  };
+  
+  const fetchTablesStatus = async () => {
+    const updatedTables = [...tables];
+    
+    for (let i = 0; i < updatedTables.length; i++) {
+      try {
+        updatedTables[i].status = "checking";
+        setTables([...updatedTables]);
+        
+        const { data, error } = await supabase
+          .from(updatedTables[i].name)
+          .select('count')
+          .limit(1);
+        
+        if (error) {
+          updatedTables[i].status = "unavailable";
+        } else {
+          updatedTables[i].status = "available";
+        }
+      } catch (error) {
+        updatedTables[i].status = "unavailable";
+      }
+    }
+    
+    setTables(updatedTables);
+  };
   
   const handleConnect = async () => {
     // Validasi form
@@ -76,31 +136,12 @@ const SupabaseConnection = ({ onPublish, onConnectionChange, isConnected: initia
     });
     
     try {
-      // Di sini nantinya kita akan melakukan koneksi ke Supabase sebenarnya
-      // Untuk saat ini, kita gunakan simulasi
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Periksa koneksi Supabase
+      await checkSupabaseConnection();
       
-      // Simulasi pengecekan tabel
-      setTables(prev => prev.map(table => ({...table, status: "checking"})));
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Simulasi hasil pengecekan
-      setTables([
-        { name: "properties", status: "available" },
-        { name: "users", status: "available" },
-        { name: "content", status: "available" }
-      ]);
-      
-      setConnectionStatus('connected');
-      const now = new Date();
-      const formattedDate = now.toLocaleDateString('id-ID', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-      setLastSync(formattedDate);
+      if (connectionStatus !== 'connected') {
+        throw new Error("Tidak dapat terhubung ke Supabase");
+      }
       
       toast({
         title: "Koneksi berhasil",
@@ -142,8 +183,8 @@ const SupabaseConnection = ({ onPublish, onConnectionChange, isConnected: initia
     });
     
     try {
-      // Simulasi proses sinkronisasi
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Periksa kembali status tabel
+      await fetchTablesStatus();
       
       const now = new Date();
       const formattedDate = now.toLocaleDateString('id-ID', {
@@ -175,30 +216,24 @@ const SupabaseConnection = ({ onPublish, onConnectionChange, isConnected: initia
   };
   
   const handleTestConnection = async () => {
-    if (connectionStatus !== 'connected') {
-      toast({
-        title: "Koneksi tidak aktif",
-        description: "Harap hubungkan ke Supabase terlebih dahulu.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    toast({
-      title: "Menguji koneksi",
-      description: "Memeriksa koneksi ke Supabase",
-      duration: 1000,
-    });
-    
     try {
-      // Simulasi pengujian koneksi
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
       toast({
-        title: "Koneksi berhasil",
-        description: "Berhasil terhubung ke database Supabase",
-        className: "bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg",
+        title: "Menguji koneksi",
+        description: "Memeriksa koneksi ke Supabase",
+        duration: 1000,
       });
+      
+      await checkSupabaseConnection();
+      
+      if (connectionStatus === 'connected') {
+        toast({
+          title: "Koneksi berhasil",
+          description: "Berhasil terhubung ke database Supabase",
+          className: "bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg",
+        });
+      } else {
+        throw new Error("Tidak dapat terhubung ke Supabase");
+      }
     } catch (error) {
       console.error("Connection test failed:", error);
       

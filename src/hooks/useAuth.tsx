@@ -1,140 +1,214 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { Session, User } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-
-interface User {
-  name: string;
-  email: string;
-  role: "user" | "admin";
-  avatar: string;
-}
 
 interface AuthState {
   isAuthenticated: boolean;
   isAdmin: boolean;
   user: User | null;
+  profile: any | null;
+  session: Session | null;
 }
 
 interface AuthContextType extends AuthState {
-  login: (email: string, password: string) => boolean;
-  loginWithGoogle: () => boolean;
-  register: (name: string, email: string, password: string) => boolean;
-  logout: () => void;
+  login: (email: string, password: string) => Promise<boolean>;
+  loginWithGoogle: () => Promise<boolean>;
+  register: (name: string, email: string, password: string) => Promise<boolean>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [authState, setAuthState] = useState<AuthState>(() => {
-    const savedAuth = localStorage.getItem("auth");
-    return savedAuth 
-      ? JSON.parse(savedAuth) 
-      : {
-          isAuthenticated: false,
-          isAdmin: false,
-          user: null,
-        };
+  const [authState, setAuthState] = useState<AuthState>({
+    isAuthenticated: false,
+    isAdmin: false,
+    user: null,
+    profile: null,
+    session: null
   });
 
   useEffect(() => {
-    localStorage.setItem("auth", JSON.stringify(authState));
-  }, [authState]);
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (session) {
+          setAuthState(prevState => ({
+            ...prevState,
+            isAuthenticated: true,
+            user: session.user,
+            session: session,
+          }));
 
-  const login = (email: string, password: string) => {
-    // Simplified mock login
-    if (email === "gueadmin" && password === "gueadmin") {
-      const newState = {
-        isAuthenticated: true,
-        isAdmin: true,
-        user: {
-          name: "Admin User",
-          email: "gueadmin",
-          role: "admin" as "admin", // Explicitly cast as "admin"
-          avatar: "https://i.pravatar.cc/150?u=admin",
-        },
-      };
-      setAuthState(newState);
+          // Fetch profile and role in a separate non-blocking operation
+          setTimeout(() => {
+            fetchUserProfile(session.user.id);
+          }, 0);
+        } else {
+          setAuthState({
+            isAuthenticated: false,
+            isAdmin: false,
+            user: null,
+            profile: null,
+            session: null
+          });
+        }
+      }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setAuthState(prevState => ({
+          ...prevState,
+          isAuthenticated: true,
+          user: session.user,
+          session: session,
+        }));
+
+        // Fetch profile and role in a separate non-blocking operation
+        setTimeout(() => {
+          fetchUserProfile(session.user.id);
+        }, 0);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      // Ambil profil pengguna
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (profileError) throw profileError;
+
+      // Cek apakah pengguna adalah admin
+      const { data: isAdminData, error: isAdminError } = await supabase
+        .rpc('is_admin', { user_id: userId });
+
+      if (isAdminError) throw isAdminError;
+
+      setAuthState(prevState => ({
+        ...prevState,
+        profile,
+        isAdmin: !!isAdminData,
+      }));
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    }
+  };
+
+  const login = async (email: string, password: string) => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) throw error;
+
       toast({
-        title: "Selamat Datang Admin!",
-        description: "Anda berhasil masuk sebagai admin.",
+        title: "Selamat datang kembali!",
+        description: "Anda berhasil masuk.",
         duration: 1000,
         className: "bg-gradient-to-r from-blue-500 to-purple-600 text-white border-none",
       });
+
       return true;
-    } else if (email && password) {
-      const newState = {
-        isAuthenticated: true,
-        isAdmin: false,
-        user: {
-          name: "Regular User",
-          email,
-          role: "user" as "user", // Explicitly cast as "user"
-          avatar: `https://i.pravatar.cc/150?u=${email}`,
-        },
-      };
-      setAuthState(newState);
+    } catch (error: any) {
       toast({
-        title: "Selamat Datang!",
-        description: "Anda berhasil masuk.",
-        duration: 1000,
-        className: "bg-gradient-to-r from-green-500 to-teal-500 text-white border-none",
+        title: "Gagal masuk",
+        description: error.message || "Terjadi kesalahan saat mencoba masuk",
+        variant: "destructive",
+        duration: 3000,
       });
-      return true;
+      return false;
     }
-    return false;
   };
 
-  const loginWithGoogle = () => {
-    // Mock Google login
-    const randomEmail = `user${Math.floor(Math.random() * 1000)}@gmail.com`;
-    const newState = {
-      isAuthenticated: true,
-      isAdmin: false,
-      user: {
-        name: "Google User",
-        email: randomEmail,
-        role: "user" as "user", // Explicitly cast as "user"
-        avatar: `https://i.pravatar.cc/150?u=${randomEmail}`,
-      },
-    };
-    setAuthState(newState);
-    toast({
-      title: "Selamat Datang!",
-      description: "Anda berhasil masuk dengan Google.",
-      duration: 1000,
-      className: "bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-none",
-    });
-    return true;
+  const loginWithGoogle = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+
+      if (error) throw error;
+      
+      return true;
+    } catch (error: any) {
+      toast({
+        title: "Gagal masuk dengan Google",
+        description: error.message || "Terjadi kesalahan saat mencoba masuk dengan Google",
+        variant: "destructive",
+        duration: 3000,
+      });
+      return false;
+    }
   };
 
-  const register = (name: string, email: string, password: string) => {
-    // Mock registration
-    const newState = {
-      isAuthenticated: true,
-      isAdmin: false,
-      user: {
-        name,
+  const register = async (name: string, email: string, password: string) => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
         email,
-        role: "user" as "user", // Explicitly cast as "user"
-        avatar: `https://i.pravatar.cc/150?u=${email}`,
-      },
-    };
-    setAuthState(newState);
-    toast({
-      title: "Registrasi Berhasil!",
-      description: "Selamat datang di Rekaland.",
-      duration: 1000,
-      className: "bg-gradient-to-r from-orange-500 to-amber-500 text-white border-none",
-    });
-    return true;
+        password,
+        options: {
+          data: {
+            full_name: name,
+          },
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Registrasi Berhasil!",
+        description: "Selamat datang di Rekaland.",
+        duration: 1000,
+        className: "bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0",
+      });
+
+      return true;
+    } catch (error: any) {
+      toast({
+        title: "Gagal mendaftar",
+        description: error.message || "Terjadi kesalahan saat mencoba mendaftar",
+        variant: "destructive",
+        duration: 3000,
+      });
+      return false;
+    }
   };
 
-  const logout = () => {
-    setAuthState({
-      isAuthenticated: false,
-      isAdmin: false,
-      user: null,
-    });
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+      
+      toast({
+        title: "Berhasil Keluar",
+        description: "Anda telah keluar dari akun Anda",
+        duration: 1000,
+        className: "bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0",
+      });
+    } catch (error: any) {
+      console.error("Error during logout:", error);
+      toast({
+        title: "Gagal keluar",
+        description: error.message || "Terjadi kesalahan saat mencoba keluar",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
