@@ -1,13 +1,13 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { Session, User } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, ExtendedUser } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
 interface AuthState {
   isAuthenticated: boolean;
   isAdmin: boolean;
-  user: User | null;
+  user: ExtendedUser | null;
   profile: any | null;
   session: Session | null;
 }
@@ -35,10 +35,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (session) {
+          // Create extended user with basic info
+          const extendedUser: ExtendedUser = {
+            id: session.user.id,
+            email: session.user.email,
+          };
+
           setAuthState(prevState => ({
             ...prevState,
             isAuthenticated: true,
-            user: session.user,
+            user: extendedUser,
             session: session,
           }));
 
@@ -61,10 +67,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
+        // Create extended user with basic info
+        const extendedUser: ExtendedUser = {
+          id: session.user.id,
+          email: session.user.email,
+        };
+
         setAuthState(prevState => ({
           ...prevState,
           isAuthenticated: true,
-          user: session.user,
+          user: extendedUser,
           session: session,
         }));
 
@@ -97,11 +109,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (isAdminError) throw isAdminError;
 
-      setAuthState(prevState => ({
-        ...prevState,
-        profile,
-        isAdmin: !!isAdminData,
-      }));
+      // Update user with profile data
+      setAuthState(prevState => {
+        const updatedUser: ExtendedUser = {
+          ...(prevState.user || { id: userId }),
+          name: profile?.full_name || '',
+          avatar: profile?.avatar_url || '',
+          role: isAdminData ? 'admin' : 'user'
+        };
+
+        return {
+          ...prevState,
+          user: updatedUser,
+          profile,
+          isAdmin: !!isAdminData,
+        };
+      });
     } catch (error) {
       console.error('Error fetching user data:', error);
     }

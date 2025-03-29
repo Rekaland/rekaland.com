@@ -1,18 +1,28 @@
 
 import { createClient } from '@supabase/supabase-js';
+import { Database } from './types';
 
 // URL Supabase dan kunci API publik
 const supabaseUrl = 'https://qnzmhgvpynokshnlbsiw.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuem1oZ3ZweW5va3Nobmxic2l3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyNzI3NTUsImV4cCI6MjA1ODg0ODc1NX0.viIBr28yGeY9SaD9tYejkQ-5_Ihk69VygMYh6l-VThA';
 
 // Membuat client Supabase
-export const supabase = createClient(supabaseUrl, supabaseKey, {
+export const supabase = createClient<Database>(supabaseUrl, supabaseKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
     storageKey: 'rekaland-auth-storage',
   },
 });
+
+// Extended User type that includes our custom fields
+export interface ExtendedUser {
+  id: string;
+  email?: string;
+  name?: string;
+  avatar?: string;
+  role?: string;
+}
 
 // Tipe untuk properti
 export type Property = {
