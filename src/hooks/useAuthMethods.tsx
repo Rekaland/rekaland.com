@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -14,7 +13,24 @@ export const useAuthMethods = () => {
 
       if (error) {
         console.error("Login error:", error);
-        throw error;
+        
+        if (error.message.includes("Invalid login credentials")) {
+          toast({
+            title: "Email atau kata sandi salah",
+            description: "Periksa kembali email dan kata sandi Anda, atau daftar jika Anda belum memiliki akun.",
+            variant: "destructive",
+            duration: 5000,
+          });
+        } else {
+          toast({
+            title: "Gagal masuk",
+            description: error.message || "Terjadi kesalahan saat mencoba masuk",
+            variant: "destructive",
+            duration: 3000,
+          });
+        }
+        
+        return false;
       }
 
       console.log("Login successful:", data);
@@ -114,6 +130,61 @@ export const useAuthMethods = () => {
     }
   };
 
+  const registerAdmin = async (email: string, password: string, name: string) => {
+    try {
+      console.log("Attempting registration for admin:", email);
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: name,
+            is_admin: true,
+          },
+        }
+      });
+
+      if (error) {
+        console.error("Admin registration error:", error);
+        throw error;
+      }
+
+      console.log("Admin registration successful:", data);
+
+      if (data.user) {
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .insert([
+            { user_id: data.user.id, role: 'admin' }
+          ]);
+          
+        if (roleError) {
+          console.error("Error setting admin role:", roleError);
+        }
+      }
+
+      toast({
+        title: "Registrasi Admin Berhasil!",
+        description: "Selamat datang di Rekaland.",
+        duration: 3000,
+        className: "bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0",
+      });
+
+      return true;
+    } catch (error: any) {
+      console.error("Admin registration failed:", error);
+      
+      toast({
+        title: "Gagal mendaftar sebagai admin",
+        description: error.message || "Terjadi kesalahan saat mencoba mendaftar",
+        variant: "destructive",
+        duration: 3000,
+      });
+      return false;
+    }
+  };
+
   const logout = async () => {
     try {
       console.log("Attempting logout");
@@ -142,6 +213,7 @@ export const useAuthMethods = () => {
     login,
     loginWithGoogle,
     register,
+    registerAdmin,
     logout
   };
 };

@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import Layout from "@/components/layout/Layout";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { InfoIcon } from "lucide-react";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -25,23 +27,18 @@ const LoginPage = () => {
     }
   }, [location]);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     
     try {
-      const success = login(email, password);
+      const success = await login(email, password);
       
       if (success) {
         handlePostLoginActions();
-      } else {
-        toast({
-          title: "Gagal Masuk",
-          description: "Email atau kata sandi tidak valid",
-          variant: "destructive",
-        });
       }
     } catch (error) {
+      console.error("Login error:", error);
       toast({
         title: "Error",
         description: "Terjadi kesalahan saat masuk",
@@ -52,16 +49,17 @@ const LoginPage = () => {
     }
   };
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     setLoading(true);
     
     try {
-      const success = loginWithGoogle();
+      const success = await loginWithGoogle();
       
       if (success) {
         handlePostLoginActions();
       }
     } catch (error) {
+      console.error("Google login error:", error);
       toast({
         title: "Error",
         description: "Terjadi kesalahan saat masuk dengan Google",
@@ -128,6 +126,15 @@ const LoginPage = () => {
               </Link>
             </p>
           </div>
+          
+          <Alert className="bg-blue-50 border-blue-200">
+            <InfoIcon className="h-4 w-4 text-blue-500" />
+            <AlertTitle className="text-blue-700">Informasi</AlertTitle>
+            <AlertDescription className="text-blue-600">
+              Untuk mendaftar sebagai admin, gunakan email: rekaland.idn@gmail.com dan kata sandi: rekaland123
+            </AlertDescription>
+          </Alert>
+
           <form className="mt-8 space-y-6" onSubmit={handleLogin}>
             <div className="space-y-4">
               <div>
@@ -135,16 +142,13 @@ const LoginPage = () => {
                 <Input
                   id="email"
                   name="email"
-                  type="text"
+                  type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   placeholder="nama@example.com"
                   className="mt-1"
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  Gunakan 'gueadmin' untuk masuk sebagai admin
-                </p>
               </div>
               <div>
                 <Label htmlFor="password">Kata Sandi</Label>
@@ -158,9 +162,6 @@ const LoginPage = () => {
                   placeholder="********"
                   className="mt-1"
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  Gunakan 'gueadmin' untuk masuk sebagai admin
-                </p>
               </div>
             </div>
 
