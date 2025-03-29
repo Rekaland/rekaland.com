@@ -7,14 +7,19 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, AlertTriangle, CheckCircle, Database, Server, Table, Key, Lock, Link, Settings, ArrowRight, TableProperties, Play, Code2, FileJson, RefreshCw, Globe, ExternalLink } from "lucide-react";
+import { AlertCircle, AlertTriangle, CheckCircle, Database, Server, Table, Key, Lock, Link, Settings, ArrowRight, TableProperties, Play, Code2, FileJson, RefreshCw, Globe, ExternalLink, Info, Plus, UploadCloud, CloudOff, Shield } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 const BackendEditor = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("database");
+  const [isConnectedToSupabase, setIsConnectedToSupabase] = useState(false);
+  const [supabaseProjectId, setSupabaseProjectId] = useState("");
+  const [supabaseApiKey, setSupabaseApiKey] = useState("");
   
   // Mock data for the backend sections
   const [tables] = useState([
@@ -45,10 +50,36 @@ const BackendEditor = () => {
     { id: 3, name: "Production", url: "rekaland.com", status: "online", version: "1.2.1" }
   ]);
 
-  const handleConnect = () => {
+  const handleConnectSupabase = () => {
+    if (supabaseProjectId && supabaseApiKey) {
+      setIsConnectedToSupabase(true);
+      toast({
+        title: "Terhubung ke Supabase!",
+        description: "Koneksi ke database Supabase berhasil dibuat",
+        className: "bg-green-600 text-white"
+      });
+    } else {
+      toast({
+        title: "Koneksi gagal!",
+        description: "Harap isi Project ID dan API Key Supabase",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDisconnectSupabase = () => {
+    setIsConnectedToSupabase(false);
     toast({
-      title: "Terhubung ke Supabase!",
-      description: "Koneksi ke database Supabase berhasil dibuat",
+      title: "Koneksi diputus",
+      description: "Koneksi ke Supabase telah diputus",
+      variant: "default"
+    });
+  };
+
+  const handleSaveConfig = () => {
+    toast({
+      title: "Konfigurasi tersimpan!",
+      description: "Konfigurasi koneksi berhasil disimpan",
       className: "bg-green-600 text-white"
     });
   };
@@ -104,6 +135,96 @@ const BackendEditor = () => {
     });
   };
 
+  const renderSupabaseConnectPanel = () => {
+    if (isConnectedToSupabase) {
+      return (
+        <div className="flex items-center justify-between p-4 bg-green-50 rounded-md border border-green-100">
+          <div className="flex items-center">
+            <CheckCircle size={20} className="text-green-600 mr-3" />
+            <div>
+              <p className="font-medium">Terhubung ke Supabase</p>
+              <p className="text-sm text-gray-600">project-id: {supabaseProjectId}</p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={handleDisconnectSupabase}>
+              <CloudOff size={14} className="mr-1" />
+              Putuskan
+            </Button>
+            <Button variant="outline" size="sm">
+              <Settings size={14} className="mr-1" />
+              Konfigurasi
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center">
+            <Database size={16} className="mr-2" />
+            Koneksi Supabase
+          </CardTitle>
+          <CardDescription>
+            Hubungkan website Anda dengan Supabase untuk backend dan database
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 p-3 bg-blue-50 text-blue-800 rounded-md">
+            <Info size={18} className="shrink-0" />
+            <p className="text-sm">
+              Anda perlu membuat akun di <a href="https://supabase.com" className="underline" target="_blank" rel="noreferrer">Supabase.com</a> dan membuat project baru untuk mendapatkan kredensial koneksi.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label htmlFor="project-id">Supabase Project ID</Label>
+              <Input 
+                id="project-id" 
+                placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" 
+                value={supabaseProjectId}
+                onChange={(e) => setSupabaseProjectId(e.target.value)}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="api-key">Supabase API Key</Label>
+              <Input 
+                id="api-key" 
+                type="password" 
+                placeholder="supabase-anon-key" 
+                value={supabaseApiKey}
+                onChange={(e) => setSupabaseApiKey(e.target.value)}
+              />
+              <p className="text-xs text-gray-500">
+                Gunakan "anon" key dari Supabase API Settings
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:justify-between gap-2">
+            <Button variant="outline" size="sm" className="sm:w-auto">
+              <ExternalLink size={14} className="mr-1" />
+              Buka Dashboard Supabase
+            </Button>
+            
+            <Button 
+              onClick={handleConnectSupabase}
+              disabled={!supabaseProjectId || !supabaseApiKey}
+              className="sm:w-auto"
+            >
+              <Database size={14} className="mr-1" />
+              Hubungkan ke Supabase
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
   return (
     <div>
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -128,116 +249,141 @@ const BackendEditor = () => {
 
         {/* Database Tab */}
         <TabsContent value="database" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex justify-between items-center">
-                <div className="flex items-center">
-                  <Database size={18} className="mr-2" />
-                  Koneksi Database
-                </div>
-                <Badge variant="outline" className="bg-green-50 text-green-700 hover:bg-green-50">
-                  Terhubung
-                </Badge>
-              </CardTitle>
-              <CardDescription>
-                Kelola koneksi dan data di database website Anda
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between p-4 bg-green-50 rounded-md border border-green-100">
-                <div className="flex items-center">
-                  <CheckCircle size={20} className="text-green-600 mr-3" />
-                  <div>
-                    <p className="font-medium">Terhubung ke Supabase</p>
-                    <p className="text-sm text-gray-600">project-id: rekaland-db</p>
-                  </div>
-                </div>
-                <Button variant="outline" size="sm">
-                  Konfigurasi
-                </Button>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-medium">Tabel Database</h3>
-                  <Button onClick={handleCreateTable}>
-                    Buat Tabel
-                  </Button>
-                </div>
-                
-                <div className="border rounded-md">
-                  <div className="grid grid-cols-4 gap-4 p-4 bg-gray-50 border-b font-medium">
-                    <div>Nama Tabel</div>
-                    <div>Records</div>
-                    <div>Status</div>
-                    <div className="text-right">Aksi</div>
+          {/* Supabase Connection */}
+          {renderSupabaseConnectPanel()}
+          
+          {isConnectedToSupabase && (
+            <>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex justify-between items-center">
+                    <div className="flex items-center">
+                      <Database size={18} className="mr-2" />
+                      Database Management
+                    </div>
+                  </CardTitle>
+                  <CardDescription>
+                    Kelola tabel dan data di database website Anda
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-medium">Tabel Database</h3>
+                    <Button onClick={handleCreateTable}>
+                      <Plus size={14} className="mr-1" />
+                      Buat Tabel
+                    </Button>
                   </div>
                   
-                  {tables.map((table) => (
-                    <div key={table.id} className="grid grid-cols-4 gap-4 p-4 border-b last:border-0 items-center">
-                      <div className="font-medium">{table.name}</div>
-                      <div>{table.records}</div>
-                      <div>
-                        <Badge variant="outline" className="bg-green-50 text-green-700 hover:bg-green-50">
-                          {table.status}
-                        </Badge>
-                      </div>
-                      <div className="flex justify-end gap-2">
-                        <Button size="sm" variant="outline">
-                          <TableProperties size={14} className="mr-1" />
-                          Struktur
-                        </Button>
-                        <Button size="sm" variant="outline">
-                          <Table size={14} className="mr-1" />
-                          Data
-                        </Button>
-                      </div>
+                  <div className="border rounded-md">
+                    <div className="grid grid-cols-4 gap-4 p-4 bg-gray-50 border-b font-medium">
+                      <div>Nama Tabel</div>
+                      <div>Records</div>
+                      <div>Status</div>
+                      <div className="text-right">Aksi</div>
                     </div>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Card className="flex-1">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Total Data</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold">562</div>
-                    <p className="text-sm text-gray-500">records</p>
-                  </CardContent>
-                </Card>
-                <Card className="flex-1">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Ukuran Database</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold">24.8 MB</div>
-                    <p className="text-sm text-gray-500">dari 500 MB</p>
-                    <Progress value={5} className="mt-2 h-1" />
-                  </CardContent>
-                </Card>
-                <Card className="flex-1">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Status</CardTitle>
-                  </CardHeader>
-                  <CardContent className="flex items-center">
-                    <div className="h-3 w-3 rounded-full bg-green-500 mr-2"></div>
-                    <div className="text-lg font-medium">Online</div>
-                  </CardContent>
-                </Card>
-              </div>
-            </CardContent>
-            <CardFooter className="flex justify-between border-t pt-4">
-              <Button variant="outline" onClick={handleViewLogs}>
-                View Logs
-              </Button>
-              <Button onClick={handleConnect}>
-                <RefreshCw size={14} className="mr-2" />
-                Reconnect
-              </Button>
-            </CardFooter>
-          </Card>
+                    
+                    {tables.map((table) => (
+                      <div key={table.id} className="grid grid-cols-4 gap-4 p-4 border-b last:border-0 items-center">
+                        <div className="font-medium">{table.name}</div>
+                        <div>{table.records}</div>
+                        <div>
+                          <Badge variant="outline" className="bg-green-50 text-green-700 hover:bg-green-50">
+                            {table.status}
+                          </Badge>
+                        </div>
+                        <div className="flex justify-end gap-2">
+                          <Button size="sm" variant="outline">
+                            <TableProperties size={14} className="mr-1" />
+                            Struktur
+                          </Button>
+                          <Button size="sm" variant="outline">
+                            <Table size={14} className="mr-1" />
+                            Data
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <Card className="flex-1">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm">Total Data</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-3xl font-bold">562</div>
+                        <p className="text-sm text-gray-500">records</p>
+                      </CardContent>
+                    </Card>
+                    <Card className="flex-1">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm">Ukuran Database</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-3xl font-bold">24.8 MB</div>
+                        <p className="text-sm text-gray-500">dari 500 MB</p>
+                        <Progress value={5} className="mt-2 h-1" />
+                      </CardContent>
+                    </Card>
+                    <Card className="flex-1">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm">Status</CardTitle>
+                      </CardHeader>
+                      <CardContent className="flex items-center">
+                        <div className="h-3 w-3 rounded-full bg-green-500 mr-2"></div>
+                        <div className="text-lg font-medium">Online</div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </CardContent>
+                <CardFooter className="flex justify-between border-t pt-4">
+                  <Button variant="outline" onClick={handleViewLogs}>
+                    View Logs
+                  </Button>
+                  <Button onClick={() => {
+                    toast({
+                      title: "Database Disinkronkan",
+                      description: "Sinkronisasi dengan Supabase berhasil",
+                      className: "bg-green-600 text-white"
+                    });
+                  }}>
+                    <RefreshCw size={14} className="mr-2" />
+                    Sinkronkan
+                  </Button>
+                </CardFooter>
+              </Card>
+
+              {/* SQL Editor Panel */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center">
+                    <Code2 size={16} className="mr-2" />
+                    SQL Editor
+                  </CardTitle>
+                  <CardDescription>
+                    Jalankan query SQL langsung ke database Anda
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Textarea 
+                    className="font-mono text-sm bg-gray-900 text-gray-100 p-4 h-40"
+                    placeholder="SELECT * FROM users LIMIT 10;"
+                  />
+                  
+                  <div className="flex justify-between">
+                    <Button variant="outline">
+                      Format Query
+                    </Button>
+                    <Button>
+                      <Play size={14} className="mr-1" />
+                      Jalankan Query
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
         </TabsContent>
 
         {/* API Tab */}
@@ -255,49 +401,112 @@ const BackendEditor = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium">API Endpoints</h3>
-                <Button onClick={handleCreateAPI}>
-                  Buat API
-                </Button>
-              </div>
-              
-              <div className="border rounded-md">
-                <div className="grid grid-cols-5 gap-4 p-4 bg-gray-50 border-b font-medium">
-                  <div>Path</div>
-                  <div>Method</div>
-                  <div>Status</div>
-                  <div>Description</div>
-                  <div className="text-right">Aksi</div>
+              {!isConnectedToSupabase ? (
+                <div className="flex flex-col items-center justify-center p-8 text-center bg-gray-50 rounded-md border border-dashed border-gray-300">
+                  <AlertCircle size={40} className="text-gray-400 mb-4" />
+                  <h3 className="text-lg font-medium mb-2">Backend Tidak Terhubung</h3>
+                  <p className="text-gray-500 mb-4">
+                    Hubungkan terlebih dahulu ke Supabase di tab Database untuk mengaktifkan fitur API.
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setActiveTab("database")}
+                  >
+                    Hubungkan Sekarang
+                  </Button>
                 </div>
-                
-                {apis.map((api) => (
-                  <div key={api.id} className="grid grid-cols-5 gap-4 p-4 border-b last:border-0 items-center">
-                    <div className="font-mono text-sm font-medium">{api.path}</div>
-                    <div>
-                      <Badge variant={api.method === "GET" ? "outline" : "default"} className={`${api.method === "GET" ? "bg-blue-50 text-blue-700 hover:bg-blue-50" : "bg-violet-100 text-violet-800 hover:bg-violet-100"}`}>
-                        {api.method}
-                      </Badge>
-                    </div>
-                    <div>
-                      <Badge variant="outline" className={api.status === "active" ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-700"}>
-                        {api.status}
-                      </Badge>
-                    </div>
-                    <div className="text-sm">{api.description}</div>
-                    <div className="flex justify-end gap-2">
-                      <Button size="sm" variant="outline">
-                        <Play size={14} className="mr-1" />
-                        Test
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        <FileJson size={14} className="mr-1" />
-                        Schema
-                      </Button>
-                    </div>
+              ) : (
+                <>
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-medium">API Endpoints</h3>
+                    <Button onClick={handleCreateAPI}>
+                      <Plus size={14} className="mr-1" />
+                      Buat API
+                    </Button>
                   </div>
-                ))}
-              </div>
+                  
+                  <div className="border rounded-md">
+                    <div className="grid grid-cols-5 gap-4 p-4 bg-gray-50 border-b font-medium">
+                      <div>Path</div>
+                      <div>Method</div>
+                      <div>Status</div>
+                      <div>Description</div>
+                      <div className="text-right">Aksi</div>
+                    </div>
+                    
+                    {apis.map((api) => (
+                      <div key={api.id} className="grid grid-cols-5 gap-4 p-4 border-b last:border-0 items-center">
+                        <div className="font-mono text-sm font-medium">{api.path}</div>
+                        <div>
+                          <Badge variant={api.method === "GET" ? "outline" : "default"} className={`${api.method === "GET" ? "bg-blue-50 text-blue-700 hover:bg-blue-50" : "bg-violet-100 text-violet-800 hover:bg-violet-100"}`}>
+                            {api.method}
+                          </Badge>
+                        </div>
+                        <div>
+                          <Badge variant="outline" className={api.status === "active" ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-700"}>
+                            {api.status}
+                          </Badge>
+                        </div>
+                        <div className="text-sm">{api.description}</div>
+                        <div className="flex justify-end gap-2">
+                          <Button size="sm" variant="outline">
+                            <Play size={14} className="mr-1" />
+                            Test
+                          </Button>
+                          <Button size="sm" variant="outline">
+                            <FileJson size={14} className="mr-1" />
+                            Schema
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm">Pengaturan API</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium">CORS Settings</p>
+                          <p className="text-sm text-gray-500">Allowed Origins</p>
+                        </div>
+                        <Input 
+                          className="w-[300px]" 
+                          defaultValue="*"
+                          placeholder="https://yourdomain.com, *"
+                        />
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium">Rate Limiting</p>
+                          <p className="text-sm text-gray-500">Requests per minute</p>
+                        </div>
+                        <Input 
+                          className="w-[100px]" 
+                          type="number"
+                          defaultValue="60"
+                        />
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium">API Authentication</p>
+                          <p className="text-sm text-gray-500">Require authentication</p>
+                        </div>
+                        <Switch defaultChecked />
+                      </div>
+                    </CardContent>
+                    <CardFooter>
+                      <Button onClick={handleSaveConfig} className="ml-auto">
+                        Simpan Pengaturan
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                </>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -317,53 +526,161 @@ const BackendEditor = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium">Functions</h3>
-                <Button onClick={handleCreateFunction}>
-                  Buat Function
-                </Button>
-              </div>
-              
-              <div className="border rounded-md">
-                <div className="grid grid-cols-5 gap-4 p-4 bg-gray-50 border-b font-medium">
-                  <div>Nama</div>
-                  <div>Trigger</div>
-                  <div>Status</div>
-                  <div>Terakhir Dijalankan</div>
-                  <div className="text-right">Aksi</div>
+              {!isConnectedToSupabase ? (
+                <div className="flex flex-col items-center justify-center p-8 text-center bg-gray-50 rounded-md border border-dashed border-gray-300">
+                  <AlertCircle size={40} className="text-gray-400 mb-4" />
+                  <h3 className="text-lg font-medium mb-2">Backend Tidak Terhubung</h3>
+                  <p className="text-gray-500 mb-4">
+                    Hubungkan terlebih dahulu ke Supabase di tab Database untuk mengaktifkan fitur Functions.
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setActiveTab("database")}
+                  >
+                    Hubungkan Sekarang
+                  </Button>
                 </div>
-                
-                {functions.map((fn) => (
-                  <div key={fn.id} className="grid grid-cols-5 gap-4 p-4 border-b last:border-0 items-center">
-                    <div className="font-mono text-sm font-medium">{fn.name}</div>
-                    <div>
-                      <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                        {fn.trigger}
-                      </Badge>
-                    </div>
-                    <div>
-                      <Badge variant="outline" className={fn.status === "active" ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-700"}>
-                        {fn.status}
-                      </Badge>
-                    </div>
-                    <div className="text-sm">{fn.lastRun}</div>
-                    <div className="flex justify-end gap-2">
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => handleTestFunction(fn.name)}
-                      >
-                        <Play size={14} className="mr-1" />
-                        Run
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        <Code2 size={14} className="mr-1" />
-                        Code
-                      </Button>
-                    </div>
+              ) : (
+                <>
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-medium">Functions</h3>
+                    <Button onClick={handleCreateFunction}>
+                      <Plus size={14} className="mr-1" />
+                      Buat Function
+                    </Button>
                   </div>
-                ))}
-              </div>
+                  
+                  <div className="border rounded-md">
+                    <div className="grid grid-cols-5 gap-4 p-4 bg-gray-50 border-b font-medium">
+                      <div>Nama</div>
+                      <div>Trigger</div>
+                      <div>Status</div>
+                      <div>Terakhir Dijalankan</div>
+                      <div className="text-right">Aksi</div>
+                    </div>
+                    
+                    {functions.map((fn) => (
+                      <div key={fn.id} className="grid grid-cols-5 gap-4 p-4 border-b last:border-0 items-center">
+                        <div className="font-mono text-sm font-medium">{fn.name}</div>
+                        <div>
+                          <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                            {fn.trigger}
+                          </Badge>
+                        </div>
+                        <div>
+                          <Badge variant="outline" className={fn.status === "active" ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-700"}>
+                            {fn.status}
+                          </Badge>
+                        </div>
+                        <div className="text-sm">{fn.lastRun}</div>
+                        <div className="flex justify-end gap-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleTestFunction(fn.name)}
+                          >
+                            <Play size={14} className="mr-1" />
+                            Run
+                          </Button>
+                          <Button size="sm" variant="outline">
+                            <Code2 size={14} className="mr-1" />
+                            Code
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Function Editor */}
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="flex items-center">
+                        <Code2 size={16} className="mr-2" />
+                        Function Editor
+                      </CardTitle>
+                      <CardDescription>
+                        Buat dan edit fungsi serverless 
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="md:col-span-1 space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="fn-name">Nama Function</Label>
+                            <Input id="fn-name" placeholder="newFunction" />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="fn-trigger">Trigger Type</Label>
+                            <Select defaultValue="http">
+                              <SelectTrigger id="fn-trigger">
+                                <SelectValue placeholder="Pilih Trigger" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="http">HTTP Request</SelectItem>
+                                <SelectItem value="schedule">Schedule</SelectItem>
+                                <SelectItem value="database">Database Change</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="fn-auth">Authentication</Label>
+                            <Select defaultValue="jwt">
+                              <SelectTrigger id="fn-auth">
+                                <SelectValue placeholder="Pilih Authentication" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="none">No Auth</SelectItem>
+                                <SelectItem value="jwt">JWT Token</SelectItem>
+                                <SelectItem value="api_key">API Key</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <Label htmlFor="fn-active">Active</Label>
+                              <Switch id="fn-active" defaultChecked />
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="md:col-span-2 space-y-2">
+                          <Label>Function Code</Label>
+                          <Textarea 
+                            className="font-mono text-sm bg-gray-900 text-gray-100 p-4 h-64"
+                            placeholder="// Write your serverless function code here
+export async function handler(req, res) {
+  try {
+    // Your code here
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ message: 'Success!' })
+    }
+  } catch (error) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: error.message })
+    }
+  }
+}"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-end gap-2">
+                        <Button variant="outline">
+                          Preview
+                        </Button>
+                        <Button>
+                          Save Function
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -385,45 +702,130 @@ const BackendEditor = () => {
             <CardContent className="space-y-6">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-medium">Environments</h3>
-                <Button onClick={handleDeploy} className="bg-blue-600 hover:bg-blue-700">
-                  <Globe size={14} className="mr-1" />
+                <Button 
+                  onClick={handleDeploy} 
+                  className="bg-blue-600 hover:bg-blue-700"
+                  disabled={!isConnectedToSupabase}
+                >
+                  <UploadCloud size={14} className="mr-1" />
                   Deploy
                 </Button>
               </div>
               
-              <div className="border rounded-md">
-                <div className="grid grid-cols-4 gap-4 p-4 bg-gray-50 border-b font-medium">
-                  <div>Environment</div>
-                  <div>URL</div>
-                  <div>Status</div>
-                  <div className="text-right">Aksi</div>
+              {!isConnectedToSupabase ? (
+                <div className="flex flex-col items-center justify-center p-8 text-center bg-gray-50 rounded-md border border-dashed border-gray-300">
+                  <AlertCircle size={40} className="text-gray-400 mb-4" />
+                  <h3 className="text-lg font-medium mb-2">Backend Tidak Terhubung</h3>
+                  <p className="text-gray-500 mb-4">
+                    Hubungkan terlebih dahulu ke Supabase di tab Database untuk mengaktifkan fitur Deployment.
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setActiveTab("database")}
+                  >
+                    Hubungkan Sekarang
+                  </Button>
                 </div>
-                
-                {environments.map((env) => (
-                  <div key={env.id} className="grid grid-cols-4 gap-4 p-4 border-b last:border-0 items-center">
-                    <div className="font-medium">
-                      {env.name}
-                      <div className="text-xs text-gray-500">v{env.version}</div>
+              ) : (
+                <>
+                  <div className="border rounded-md">
+                    <div className="grid grid-cols-4 gap-4 p-4 bg-gray-50 border-b font-medium">
+                      <div>Environment</div>
+                      <div>URL</div>
+                      <div>Status</div>
+                      <div className="text-right">Aksi</div>
                     </div>
-                    <div className="font-mono text-sm">{env.url}</div>
-                    <div>
-                      <Badge variant="outline" className="bg-green-50 text-green-700">
-                        {env.status}
-                      </Badge>
-                    </div>
-                    <div className="flex justify-end gap-2">
-                      <Button size="sm" variant="outline">
-                        <ExternalLink size={14} className="mr-1" />
-                        Buka
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        <Server size={14} className="mr-1" />
-                        Settings
-                      </Button>
-                    </div>
+                    
+                    {environments.map((env) => (
+                      <div key={env.id} className="grid grid-cols-4 gap-4 p-4 border-b last:border-0 items-center">
+                        <div className="font-medium">
+                          {env.name}
+                          <div className="text-xs text-gray-500">v{env.version}</div>
+                        </div>
+                        <div className="font-mono text-sm">{env.url}</div>
+                        <div>
+                          <Badge variant="outline" className="bg-green-50 text-green-700">
+                            {env.status}
+                          </Badge>
+                        </div>
+                        <div className="flex justify-end gap-2">
+                          <Button size="sm" variant="outline">
+                            <ExternalLink size={14} className="mr-1" />
+                            Buka
+                          </Button>
+                          <Button size="sm" variant="outline">
+                            <Server size={14} className="mr-1" />
+                            Settings
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+
+                  {/* Security Panel */}
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base flex items-center">
+                        <Shield size={16} className="mr-2" />
+                        Keamanan
+                      </CardTitle>
+                      <CardDescription>
+                        Pengaturan keamanan untuk deployment website
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-md">
+                          <div>
+                            <p className="font-medium">SSL/TLS</p>
+                            <p className="text-xs text-gray-500">HTTPS encryption</p>
+                          </div>
+                          <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+                            Enabled
+                          </Badge>
+                        </div>
+                        
+                        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-md">
+                          <div>
+                            <p className="font-medium">DDOS Protection</p>
+                            <p className="text-xs text-gray-500">Attack prevention</p>
+                          </div>
+                          <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+                            Enabled
+                          </Badge>
+                        </div>
+                        
+                        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-md">
+                          <div>
+                            <p className="font-medium">Data Encryption</p>
+                            <p className="text-xs text-gray-500">At rest & in transit</p>
+                          </div>
+                          <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+                            Enabled
+                          </Badge>
+                        </div>
+                        
+                        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-md">
+                          <div>
+                            <p className="font-medium">Content Security</p>
+                            <p className="text-xs text-gray-500">CSP headers</p>
+                          </div>
+                          <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
+                            Partial
+                          </Badge>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-end">
+                        <Button variant="outline">
+                          <Settings size={14} className="mr-1" />
+                          Security Settings
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

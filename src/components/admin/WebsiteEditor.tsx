@@ -1,17 +1,10 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Eye, Globe, Pencil, Save, History, FileText, Code, Layout, Image as ImageIcon, Database, Server, Table, Key, Lock, Link, Settings, ArrowRight, TableProperties, Play, Code2, FileJson } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
+import { Eye, Globe, Save, Database, Layout } from "lucide-react";
 import FrontendEditor from "./website/FrontendEditor";
 import BackendEditor from "./website/BackendEditor";
 
@@ -61,7 +54,7 @@ const WebsiteEditor = () => {
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="grid grid-cols-2 w-full md:w-auto">
           <TabsTrigger value="frontend" className="flex items-center gap-2">
             <Layout size={16} />
@@ -74,11 +67,11 @@ const WebsiteEditor = () => {
         </TabsList>
 
         {/* Content based on active tab */}
-        <TabsContent value="frontend" className="space-y-4 mt-2">
+        <TabsContent value="frontend" className="mt-2">
           <FrontendEditor />
         </TabsContent>
 
-        <TabsContent value="backend" className="space-y-4 mt-2">
+        <TabsContent value="backend" className="mt-2">
           <BackendEditor />
         </TabsContent>
       </Tabs>

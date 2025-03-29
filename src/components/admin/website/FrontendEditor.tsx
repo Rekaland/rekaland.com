@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,7 +7,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Eye, Pencil, Save, History, FileText, Code, Layout, Image as ImageIcon, Box, Type, Laptop, Smartphone, Palette, Layers, RotateCcw } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
@@ -22,14 +21,17 @@ const FrontendEditor = () => {
   const [activePage, setActivePage] = useState("home");
   const [activeDevice, setActiveDevice] = useState("desktop");
   
-  const [pages] = useState([
+  const [pages, setPages] = useState([
     { id: "home", name: "Beranda", path: "/" },
     { id: "about", name: "Tentang Kami", path: "/about" },
     { id: "products", name: "Produk", path: "/products" },
     { id: "contact", name: "Kontak", path: "/contact" }
   ]);
-  
-  const [htmlCode, setHtmlCode] = useState(`<!DOCTYPE html>
+
+  // Page specific HTML and CSS content
+  const [pagesContent, setPagesContent] = useState({
+    home: {
+      html: `<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
@@ -58,9 +60,8 @@ const FrontendEditor = () => {
     <!-- Footer -->
   </footer>
 </body>
-</html>`);
-
-  const [cssCode, setCssCode] = useState(`/* Main Styles */
+</html>`,
+      css: `/* Main Styles */
 body {
   font-family: 'Inter', sans-serif;
   color: #333;
@@ -86,7 +87,276 @@ button {
   padding: 10px 20px;
   border-radius: 4px;
   cursor: pointer;
-}`);
+}`
+    },
+    about: {
+      html: `<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tentang Kami - REKALAND</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header>
+    <nav>
+      <!-- Navigasi -->
+    </nav>
+  </header>
+  
+  <main>
+    <section class="about-hero">
+      <h1>Tentang REKALAND</h1>
+      <p>Mitra terpercaya untuk kebutuhan properti Anda</p>
+    </section>
+    
+    <section class="about-content">
+      <h2>Visi & Misi</h2>
+      <p>Menjadi perusahaan properti terdepan yang memberikan solusi hunian berkualitas untuk seluruh masyarakat Indonesia</p>
+    </section>
+  </main>
+  
+  <footer>
+    <!-- Footer -->
+  </footer>
+</body>
+</html>`,
+      css: `.about-hero {
+  background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('/images/about.jpg');
+  color: white;
+  text-align: center;
+  padding: 100px 20px;
+}
+
+.about-content {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.about-content h2 {
+  color: #f97316;
+  margin-bottom: 20px;
+}`
+    },
+    products: {
+      html: `<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Produk - REKALAND</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header>
+    <nav>
+      <!-- Navigasi -->
+    </nav>
+  </header>
+  
+  <main>
+    <section class="products-hero">
+      <h1>Produk Kami</h1>
+      <p>Temukan hunian impian Anda bersama REKALAND</p>
+    </section>
+    
+    <section class="products-grid">
+      <div class="product-card">
+        <img src="/placeholder.svg" alt="Properti 1">
+        <h3>Kavling Siap Bangun</h3>
+        <p>Mulai dari Rp 500jt</p>
+        <button>Detail</button>
+      </div>
+      <div class="product-card">
+        <img src="/placeholder.svg" alt="Properti 2">
+        <h3>Rumah Semi Jadi</h3>
+        <p>Mulai dari Rp 800jt</p>
+        <button>Detail</button>
+      </div>
+      <div class="product-card">
+        <img src="/placeholder.svg" alt="Properti 3">
+        <h3>Rumah Siap Huni</h3>
+        <p>Mulai dari Rp 1.2M</p>
+        <button>Detail</button>
+      </div>
+    </section>
+  </main>
+  
+  <footer>
+    <!-- Footer -->
+  </footer>
+</body>
+</html>`,
+      css: `.products-hero {
+  background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('/images/products.jpg');
+  color: white;
+  text-align: center;
+  padding: 80px 20px;
+}
+
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  padding: 40px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.product-card {
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.product-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.product-card h3, .product-card p {
+  padding: 0 15px;
+}
+
+.product-card button {
+  margin: 15px;
+}`
+    },
+    contact: {
+      html: `<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kontak - REKALAND</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header>
+    <nav>
+      <!-- Navigasi -->
+    </nav>
+  </header>
+  
+  <main>
+    <section class="contact-hero">
+      <h1>Hubungi Kami</h1>
+      <p>Kami siap membantu Anda menemukan hunian impian</p>
+    </section>
+    
+    <section class="contact-content">
+      <div class="contact-info">
+        <h2>Informasi Kontak</h2>
+        <p><strong>Alamat:</strong> Jl. Properti Indah No. 123, Jakarta</p>
+        <p><strong>Telepon:</strong> (021) 123-4567</p>
+        <p><strong>Email:</strong> info@rekaland.com</p>
+      </div>
+      
+      <form class="contact-form">
+        <h2>Kirim Pesan</h2>
+        <div class="form-group">
+          <label for="name">Nama</label>
+          <input type="text" id="name" required>
+        </div>
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" required>
+        </div>
+        <div class="form-group">
+          <label for="message">Pesan</label>
+          <textarea id="message" rows="5" required></textarea>
+        </div>
+        <button type="submit">Kirim Pesan</button>
+      </form>
+    </section>
+  </main>
+  
+  <footer>
+    <!-- Footer -->
+  </footer>
+</body>
+</html>`,
+      css: `.contact-hero {
+  background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('/images/contact.jpg');
+  color: white;
+  text-align: center;
+  padding: 80px 20px;
+}
+
+.contact-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  max-width: 1000px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+@media (max-width: 768px) {
+  .contact-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+.contact-form .form-group {
+  margin-bottom: 20px;
+}
+
+.contact-form label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.contact-form input, 
+.contact-form textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.contact-form button {
+  background-color: #f97316;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+}`
+    }
+  });
+  
+  const [htmlCode, setHtmlCode] = useState(pagesContent[activePage]?.html || "");
+  const [cssCode, setCssCode] = useState(pagesContent[activePage]?.css || "");
+
+  // Update code when page changes
+  useEffect(() => {
+    setHtmlCode(pagesContent[activePage]?.html || "");
+    setCssCode(pagesContent[activePage]?.css || "");
+  }, [activePage, pagesContent]);
+
+  // Save changes to specific page content
+  const savePageContent = () => {
+    setPagesContent(prev => ({
+      ...prev,
+      [activePage]: {
+        ...prev[activePage],
+        html: htmlCode,
+        css: cssCode
+      }
+    }));
+    
+    handleSaveChanges("halaman");
+  };
 
   const handlePageChange = (pageId: string) => {
     setActivePage(pageId);
@@ -111,6 +381,72 @@ button {
       title: "Perubahan tersimpan!",
       description: `Perubahan pada ${type} berhasil disimpan`,
       className: "bg-gradient-to-r from-green-500 to-green-600 text-white border-0",
+      duration: 1500,
+    });
+  };
+
+  const handleAddPage = () => {
+    const newPageId = `page-${Date.now()}`;
+    const newPageName = `Halaman Baru ${pages.length + 1}`;
+    const newPagePath = `/page-${pages.length + 1}`;
+    
+    setPages([...pages, { id: newPageId, name: newPageName, path: newPagePath }]);
+    
+    // Add template content for the new page
+    setPagesContent(prev => ({
+      ...prev,
+      [newPageId]: {
+        html: `<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${newPageName} - REKALAND</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header>
+    <nav>
+      <!-- Navigasi -->
+    </nav>
+  </header>
+  
+  <main>
+    <section class="page-hero">
+      <h1>${newPageName}</h1>
+    </section>
+    
+    <section class="page-content">
+      <p>Konten halaman baru</p>
+    </section>
+  </main>
+  
+  <footer>
+    <!-- Footer -->
+  </footer>
+</body>
+</html>`,
+        css: `.page-hero {
+  background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('/placeholder.svg');
+  color: white;
+  text-align: center;
+  padding: 80px 20px;
+}
+
+.page-content {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}`
+      }
+    }));
+    
+    // Switch to the new page
+    setActivePage(newPageId);
+    
+    toast({
+      title: "Halaman baru dibuat",
+      description: `Halaman "${newPageName}" berhasil dibuat`,
       duration: 1500,
     });
   };
@@ -185,7 +521,12 @@ button {
                 {page.name}
               </Button>
             ))}
-            <Button variant="outline" size="sm" className="bg-gray-50">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="bg-gray-50"
+              onClick={handleAddPage}
+            >
               <Pencil size={14} className="mr-1" /> Tambah
             </Button>
           </div>
@@ -249,7 +590,7 @@ button {
               cssCode={cssCode}
               onHtmlChange={setHtmlCode}
               onCssChange={setCssCode}
-              onSave={() => handleSaveChanges("kode")}
+              onSave={savePageContent}
             />
           </TabsContent>
         </Tabs>
