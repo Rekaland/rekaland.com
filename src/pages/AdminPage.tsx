@@ -16,7 +16,8 @@ import {
   X,
   Globe,
   History,
-  Save
+  Save,
+  Code
 } from "lucide-react";
 import AnalyticsDashboard from "@/components/admin/AnalyticsDashboard";
 import PropertyManagement from "@/components/admin/PropertyManagement";
@@ -26,6 +27,7 @@ import WebsiteEditor from "@/components/admin/WebsiteEditor";
 import SalesManagement from "@/components/admin/SalesManagement";
 import SettingsManagement from "@/components/admin/SettingsManagement";
 import PublicationPanel from "@/components/admin/PublicationPanel";
+import DeveloperTools from "@/components/admin/DeveloperTools";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -73,7 +75,8 @@ const AdminPage = () => {
     { value: "editor", label: "Editor", icon: <Pencil size={20} /> },
     { value: "sales", label: "Penjualan", icon: <ShoppingCart size={20} /> },
     { value: "settings", label: "Pengaturan", icon: <Settings size={20} /> },
-    { value: "publication", label: "Publikasi", icon: <Globe size={20} /> }
+    { value: "publication", label: "Publikasi", icon: <Globe size={20} /> },
+    { value: "developer", label: "Developer Tools", icon: <Code size={20} /> }
   ];
 
   return (
@@ -140,6 +143,7 @@ const AdminPage = () => {
             {activeTab === "sales" && <SalesManagement />}
             {activeTab === "settings" && <SettingsManagement />}
             {activeTab === "publication" && <PublicationPanel />}
+            {activeTab === "developer" && <DeveloperTools />}
           </div>
         </div>
       </div>
