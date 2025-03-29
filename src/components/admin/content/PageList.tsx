@@ -1,10 +1,11 @@
 
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Pencil, Eye } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { PageSearchBar } from "./PageSearchBar";
+import { PageStatusBadge } from "./PageStatusBadge";
+import { PageActions } from "./PageActions";
+import { PageTableHeader } from "./PageTableHeader";
 
 interface Page {
   id: number;
@@ -55,16 +56,7 @@ export const PageList = ({ pages, onEditPage }: PageListProps) => {
       
       <div className="rounded-md border overflow-hidden mt-4">
         <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Judul</TableHead>
-              <TableHead>URL</TableHead>
-              <TableHead>Terakhir Diubah</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Aksi</TableHead>
-            </TableRow>
-          </TableHeader>
+          <PageTableHeader />
           <TableBody>
             {filteredPages.map(page => (
               <TableRow key={page.id} className="hover:bg-gray-50">
@@ -73,29 +65,14 @@ export const PageList = ({ pages, onEditPage }: PageListProps) => {
                 <TableCell>{page.slug}</TableCell>
                 <TableCell>{page.lastEdited}</TableCell>
                 <TableCell>
-                  <span className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
-                    {page.status}
-                  </span>
+                  <PageStatusBadge status={page.status} />
                 </TableCell>
                 <TableCell>
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => onEditPage(page.id)}
-                    >
-                      <Pencil size={14} className="mr-1" />
-                      Edit
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleViewPage(page.id)}
-                    >
-                      <Eye size={14} className="mr-1" />
-                      Lihat
-                    </Button>
-                  </div>
+                  <PageActions 
+                    pageId={page.id} 
+                    onEdit={onEditPage} 
+                    onView={handleViewPage} 
+                  />
                 </TableCell>
               </TableRow>
             ))}
