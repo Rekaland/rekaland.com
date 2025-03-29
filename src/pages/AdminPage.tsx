@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,11 @@ import { Badge } from "@/components/ui/badge";
 import EnhancedContentManagement from '@/components/admin/EnhancedContentManagement';
 import EnhancedPropertyManagement from '@/components/admin/EnhancedPropertyManagement';
 import { useIsMobile } from '@/hooks/use-mobile';
+import UserManagement from '@/components/admin/UserManagement';
+import AnalyticsDashboard from '@/components/admin/analytics/AnalyticsDashboard';
+import MessagingCenter from '@/components/admin/MessagingCenter';
+import SystemSettings from '@/components/admin/SystemSettings';
+import WebsiteEditor from '@/components/admin/WebsiteEditor';
 
 const AdminPage = () => {
   const navigate = useNavigate();
@@ -144,7 +150,7 @@ const AdminPage = () => {
                   {activeTab === "property" && "Kelola properti dan listing yang ditampilkan"}
                   {activeTab === "users" && "Kelola akun pengguna dan hak akses"}
                   {activeTab === "analytics" && "Analisis performa dan aktivitas pengunjung"}
-                  {activeTab === "website" && "Kustomisasi tampilan website"}
+                  {activeTab === "website" && "Kustomisasi tampilan website dan koneksi backend"}
                   {activeTab === "messages" && "Kelola pesan dan komunikasi dengan pengguna"}
                   {activeTab === "settings" && "Konfigurasi pengaturan sistem"}
                 </p>
@@ -214,71 +220,20 @@ const AdminPage = () => {
             {/* Property Management */}
             {activeTab === "property" && <EnhancedPropertyManagement />}
             
-            {/* Other Admin Sections */}
-            {activeTab === "users" && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Manajemen Pengguna</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-500 text-center p-8">
-                    Modul manajemen pengguna sedang dalam pengembangan
-                  </p>
-                </CardContent>
-              </Card>
-            )}
+            {/* User Management */}
+            {activeTab === "users" && <UserManagement />}
             
-            {activeTab === "analytics" && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Analitik Website</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-500 text-center p-8">
-                    Modul analitik website sedang dalam pengembangan
-                  </p>
-                </CardContent>
-              </Card>
-            )}
+            {/* Analytics */}
+            {activeTab === "analytics" && <AnalyticsDashboard />}
             
-            {activeTab === "website" && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Editor Website</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-500 text-center p-8">
-                    Modul editor website sedang dalam pengembangan
-                  </p>
-                </CardContent>
-              </Card>
-            )}
+            {/* Website Editor */}
+            {activeTab === "website" && <WebsiteEditor />}
             
-            {activeTab === "messages" && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Pesan & Komunikasi</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-500 text-center p-8">
-                    Modul pesan & komunikasi sedang dalam pengembangan
-                  </p>
-                </CardContent>
-              </Card>
-            )}
+            {/* Messaging Center */}
+            {activeTab === "messages" && <MessagingCenter />}
             
-            {activeTab === "settings" && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Pengaturan Sistem</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-500 text-center p-8">
-                    Modul pengaturan sistem sedang dalam pengembangan
-                  </p>
-                </CardContent>
-              </Card>
-            )}
+            {/* System Settings */}
+            {activeTab === "settings" && <SystemSettings />}
           </div>
         </div>
       </div>
