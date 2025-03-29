@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -131,6 +130,22 @@ const AuthPage = () => {
     }
   };
   
+  const switchToRegisterTab = () => {
+    // Safely find and click the register tab trigger
+    const registerTab = document.querySelector('button[value="register"]') as HTMLButtonElement | null;
+    if (registerTab) {
+      registerTab.click();
+    }
+  };
+  
+  const switchToLoginTab = () => {
+    // Safely find and click the login tab trigger
+    const loginTab = document.querySelector('button[value="login"]') as HTMLButtonElement | null;
+    if (loginTab) {
+      loginTab.click();
+    }
+  };
+  
   return (
     <Layout>
       <div className="container mx-auto max-w-md py-16 px-4">
@@ -230,7 +245,7 @@ const AuthPage = () => {
                   Belum memiliki akun?{" "}
                   <button 
                     className="text-orange-600 hover:underline"
-                    onClick={() => document.querySelector('button[value="register"]')?.click()}
+                    onClick={switchToRegisterTab}
                   >
                     Daftar sekarang
                   </button>
@@ -330,7 +345,7 @@ const AuthPage = () => {
                   Sudah memiliki akun?{" "}
                   <button 
                     className="text-orange-600 hover:underline"
-                    onClick={() => document.querySelector('button[value="login"]')?.click()}
+                    onClick={switchToLoginTab}
                   >
                     Masuk sekarang
                   </button>
