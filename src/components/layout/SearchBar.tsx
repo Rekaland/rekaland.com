@@ -1,27 +1,15 @@
+
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { SearchResults } from "./SearchResults";
 
 interface SearchBarProps {
   focusOnMount?: boolean;
   closeSheet?: () => void;
 }
-
-// Data kategori produk untuk pencarian cepat
-const productCategories = [
-  { id: "kavling-kosongan", name: "Kavling Kosongan" },
-  { id: "kavling-setengah-jadi", name: "Kavling Setengah Jadi" },
-  { id: "kavling-siap-huni", name: "Kavling Siap Huni" },
-];
-
-// Keywords yang sering dicari
-const popularKeywords = [
-  "Jakarta", "Lampung", "BSD", "Cisarua", "Premium", 
-  "Strategis", "Dekat Stasiun", "View Pegunungan", "SHM", "Bebas Banjir"
-];
 
 export const SearchBar = ({ focusOnMount, closeSheet }: SearchBarProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -73,45 +61,11 @@ export const SearchBar = ({ focusOnMount, closeSheet }: SearchBarProps) => {
       </form>
 
       {isCommandOpen && searchTerm.length > 0 && (
-        <div className="absolute top-full mt-1 left-0 right-0 bg-white rounded-md shadow-lg overflow-hidden z-50">
-          <Command className="border rounded-lg">
-            <CommandList>
-              <CommandGroup heading="Kategori Properti">
-                {productCategories.map((category) => (
-                  <CommandItem
-                    key={category.id}
-                    onSelect={() => handleSearchItemClick(`/produk/${category.id}`)}
-                    className="cursor-pointer hover:bg-gray-100"
-                  >
-                    {category.name}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-              
-              <CommandGroup heading="Kata Kunci Populer">
-                {popularKeywords
-                  .filter(keyword => 
-                    keyword.toLowerCase().includes(searchTerm.toLowerCase()))
-                  .slice(0, 5)
-                  .map((keyword, index) => (
-                    <CommandItem
-                      key={index}
-                      onSelect={() => {
-                        setSearchTerm(keyword);
-                        handleSearchItemClick(`/produk?search=${encodeURIComponent(keyword)}`);
-                      }}
-                      className="cursor-pointer hover:bg-gray-100"
-                    >
-                      {keyword}
-                    </CommandItem>
-                  ))
-                }
-              </CommandGroup>
-              
-              <CommandEmpty>Tidak ada hasil yang sesuai</CommandEmpty>
-            </CommandList>
-          </Command>
-        </div>
+        <SearchResults 
+          searchTerm={searchTerm}
+          onItemClick={handleSearchItemClick}
+          onTermSelect={setSearchTerm}
+        />
       )}
     </div>
   );
