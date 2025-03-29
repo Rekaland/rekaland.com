@@ -8,9 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Eye, Pencil, Save, History, FileText, Code, Layout, Image as ImageIcon, Box, Type, Laptop, Smartphone, Palette, Layers, RotateCcw } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import PageEditor from "./PageEditor";
 import CodeEditor from "./CodeEditor";
@@ -128,7 +128,7 @@ button {
       {/* Main Editor Area - Takes 3 columns on large screens */}
       <div className="lg:col-span-3 space-y-4">
         {/* Editor Type Tabs */}
-        <Tabs value={editorMode} onValueChange={(v) => setEditorMode(v as "visual" | "code")} className="w-full">
+        <Tabs value={editorMode} onValueChange={(v) => setEditorMode(v as "visual" | "code")}>
           <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
             <TabsList className="h-9">
               <TabsTrigger value="visual" className="flex items-center gap-2">

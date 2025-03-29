@@ -61,7 +61,7 @@ const WebsiteEditor = () => {
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid grid-cols-2 w-full md:w-auto">
           <TabsTrigger value="frontend" className="flex items-center gap-2">
             <Layout size={16} />
@@ -72,16 +72,16 @@ const WebsiteEditor = () => {
             Back-End
           </TabsTrigger>
         </TabsList>
+
+        {/* Content based on active tab */}
+        <TabsContent value="frontend" className="space-y-4 mt-2">
+          <FrontendEditor />
+        </TabsContent>
+
+        <TabsContent value="backend" className="space-y-4 mt-2">
+          <BackendEditor />
+        </TabsContent>
       </Tabs>
-
-      {/* Content based on active tab */}
-      <TabsContent value="frontend" className="space-y-4 mt-2">
-        <FrontendEditor />
-      </TabsContent>
-
-      <TabsContent value="backend" className="space-y-4 mt-2">
-        <BackendEditor />
-      </TabsContent>
     </div>
   );
 };
