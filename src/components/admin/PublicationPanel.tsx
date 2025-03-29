@@ -1,22 +1,17 @@
 
 import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, Globe, Database, AlertTriangle } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { Upload, Check, AlertTriangle, Clock, Globe, RefreshCw, ChevronRight } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import DeploymentStatus from "./publication/DeploymentStatus";
 import DeploymentHistory from "./publication/DeploymentHistory";
-import ChangeHistory from "./publication/ChangeHistory";
 import SupabaseConnection from "./publication/SupabaseConnection";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-
-// Simulasi data untuk riwayat deployment
-const mockDeploymentHistory = [
-  { id: 1, version: "v1.2.3", timestamp: "15 Jun 2023 13:45", status: "Sukses", author: "Admin User", changes: 15 },
-  { id: 2, version: "v1.2.2", timestamp: "10 Jun 2023 09:20", status: "Sukses", author: "Admin User", changes: 8 },
-  { id: 3, version: "v1.2.1", timestamp: "5 Jun 2023 14:30", status: "Gagal", author: "Admin User", changes: 12 },
-  { id: 4, version: "v1.2.0", timestamp: "1 Jun 2023 10:15", status: "Sukses", author: "Admin User", changes: 23 },
-];
 
 interface PublicationPanelProps {
   hasUnsavedChanges?: boolean;
@@ -25,174 +20,173 @@ interface PublicationPanelProps {
 
 const PublicationPanel = ({ hasUnsavedChanges, lastSaved }: PublicationPanelProps) => {
   const { toast } = useToast();
-  const [deploymentHistory, setDeploymentHistory] = useState(mockDeploymentHistory);
-  const [isPublishing, setIsPublishing] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
-  const [activeTab, setActiveTab] = useState("deployment");
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [publishProgress, setPublishProgress] = useState(0);
+  const [activeTab, setActiveTab] = useState("status");
   
-  const handlePublish = async () => {
-    // Periksa koneksi terlebih dahulu
+  // Function to handle supabase connection state update
+  const handleConnectionChange = (connected: boolean) => {
+    setIsConnected(connected);
+    
+    if (connected) {
+      toast({
+        title: "Terhubung ke Supabase!",
+        description: "Koneksi ke Supabase berhasil dibuat",
+        className: "bg-green-600 text-white",
+      });
+    }
+  };
+  
+  // Simulate publishing process
+  const handlePublish = () => {
     if (!isConnected) {
       toast({
-        title: "Koneksi Supabase tidak ditemukan",
-        description: "Silakan hubungkan ke Supabase terlebih dahulu.",
+        title: "Gagal publikasi",
+        description: "Harap hubungkan dengan Supabase terlebih dahulu",
         variant: "destructive",
-        duration: 5000,
       });
-      setActiveTab("connection");
       return;
     }
     
-    // Periksa perubahan yang belum disimpan
     if (hasUnsavedChanges) {
       toast({
         title: "Perubahan belum disimpan",
         description: "Harap simpan perubahan sebelum publikasi",
         variant: "destructive",
-        duration: 5000,
       });
       return;
     }
     
     setIsPublishing(true);
+    setPublishProgress(0);
     
-    toast({
-      title: "Memulai publikasi ke Supabase",
-      description: "Sedang menyinkronkan data dengan database Supabase...",
-      duration: 3000,
-      className: "bg-gradient-to-r from-blue-500 to-green-500 text-white border-0 shadow-lg animate-in fade-in-80 slide-in-from-bottom-10",
-    });
-    
-    try {
-      // Simulasi proses publikasi ke Supabase
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Menambahkan entri baru ke riwayat deployment
-      const newDeployment = {
-        id: Date.now(),
-        version: `v1.2.${deploymentHistory.length + 1}`,
-        timestamp: new Date().toLocaleDateString('id-ID', {
-          day: 'numeric',
-          month: 'short',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
-        }),
-        status: "Sukses",
-        author: "Admin User",
-        changes: Math.floor(Math.random() * 20) + 1
-      };
-      
-      setDeploymentHistory(prev => [newDeployment, ...prev]);
-      
-      toast({
-        title: "Publikasi Berhasil!",
-        description: "Data berhasil diperbarui dan disinkronkan dengan Supabase",
-        duration: 5000,
-        className: "bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg animate-in fade-in-80 slide-in-from-bottom-10",
+    // Simulate progress updates
+    const interval = setInterval(() => {
+      setPublishProgress(prev => {
+        const newProgress = prev + 10;
+        if (newProgress >= 100) {
+          clearInterval(interval);
+          
+          setTimeout(() => {
+            setIsPublishing(false);
+            toast({
+              title: "Publikasi berhasil!",
+              description: "Website berhasil dipublikasikan ke Supabase",
+              className: "bg-green-600 text-white",
+            });
+          }, 500);
+          
+          return 100;
+        }
+        return newProgress;
       });
-    } catch (error) {
-      console.error("Error during publication:", error);
-      
-      toast({
-        title: "Publikasi Gagal",
-        description: "Terjadi kesalahan saat menyinkronkan data dengan Supabase",
-        variant: "destructive",
-        duration: 5000,
-      });
-    } finally {
-      setIsPublishing(false);
-    }
+    }, 600);
   };
   
-  // Saat menghubungkan ke Supabase
-  const handleConnectionUpdate = (status: boolean) => {
-    setIsConnected(status);
-  };
-
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
         <div>
-          <h2 className="text-2xl font-semibold">Publikasi Website</h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Publikasikan perubahan konten dan konfigurasi ke Supabase
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            className="flex items-center gap-2"
-            onClick={() => {
-              toast({
-                title: "Preview dibuka",
-                description: "Membuka preview website di tab baru",
-                duration: 1000,
-                className: "bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-0 shadow-lg animate-in fade-in-80 slide-in-from-bottom-10",
-              });
-            }}
-          >
-            <Eye size={16} />
-            Preview
-          </Button>
-          <Button 
-            onClick={handlePublish}
-            disabled={isPublishing || hasUnsavedChanges || !isConnected}
-            className="bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0 hover:from-orange-600 hover:to-amber-600 flex items-center gap-2"
-          >
-            {isPublishing ? (
-              <>
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent mr-2" />
-                Publikasi...
-              </>
-            ) : (
-              <>
-                <Globe size={16} className="mr-2" />
-                Publikasikan ke Supabase
-              </>
-            )}
-          </Button>
+          <h2 className="text-xl font-semibold">Publikasi Website</h2>
+          <p className="text-sm text-gray-500">Publikasikan perubahan website ke Supabase dan deploy ke hosting</p>
         </div>
       </div>
-
-      {hasUnsavedChanges && (
-        <Alert variant="warning" className="bg-amber-50 border-amber-200">
-          <AlertTriangle className="h-4 w-4 text-amber-500" />
-          <AlertTitle className="text-amber-800">Perubahan belum disimpan</AlertTitle>
-          <AlertDescription className="text-amber-700">
-            Anda memiliki perubahan yang belum disimpan. Harap simpan perubahan sebelum publikasi.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {!isConnected && (
-        <Alert variant="warning" className="bg-blue-50 border-blue-200">
-          <Database className="h-4 w-4 text-blue-500" />
-          <AlertTitle className="text-blue-800">Koneksi Supabase diperlukan</AlertTitle>
-          <AlertDescription className="text-blue-700">
-            Hubungkan ke Supabase terlebih dahulu melalui tab Koneksi Supabase di bawah ini.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-3 mb-4">
-          <TabsTrigger value="deployment">Status Deployment</TabsTrigger>
-          <TabsTrigger value="history">Riwayat Perubahan</TabsTrigger>
-          <TabsTrigger value="connection">Koneksi Supabase</TabsTrigger>
+      
+      <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="status" className="flex items-center gap-2">
+            <Globe size={16} />
+            Status
+          </TabsTrigger>
+          <TabsTrigger value="connection" className="flex items-center gap-2">
+            <RefreshCw size={16} />
+            Koneksi Supabase
+          </TabsTrigger>
+          <TabsTrigger value="history" className="flex items-center gap-2">
+            <Clock size={16} />
+            Riwayat
+          </TabsTrigger>
         </TabsList>
-
-        <TabsContent value="deployment" className="space-y-4">
+        
+        <TabsContent value="status" className="space-y-4">
           <DeploymentStatus isConnected={isConnected} lastSaved={lastSaved} />
-          <DeploymentHistory deploymentHistory={deploymentHistory} />
+          
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Publikasikan Website</CardTitle>
+              <CardDescription>Publikasikan perubahan terbaru ke Supabase dan hosting</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center justify-between p-4 bg-gray-50 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isConnected ? 'bg-green-100' : 'bg-amber-100'}`}>
+                      {isConnected ? <Check size={16} className="text-green-600" /> : <AlertTriangle size={16} className="text-amber-600" />}
+                    </div>
+                    <div>
+                      <h3 className="font-medium">Status Koneksi</h3>
+                      <p className="text-sm text-gray-600">Koneksi ke Supabase</p>
+                    </div>
+                  </div>
+                  <Badge variant={isConnected ? "outline" : "outline"} className={isConnected ? "bg-green-50 text-green-700 border-green-200" : "bg-amber-50 text-amber-700 border-amber-200"}>
+                    {isConnected ? "Terhubung" : "Tidak terhubung"}
+                  </Badge>
+                </div>
+                
+                <div className="flex items-center justify-between p-4 bg-gray-50 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${!hasUnsavedChanges ? 'bg-green-100' : 'bg-amber-100'}`}>
+                      {!hasUnsavedChanges ? <Check size={16} className="text-green-600" /> : <AlertTriangle size={16} className="text-amber-600" />}
+                    </div>
+                    <div>
+                      <h3 className="font-medium">Status Perubahan</h3>
+                      <p className="text-sm text-gray-600">Perubahan pada konfigurasi</p>
+                    </div>
+                  </div>
+                  <Badge variant={!hasUnsavedChanges ? "outline" : "outline"} className={!hasUnsavedChanges ? "bg-green-50 text-green-700 border-green-200" : "bg-amber-50 text-amber-700 border-amber-200"}>
+                    {!hasUnsavedChanges ? "Tersimpan" : "Belum tersimpan"}
+                  </Badge>
+                </div>
+              </div>
+              
+              {isPublishing && (
+                <div className="mt-4">
+                  <p className="text-sm font-medium mb-2">Sedang mempublikasikan...</p>
+                  <Progress value={publishProgress} className="h-2" />
+                  <p className="text-xs text-gray-500 mt-1">
+                    {publishProgress < 30 && "Mengunggah data ke Supabase..."}
+                    {publishProgress >= 30 && publishProgress < 60 && "Memperbarui konfigurasi database..."}
+                    {publishProgress >= 60 && publishProgress < 90 && "Memperbarui halaman website..."}
+                    {publishProgress >= 90 && "Menyelesaikan publikasi..."}
+                  </p>
+                </div>
+              )}
+            </CardContent>
+            <CardFooter className="flex flex-col items-stretch gap-3 sm:flex-row sm:justify-between">
+              <Button variant="outline" disabled={isPublishing}>
+                <Globe size={16} className="mr-2" />
+                Lihat Website
+              </Button>
+              
+              <Button 
+                className="bg-green-600 hover:bg-green-700" 
+                onClick={handlePublish}
+                disabled={!isConnected || hasUnsavedChanges || isPublishing}
+              >
+                <Upload size={16} className="mr-2" />
+                {isPublishing ? "Mempublikasikan..." : "Publikasikan Sekarang"}
+              </Button>
+            </CardFooter>
+          </Card>
         </TabsContent>
-
-        <TabsContent value="history" className="space-y-4">
-          <ChangeHistory deploymentHistory={deploymentHistory} />
+        
+        <TabsContent value="connection">
+          <SupabaseConnection onConnectionChange={handleConnectionChange} isConnected={isConnected} />
         </TabsContent>
-
-        <TabsContent value="connection" className="space-y-4">
-          <SupabaseConnection onPublish={handlePublish} onConnectionUpdate={handleConnectionUpdate} />
+        
+        <TabsContent value="history">
+          <DeploymentHistory />
         </TabsContent>
       </Tabs>
     </div>

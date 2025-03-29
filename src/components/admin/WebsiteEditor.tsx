@@ -3,10 +3,11 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
-import { Database, Save } from "lucide-react";
+import { Database, Save, Globe } from "lucide-react";
 import BackendEditor from "./website/BackendEditor";
 import PublicationPanel from "./PublicationPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import FrontendEditor from "./website/FrontendEditor";
 
 const WebsiteEditor = () => {
   const { toast } = useToast();
@@ -31,7 +32,7 @@ const WebsiteEditor = () => {
     });
   };
 
-  // Menandai bahwa ada perubahan yang belum disimpan
+  // Function to handle changes in configuration
   const handleConfigChange = () => {
     setHasUnsavedChanges(true);
   };
@@ -40,7 +41,7 @@ const WebsiteEditor = () => {
     <div>
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
         <div>
-          <h2 className="text-xl font-semibold">Backend Editor</h2>
+          <h2 className="text-xl font-semibold">Website Editor</h2>
           {lastSaved && (
             <p className="text-sm text-gray-500">Terakhir disimpan: {lastSaved}</p>
           )}
@@ -61,10 +62,14 @@ const WebsiteEditor = () => {
       </div>
 
       <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid grid-cols-2 w-full md:w-auto">
+        <TabsList className="grid grid-cols-3 w-full md:w-auto">
           <TabsTrigger value="backend" className="flex items-center gap-2">
             <Database size={16} />
             Backend Config
+          </TabsTrigger>
+          <TabsTrigger value="frontend" className="flex items-center gap-2">
+            <Globe size={16} />
+            Frontend Editor
           </TabsTrigger>
           <TabsTrigger value="publication" className="flex items-center gap-2">
             <Database size={16} />
@@ -80,7 +85,20 @@ const WebsiteEditor = () => {
                 <h3 className="text-lg font-medium">Backend Configuration</h3>
               </div>
               
-              <BackendEditor onChange={handleConfigChange} />
+              <BackendEditor onConfigChange={handleConfigChange} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="frontend" className="mt-2">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Globe size={20} />
+                <h3 className="text-lg font-medium">Frontend Editor</h3>
+              </div>
+              
+              <FrontendEditor />
             </CardContent>
           </Card>
         </TabsContent>
