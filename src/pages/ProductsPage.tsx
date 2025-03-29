@@ -41,80 +41,6 @@ const ProductsPage = () => {
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const [showMap, setShowMap] = useState(false);
 
-  useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const search = searchParams.get('search');
-    if (search) {
-      setSearchTerm(search);
-      
-      if (isAuthenticated && user && search.trim() !== '') {
-        const searchHistory = JSON.parse(localStorage.getItem(`searchHistory_${user.email}`) || '[]');
-        
-        if (!searchHistory.some((item: any) => 
-          item.type === 'search' && item.keyword === search)) {
-          
-          const historyItem = { 
-            id: Date.now(), 
-            type: 'search', 
-            keyword: search, 
-            timestamp: new Date().toISOString() 
-          };
-          
-          searchHistory.unshift(historyItem);
-          
-          if (searchHistory.length > 20) searchHistory.pop();
-          
-          localStorage.setItem(`searchHistory_${user.email}`, JSON.stringify(searchHistory));
-        }
-      }
-    }
-  }, [location.search, isAuthenticated, user]);
-
-  const productCategories = [
-    {
-      id: "all",
-      title: "Semua Kavling",
-      icon: <Grid3X3 className="h-5 w-5" />,
-      description: "Lihat semua properti yang tersedia",
-      path: "/produk"
-    },
-    {
-      id: "empty",
-      title: "Kavling Kosongan",
-      icon: <Map className="h-5 w-5" />,
-      description: "Tanah kavling siap bangun",
-      path: "/produk/kavling-kosongan"
-    },
-    {
-      id: "semifinished",
-      title: "Kavling Bangunan",
-      icon: <Building className="h-5 w-5" />,
-      description: "Kavling dengan struktur bangunan dasar",
-      path: "/produk/kavling-setengah-jadi"
-    },
-    {
-      id: "ready",
-      title: "Kavling Siap Huni",
-      icon: <Home className="h-5 w-5" />,
-      description: "Properti siap untuk ditempati",
-      path: "/produk/kavling-siap-huni"
-    }
-  ];
-
-  const locations = Array.from(new Set(properties.map(p => p.location)));
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-    
-    const path = location.pathname;
-    if (path === "/produk") setActiveTab("all");
-    else if (path.includes("kavling-kosongan")) setActiveTab("empty");
-    else if (path.includes("kavling-setengah-jadi")) setActiveTab("semifinished");
-    else if (path.includes("kavling-siap-huni")) setActiveTab("ready");
-    
-    localStorage.setItem('allProperties', JSON.stringify(properties));
-  }, [location.pathname]);
-
   const properties = [
     {
       id: 1,
@@ -177,6 +103,80 @@ const ProductsPage = () => {
       features: ["3 kamar tidur", "2 kamar mandi", "Kolam renang"]
     }
   ];
+
+  const locations = Array.from(new Set(properties.map(p => p.location)));
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const search = searchParams.get('search');
+    if (search) {
+      setSearchTerm(search);
+      
+      if (isAuthenticated && user && search.trim() !== '') {
+        const searchHistory = JSON.parse(localStorage.getItem(`searchHistory_${user.email}`) || '[]');
+        
+        if (!searchHistory.some((item: any) => 
+          item.type === 'search' && item.keyword === search)) {
+          
+          const historyItem = { 
+            id: Date.now(), 
+            type: 'search', 
+            keyword: search, 
+            timestamp: new Date().toISOString() 
+          };
+          
+          searchHistory.unshift(historyItem);
+          
+          if (searchHistory.length > 20) searchHistory.pop();
+          
+          localStorage.setItem(`searchHistory_${user.email}`, JSON.stringify(searchHistory));
+        }
+      }
+    }
+  }, [location.search, isAuthenticated, user]);
+
+  const productCategories = [
+    {
+      id: "all",
+      title: "Semua Kavling",
+      icon: <Grid3X3 className="h-5 w-5" />,
+      description: "Lihat semua properti yang tersedia",
+      path: "/produk"
+    },
+    {
+      id: "empty",
+      title: "Kavling Kosongan",
+      icon: <Map className="h-5 w-5" />,
+      description: "Tanah kavling siap bangun",
+      path: "/produk/kavling-kosongan"
+    },
+    {
+      id: "semifinished",
+      title: "Kavling Bangunan",
+      icon: <Building className="h-5 w-5" />,
+      description: "Kavling dengan struktur bangunan dasar",
+      path: "/produk/kavling-setengah-jadi"
+    },
+    {
+      id: "ready",
+      title: "Kavling Siap Huni",
+      icon: <Home className="h-5 w-5" />,
+      description: "Properti siap untuk ditempati",
+      path: "/produk/kavling-siap-huni"
+    }
+  ];
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    
+    const path = location.pathname;
+    if (path === "/produk") setActiveTab("all");
+    else if (path.includes("kavling-kosongan")) setActiveTab("empty");
+    else if (path.includes("kavling-setengah-jadi")) setActiveTab("semifinished");
+    else if (path.includes("kavling-siap-huni")) setActiveTab("ready");
+    
+    localStorage.setItem('allProperties', JSON.stringify(properties));
+  }, [location.pathname]);
 
   const toggleLocationFilter = (location: string) => {
     setSelectedLocations(prev => 
