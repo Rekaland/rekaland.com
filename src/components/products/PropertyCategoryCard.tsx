@@ -1,14 +1,6 @@
 
 import { FC } from "react";
-import { ReactNode } from "react";
-
-interface CategoryProps {
-  id: string;
-  title: string;
-  icon: ReactNode;
-  description: string;
-  path: string;
-}
+import { CategoryProps } from "@/types/product";
 
 interface PropertyCategoryCardProps {
   category: CategoryProps;
