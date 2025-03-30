@@ -4,24 +4,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ColorPicker } from "@/components/ui/color-picker";
 
 interface FrontendEditorProps {
   settings: any;
   onConfigChange: (settings: any) => void;
 }
-
-// Komponen ColorPicker sederhana untuk contoh
-const ColorPicker = ({ value, onChange }: any) => {
-  return (
-    <input 
-      type="color" 
-      value={value} 
-      onChange={onChange} 
-      className="w-full h-10 cursor-pointer"
-    />
-  );
-};
 
 const FrontendEditor = ({ settings, onConfigChange }: FrontendEditorProps) => {
   const [activeSection, setActiveSection] = useState("header");
@@ -144,17 +131,21 @@ const FrontendEditor = ({ settings, onConfigChange }: FrontendEditorProps) => {
         <TabsContent value="theme" className="space-y-4">
           <div>
             <Label>Warna Utama</Label>
-            <ColorPicker 
+            <input 
+              type="color" 
               value={frontendConfig.primaryColor || '#FF6B35'} 
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('primaryColor', e.target.value)}
+              className="w-full h-10 cursor-pointer"
             />
           </div>
           
           <div>
             <Label>Warna Sekunder</Label>
-            <ColorPicker 
+            <input 
+              type="color" 
               value={frontendConfig.secondaryColor || '#4F46E5'} 
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('secondaryColor', e.target.value)}
+              className="w-full h-10 cursor-pointer"
             />
           </div>
           

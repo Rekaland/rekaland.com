@@ -54,7 +54,7 @@ export const ContentEditor = ({ initialContent, onSave }: ContentEditorProps) =>
               updated_at: new Date().toISOString()
             })
             .eq('id', content.id)
-            .select()
+            .select('*')
         : await supabase
             .from('contents')
             .insert({
@@ -63,7 +63,7 @@ export const ContentEditor = ({ initialContent, onSave }: ContentEditorProps) =>
               content: content.content,
               meta_description: content.metaDescription
             })
-            .select();
+            .select('*');
       
       if (error) {
         throw error;
