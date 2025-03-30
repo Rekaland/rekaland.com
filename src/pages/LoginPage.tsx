@@ -1,253 +1,155 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import Layout from "@/components/layout/Layout";
-import { useAuth } from "@/hooks/useAuth";
-import { toast } from "@/hooks/use-toast";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { InfoIcon } from "lucide-react";
+import { FcGoogle } from "react-icons/fc";
+import { Loader2 } from "lucide-react";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const { login, loginWithGoogle } = useAuth();
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { login, loginWithGoogle, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // Dapatkan parameter redirect_to dari URL query
+  const queryParams = new URLSearchParams(location.search);
+  const redirectTo = queryParams.get('redirect_to') || '/';
 
-  // Cek apakah ada redirect_to parameter
+  // Redirect ke halaman utama jika sudah login
   useEffect(() => {
-    const queryParams = new URLSearchParams(location.search);
-    const redirectTo = queryParams.get('redirect_to');
-    if (redirectTo) {
-      localStorage.setItem('redirectAfterLogin', redirectTo);
+    if (isAuthenticated) {
+      navigate(redirectTo);
     }
-  }, [location]);
+  }, [isAuthenticated, navigate, redirectTo]);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setError("");
+    setIsLoading(true);
     
     try {
       const success = await login(email, password);
-      
       if (success) {
-        handlePostLoginActions();
+        navigate(redirectTo);
       }
-    } catch (error) {
-      console.error("Login error:", error);
-      toast({
-        title: "Error",
-        description: "Terjadi kesalahan saat masuk",
-        variant: "destructive",
-      });
+    } catch (err: any) {
+      setError(err.message || "Terjadi kesalahan saat login.");
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   const handleGoogleLogin = async () => {
-    setLoading(true);
-    
+    setError("");
     try {
-      const success = await loginWithGoogle();
-      
-      if (success) {
-        handlePostLoginActions();
-      }
-    } catch (error) {
-      console.error("Google login error:", error);
-      toast({
-        title: "Error",
-        description: "Terjadi kesalahan saat masuk dengan Google",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePostLoginActions = () => {
-    // Cek apakah ada properti yang ingin disimpan sebelum login
-    const propertyToSave = localStorage.getItem('lastPropertyToSave');
-    if (propertyToSave) {
-      // Simulasi menyimpan properti
-      const propertyId = parseInt(propertyToSave);
-      const savedProperties = JSON.parse(localStorage.getItem(`savedProperties_${email}`) || '[]');
-      
-      if (!savedProperties.includes(propertyId)) {
-        savedProperties.push(propertyId);
-        localStorage.setItem(`savedProperties_${email}`, JSON.stringify(savedProperties));
-        
-        toast({
-          title: "Properti Disimpan",
-          description: "Properti telah ditambahkan ke daftar yang Anda minati",
-          className: "bg-gradient-to-r from-green-500 to-green-600 text-white border-0",
-        });
-      }
-      
-      // Hapus properti dari localStorage
-      localStorage.removeItem('lastPropertyToSave');
-    }
-    
-    // Cek apakah ada halaman redirect setelah login
-    const redirectPath = localStorage.getItem('redirectAfterLogin');
-    if (redirectPath) {
-      localStorage.removeItem('redirectAfterLogin');
-      navigate(redirectPath);
-    } else {
-      navigate("/");
+      await loginWithGoogle();
+      // Redirect akan ditangani oleh hook useAuth
+    } catch (err: any) {
+      setError(err.message || "Terjadi kesalahan saat login dengan Google.");
     }
   };
 
   return (
     <Layout>
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
-          <div>
-            <Link to="/" className="flex justify-center">
-              <h1 className="text-3xl font-bold text-center">
-                REKA<span className="text-rekaland-orange">LAND</span>
-              </h1>
-            </Link>
-            <h2 className="mt-6 text-center text-2xl font-bold text-gray-900">
-              Masuk ke akun Anda
-            </h2>
-            <p className="mt-2 text-center text-sm text-gray-600">
-              Atau{" "}
-              <Link
-                to="/daftar"
-                className="font-medium text-rekaland-orange hover:text-orange-500"
-              >
-                daftar akun baru
-              </Link>
-            </p>
-          </div>
-          
-          <Alert className="bg-blue-50 border-blue-200">
-            <InfoIcon className="h-4 w-4 text-blue-500" />
-            <AlertTitle className="text-blue-700">Informasi</AlertTitle>
-            <AlertDescription className="text-blue-600">
-              Untuk mendaftar sebagai admin, gunakan email: rekaland.idn@gmail.com dan kata sandi: rekaland123
-            </AlertDescription>
-          </Alert>
-
-          <form className="mt-8 space-y-6" onSubmit={handleLogin}>
-            <div className="space-y-4">
-              <div>
+      <div className="container mx-auto px-4 py-12 flex justify-center items-center min-h-[80vh]">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl text-rekaland-black">Masuk ke REKA<span className="text-rekaland-orange">LAND</span></CardTitle>
+            <CardDescription>Masukkan kredensial Anda untuk mengakses akun</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
+                <Input 
+                  id="email" 
+                  type="email" 
+                  placeholder="Email Anda" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  placeholder="nama@example.com"
-                  className="mt-1"
+                  disabled={isLoading}
                 />
               </div>
-              <div>
-                <Label htmlFor="password">Kata Sandi</Label>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
+              
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Kata Sandi</Label>
+                  <Link to="/reset-password" className="text-sm text-rekaland-orange hover:underline">
+                    Lupa kata sandi?
+                  </Link>
+                </div>
+                <Input 
+                  id="password" 
+                  type="password" 
+                  placeholder="Kata Sandi Anda" 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  placeholder="********"
-                  className="mt-1"
+                  disabled={isLoading}
                 />
               </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 text-rekaland-orange focus:ring-orange-500 border-gray-300 rounded"
-                />
-                <label
-                  htmlFor="remember-me"
-                  className="ml-2 block text-sm text-gray-900"
-                >
-                  Ingat saya
-                </label>
-              </div>
-
-              <div className="text-sm">
-                <a
-                  href="#"
-                  className="font-medium text-rekaland-orange hover:text-orange-500"
-                >
-                  Lupa kata sandi?
-                </a>
-              </div>
-            </div>
-
-            <div>
-              <Button
-                type="submit"
+              
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+              
+              <Button 
+                type="submit" 
                 className="w-full bg-rekaland-orange hover:bg-orange-600"
-                disabled={loading}
+                disabled={isLoading}
               >
-                {loading ? "Memproses..." : "Masuk"}
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Memproses...
+                  </>
+                ) : (
+                  "Masuk"
+                )}
               </Button>
-            </div>
-          </form>
-
-          <div className="mt-6">
-            <div className="relative">
+            </form>
+            
+            <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
+                <span className="w-full border-t border-gray-300" />
               </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">
-                  Atau masuk dengan
-                </span>
+              <div className="relative flex justify-center text-xs">
+                <span className="bg-white px-2 text-gray-500">Atau</span>
               </div>
             </div>
-
-            <div className="mt-6">
-              <Button
-                onClick={handleGoogleLogin}
-                type="button"
-                className="w-full flex justify-center items-center bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
-                disabled={loading}
-              >
-                <svg
-                  className="h-5 w-5 mr-2"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    fill="#EA4335"
-                    d="M5.266 9.765A7.077 7.077 0 0 1 12 4.909c1.69 0 3.218.6 4.418 1.582L19.91 3C17.782 1.145 15.055 0 12 0 7.27 0 3.198 2.698 1.24 6.65l4.026 3.115z"
-                  />
-                  <path
-                    fill="#34A853"
-                    d="M16.04 18.013c-1.09.703-2.474 1.078-4.04 1.078a7.077 7.077 0 0 1-6.723-4.823l-4.04 3.067A11.965 11.965 0 0 0 12 24c2.933 0 5.735-1.043 7.834-3l-3.793-2.987z"
-                  />
-                  <path
-                    fill="#4A90E2"
-                    d="M19.834 21c2.195-2.048 3.62-5.096 3.62-9 0-.71-.109-1.473-.272-2.182H12v4.637h6.436c-.317 1.559-1.17 2.766-2.395 3.558L19.834 21z"
-                  />
-                  <path
-                    fill="#FBBC05"
-                    d="M5.277 14.268A7.12 7.12 0 0 1 4.909 12c0-.782.125-1.533.357-2.235L1.24 6.65A11.934 11.934 0 0 0 0 12c0 1.92.445 3.73 1.237 5.335l4.04-3.067z"
-                  />
-                </svg>
-                <span>Google</span>
-              </Button>
+            
+            <Button 
+              type="button" 
+              variant="outline" 
+              className="w-full flex items-center justify-center gap-2"
+              onClick={handleGoogleLogin}
+              disabled={isLoading}
+            >
+              <FcGoogle className="h-5 w-5" />
+              Masuk dengan Google
+            </Button>
+          </CardContent>
+          <CardFooter className="flex justify-center">
+            <div className="text-sm text-gray-600">
+              Belum memiliki akun?{" "}
+              <Link to="/daftar" className="text-rekaland-orange hover:underline font-medium">
+                Daftar
+              </Link>
             </div>
-          </div>
-        </div>
+          </CardFooter>
+        </Card>
       </div>
     </Layout>
   );
