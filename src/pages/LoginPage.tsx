@@ -37,11 +37,16 @@ const LoginPage = () => {
     setIsLoading(true);
     
     try {
+      console.log("Attempting login with:", email, password);
       const success = await login(email, password);
+      console.log("Login success:", success);
       if (success) {
         navigate(redirectTo);
+      } else {
+        setError("Login gagal. Periksa kembali email dan kata sandi Anda.");
       }
     } catch (err: any) {
+      console.error("Login error:", err);
       setError(err.message || "Terjadi kesalahan saat login.");
     } finally {
       setIsLoading(false);
@@ -54,6 +59,7 @@ const LoginPage = () => {
       await loginWithGoogle();
       // Redirect akan ditangani oleh hook useAuth
     } catch (err: any) {
+      console.error("Google login error:", err);
       setError(err.message || "Terjadi kesalahan saat login dengan Google.");
     }
   };
