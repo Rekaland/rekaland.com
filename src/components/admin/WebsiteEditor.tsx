@@ -47,16 +47,19 @@ const WebsiteEditor = () => {
           }
         }
         
-        if (data?.value) {
-          setSettings(JSON.parse(data.value));
+        if (data) {
+          const settingsData = data.value ? JSON.parse(data.value as string) : {};
+          setSettings(settingsData);
           
-          const updatedAt = new Date(data.updated_at);
-          const formattedTime = updatedAt.toLocaleTimeString('id-ID', { 
-            hour: '2-digit', 
-            minute: '2-digit',
-            second: '2-digit'
-          });
-          setLastSaved(formattedTime);
+          if (data.updated_at) {
+            const updatedAt = new Date(data.updated_at);
+            const formattedTime = updatedAt.toLocaleTimeString('id-ID', { 
+              hour: '2-digit', 
+              minute: '2-digit',
+              second: '2-digit'
+            });
+            setLastSaved(formattedTime);
+          }
         }
       } catch (err) {
         console.error('Failed to fetch settings:', err);
@@ -69,17 +72,42 @@ const WebsiteEditor = () => {
   const handleSaveBackendChanges = async () => {
     try {
       const now = new Date();
-      const { data, error } = await supabase
-        .from('settings')
-        .upsert({
-          key: 'website_settings',
-          value: JSON.stringify(settings),
-          updated_at: now.toISOString()
-        }, { onConflict: 'key' })
-        .select();
       
-      if (error) {
-        throw error;
+      // Check if settings already exist
+      const { data: existingData, error: fetchError } = await supabase
+        .from('settings')
+        .select('id')
+        .eq('key', 'website_settings')
+        .maybeSingle();
+      
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        throw fetchError;
+      }
+      
+      let result;
+      
+      if (existingData) {
+        // Update existing settings
+        result = await supabase
+          .from('settings')
+          .update({
+            value: JSON.stringify(settings),
+            updated_at: now.toISOString()
+          })
+          .eq('key', 'website_settings');
+      } else {
+        // Insert new settings
+        result = await supabase
+          .from('settings')
+          .insert({
+            key: 'website_settings',
+            value: JSON.stringify(settings),
+            updated_at: now.toISOString()
+          });
+      }
+      
+      if (result.error) {
+        throw result.error;
       }
       
       const formattedTime = now.toLocaleTimeString('id-ID', { 

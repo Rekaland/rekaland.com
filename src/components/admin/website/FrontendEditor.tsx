@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ColorPicker } from "@/components/ui/color-picker";
 
 interface FrontendEditorProps {
   settings: any;
@@ -13,176 +14,160 @@ interface FrontendEditorProps {
 const FrontendEditor = ({ settings, onConfigChange }: FrontendEditorProps) => {
   const [activeSection, setActiveSection] = useState("header");
   
-  const handleChange = (field: string, value: any) => {
-    onConfigChange({
-      ...settings,
-      frontendConfig: {
-        ...settings.frontendConfig,
-        [field]: value
-      }
-    });
+  // Default frontend config jika belum tersedia
+  const frontendConfig = settings.frontend || {
+    header: {
+      logo: '',
+      navbarColor: 'light',
+    },
+    footer: {
+      logo: '',
+      copyright: '© 2023 Rekaland. All rights reserved.',
+      showSocialLinks: true,
+    },
+    home: {
+      heroTitle: 'Temukan Properti Impian Anda',
+      heroSubtitle: 'Pilihan terbaik hunian dan kavling untuk keluarga Indonesia',
+      showFeaturedProperties: true,
+      showTestimonials: true,
+    },
+    primaryColor: '#FF6B35',
+    secondaryColor: '#4F46E5',
+    fontFamily: 'Inter',
   };
   
-  // Memastikan objek frontendConfig tersedia
-  const frontendConfig = settings.frontendConfig || {
-    primaryColor: "#FF6B35",
-    secondaryColor: "#4F46E5",
-    fontFamily: "Inter, sans-serif",
-    headerStyle: "default",
-    footerStyle: "default",
-    homepageLayout: "standard",
-    customCSS: ""
+  // Handle perubahan pada pengaturan
+  const handleChange = (key: string, value: any) => {
+    const updatedConfig = {
+      ...settings,
+      frontend: {
+        ...frontendConfig,
+        [key]: value
+      }
+    };
+    
+    onConfigChange(updatedConfig);
+  };
+  
+  // Handle perubahan pada pengaturan nested (header, footer, home)
+  const handleNestedChange = (section: string, key: string, value: any) => {
+    const updatedConfig = {
+      ...settings,
+      frontend: {
+        ...frontendConfig,
+        [section]: {
+          ...frontendConfig[section],
+          [key]: value
+        }
+      }
+    };
+    
+    onConfigChange(updatedConfig);
   };
   
   return (
     <div className="space-y-6">
-      <Tabs defaultValue={activeSection} onValueChange={setActiveSection} className="w-full">
-        <TabsList className="mb-4">
+      <Tabs value={activeSection} onValueChange={setActiveSection}>
+        <TabsList className="grid grid-cols-3 w-full md:w-fit">
           <TabsTrigger value="header">Header</TabsTrigger>
           <TabsTrigger value="footer">Footer</TabsTrigger>
-          <TabsTrigger value="homepage">Homepage</TabsTrigger>
           <TabsTrigger value="theme">Tema</TabsTrigger>
-          <TabsTrigger value="custom">Kustom CSS</TabsTrigger>
         </TabsList>
         
         <TabsContent value="header" className="space-y-4">
           <div>
-            <Label>Gaya Header</Label>
-            <select 
-              className="w-full rounded-md border border-input bg-background py-2 px-3"
-              value={frontendConfig.headerStyle || 'default'}
-              onChange={(e) => handleChange('headerStyle', e.target.value)}
-            >
-              <option value="default">Default</option>
-              <option value="centered">Centered</option>
-              <option value="minimal">Minimal</option>
-              <option value="transparent">Transparent</option>
-            </select>
-            <p className="text-xs text-gray-500 mt-1">Pilih gaya tampilan untuk header</p>
+            <Label>Logo URL</Label>
+            <Input 
+              value={frontendConfig.header?.logo || ''} 
+              onChange={(e) => handleNestedChange('header', 'logo', e.target.value)}
+              placeholder="URL gambar logo"
+            />
+            <p className="text-xs text-gray-500 mt-1">Untuk hasil terbaik, gunakan logo dengan latar belakang transparan</p>
           </div>
           
           <div>
-            <Label>Logo Text</Label>
-            <Input 
-              value={frontendConfig.logoText || 'REKALAND'} 
-              onChange={(e) => handleChange('logoText', e.target.value)}
-            />
+            <Label>Warna Navbar</Label>
+            <select 
+              className="w-full p-2 border rounded"
+              value={frontendConfig.header?.navbarColor || 'light'}
+              onChange={(e) => handleNestedChange('header', 'navbarColor', e.target.value)}
+            >
+              <option value="light">Light (Putih)</option>
+              <option value="dark">Dark (Gelap)</option>
+              <option value="transparent">Transparan</option>
+            </select>
           </div>
         </TabsContent>
         
         <TabsContent value="footer" className="space-y-4">
           <div>
-            <Label>Gaya Footer</Label>
-            <select 
-              className="w-full rounded-md border border-input bg-background py-2 px-3"
-              value={frontendConfig.footerStyle || 'default'}
-              onChange={(e) => handleChange('footerStyle', e.target.value)}
-            >
-              <option value="default">Default</option>
-              <option value="minimal">Minimal</option>
-              <option value="detailed">Detailed</option>
-              <option value="centered">Centered</option>
-            </select>
-          </div>
-          
-          <div>
-            <Label>Footer Text</Label>
-            <Textarea 
-              value={frontendConfig.footerText || '© 2025 Rekaland. All rights reserved.'} 
-              onChange={(e) => handleChange('footerText', e.target.value)}
-              rows={2}
-            />
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="homepage" className="space-y-4">
-          <div>
-            <Label>Layout Homepage</Label>
-            <select 
-              className="w-full rounded-md border border-input bg-background py-2 px-3"
-              value={frontendConfig.homepageLayout || 'standard'}
-              onChange={(e) => handleChange('homepageLayout', e.target.value)}
-            >
-              <option value="standard">Standard</option>
-              <option value="hero-centered">Hero Centered</option>
-              <option value="full-width">Full Width</option>
-              <option value="property-focused">Property Focused</option>
-            </select>
-          </div>
-          
-          <div>
-            <Label>Hero Title</Label>
+            <Label>Logo Footer</Label>
             <Input 
-              value={frontendConfig.heroTitle || 'Temukan Hunian Impian Anda'} 
-              onChange={(e) => handleChange('heroTitle', e.target.value)}
+              value={frontendConfig.footer?.logo || ''} 
+              onChange={(e) => handleNestedChange('footer', 'logo', e.target.value)}
+              placeholder="URL gambar logo footer"
             />
           </div>
           
           <div>
-            <Label>Hero Subtitle</Label>
-            <Textarea 
-              value={frontendConfig.heroSubtitle || 'Kami menyediakan properti berkualitas di lokasi strategis dengan harga terbaik'} 
-              onChange={(e) => handleChange('heroSubtitle', e.target.value)}
-              rows={2}
+            <Label>Copyright Text</Label>
+            <Input 
+              value={frontendConfig.footer?.copyright || '© 2023 Rekaland. All rights reserved.'} 
+              onChange={(e) => handleNestedChange('footer', 'copyright', e.target.value)}
             />
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <input 
+              type="checkbox" 
+              id="show-social-links"
+              checked={frontendConfig.footer?.showSocialLinks || false}
+              onChange={(e) => handleNestedChange('footer', 'showSocialLinks', e.target.checked)}
+            />
+            <Label htmlFor="show-social-links">Tampilkan tautan media sosial</Label>
           </div>
         </TabsContent>
         
         <TabsContent value="theme" className="space-y-4">
           <div>
             <Label>Warna Utama</Label>
-            <input 
-              type="color" 
+            <ColorPicker 
               value={frontendConfig.primaryColor || '#FF6B35'} 
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('primaryColor', e.target.value)}
-              className="w-full h-10 cursor-pointer"
             />
           </div>
           
           <div>
             <Label>Warna Sekunder</Label>
-            <input 
-              type="color" 
+            <ColorPicker 
               value={frontendConfig.secondaryColor || '#4F46E5'} 
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange('secondaryColor', e.target.value)}
-              className="w-full h-10 cursor-pointer"
             />
           </div>
           
           <div>
             <Label>Font Family</Label>
             <select 
-              className="w-full rounded-md border border-input bg-background py-2 px-3"
-              value={frontendConfig.fontFamily || 'Inter, sans-serif'}
+              className="w-full p-2 border rounded"
+              value={frontendConfig.fontFamily || 'Inter'}
               onChange={(e) => handleChange('fontFamily', e.target.value)}
             >
-              <option value="Inter, sans-serif">Inter</option>
-              <option value="Roboto, sans-serif">Roboto</option>
-              <option value="Poppins, sans-serif">Poppins</option>
-              <option value="Montserrat, sans-serif">Montserrat</option>
-              <option value="Open Sans, sans-serif">Open Sans</option>
+              <option value="Inter">Inter</option>
+              <option value="Roboto">Roboto</option>
+              <option value="Open Sans">Open Sans</option>
+              <option value="Poppins">Poppins</option>
+              <option value="Montserrat">Montserrat</option>
             </select>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="custom" className="space-y-4">
-          <div>
-            <Label>Custom CSS</Label>
-            <Textarea 
-              value={frontendConfig.customCSS || ''} 
-              onChange={(e) => handleChange('customCSS', e.target.value)}
-              placeholder="/* Masukkan kode CSS kustom Anda di sini */"
-              className="font-mono text-sm"
-              rows={10}
-            />
-            <p className="text-xs text-gray-500 mt-1">Tambahkan CSS kustom untuk menyesuaikan tampilan website</p>
           </div>
         </TabsContent>
       </Tabs>
       
-      <p className="text-sm text-gray-500 mt-4">
-        Pengaturan ini memengaruhi tampilan frontend website. Klik "Simpan Perubahan" di atas untuk menyimpan.
-      </p>
+      <div className="p-4 bg-gray-50 rounded border border-gray-200">
+        <h3 className="text-md font-medium mb-2">Pratinjau Konfigurasi</h3>
+        <div className="text-sm bg-white p-3 rounded border border-gray-200 font-mono whitespace-pre overflow-x-auto">
+          {JSON.stringify(frontendConfig, null, 2)}
+        </div>
+      </div>
     </div>
   );
 };

@@ -43,33 +43,35 @@ export const ContentEditor = ({ initialContent, onSave }: ContentEditorProps) =>
     try {
       // Jika konten memiliki ID, update konten yang ada
       // Jika tidak, buat konten baru
-      const { data, error } = content.id 
-        ? await supabase
-            .from('contents')
-            .update({
-              title: content.title,
-              slug: content.slug,
-              content: content.content,
-              meta_description: content.metaDescription,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', content.id)
-            .select('*')
-        : await supabase
-            .from('contents')
-            .insert({
-              title: content.title,
-              slug: content.slug,
-              content: content.content,
-              meta_description: content.metaDescription
-            })
-            .select('*');
+      let result;
       
-      if (error) {
-        throw error;
+      if (content.id) {
+        result = await supabase
+          .from('contents')
+          .update({
+            title: content.title,
+            slug: content.slug,
+            content: content.content,
+            meta_description: content.metaDescription,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', content.id);
+      } else {
+        result = await supabase
+          .from('contents')
+          .insert({
+            title: content.title,
+            slug: content.slug,
+            content: content.content,
+            meta_description: content.metaDescription
+          });
       }
       
-      console.log('Content saved successfully:', data);
+      if (result.error) {
+        throw result.error;
+      }
+      
+      console.log('Content saved successfully:', result.data);
       
       if (onSave) {
         onSave(content);
