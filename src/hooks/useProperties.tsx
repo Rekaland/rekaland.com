@@ -26,7 +26,8 @@ export const useProperties = (featured?: boolean, category?: string, limit?: num
         
         // Filter berdasarkan kategori jika parameter diberikan
         if (category && category !== 'all') {
-          query = query.eq('category', category);
+          // Cast string ke tipe yang sesuai dengan kolom category di database
+          query = query.eq('category', category as any);
         }
         
         // Batasi hasil jika parameter limit diberikan

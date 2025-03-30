@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,32 +8,109 @@ import BackendEditor from "./website/BackendEditor";
 import PublicationPanel from "./PublicationPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import FrontendEditor from "./website/FrontendEditor";
+import { supabase } from "@/integrations/supabase/client";
 
 const WebsiteEditor = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("backend");
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
+  const [settings, setSettings] = useState({
+    supabaseUrl: '',
+    supabaseKey: '',
+    siteTitle: 'Rekaland',
+    siteDescription: 'Solusi properti terbaik untuk keluarga Indonesia',
+    contactEmail: '',
+    contactPhone: '',
+    siteTheme: 'light',
+    socialLinks: {
+      facebook: '',
+      instagram: '',
+      twitter: ''
+    }
+  });
   
-  const handleSaveBackendChanges = () => {
-    setHasUnsavedChanges(false);
-    const now = new Date();
-    const formattedTime = now.toLocaleTimeString('id-ID', { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      second: '2-digit'
-    });
-    setLastSaved(formattedTime);
+  // Ambil pengaturan saat komponen dimuat
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('settings')
+          .select('*')
+          .eq('key', 'website_settings')
+          .single();
+        
+        if (error) {
+          if (error.code !== 'PGRST116') { // Ignore "not found" errors
+            console.error('Error fetching settings:', error);
+            throw error;
+          }
+        }
+        
+        if (data?.value) {
+          setSettings(JSON.parse(data.value));
+          
+          const updatedAt = new Date(data.updated_at);
+          const formattedTime = updatedAt.toLocaleTimeString('id-ID', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            second: '2-digit'
+          });
+          setLastSaved(formattedTime);
+        }
+      } catch (err) {
+        console.error('Failed to fetch settings:', err);
+      }
+    };
     
-    toast({
-      title: "Perubahan tersimpan!",
-      description: "Perubahan pada backend berhasil disimpan",
-      className: "bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg animate-in fade-in-80 slide-in-from-bottom-10",
-    });
+    fetchSettings();
+  }, []);
+  
+  const handleSaveBackendChanges = async () => {
+    try {
+      const now = new Date();
+      const { data, error } = await supabase
+        .from('settings')
+        .upsert({
+          key: 'website_settings',
+          value: JSON.stringify(settings),
+          updated_at: now.toISOString()
+        }, { onConflict: 'key' })
+        .select();
+      
+      if (error) {
+        throw error;
+      }
+      
+      const formattedTime = now.toLocaleTimeString('id-ID', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        second: '2-digit'
+      });
+      
+      setHasUnsavedChanges(false);
+      setLastSaved(formattedTime);
+      
+      toast({
+        title: "Perubahan tersimpan!",
+        description: "Perubahan pada backend berhasil disimpan ke database",
+        className: "bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg animate-in fade-in-80 slide-in-from-bottom-10",
+      });
+    } catch (err: any) {
+      console.error('Error saving settings:', err);
+      
+      toast({
+        title: "Gagal menyimpan perubahan",
+        description: err.message || "Terjadi kesalahan saat menyimpan pengaturan",
+        variant: "destructive",
+        duration: 5000,
+      });
+    }
   };
 
   // Function to handle changes in configuration
-  const handleConfigChange = () => {
+  const handleConfigChange = (newSettings: any) => {
+    setSettings(newSettings);
     setHasUnsavedChanges(true);
   };
   
@@ -85,7 +162,10 @@ const WebsiteEditor = () => {
                 <h3 className="text-lg font-medium">Backend Configuration</h3>
               </div>
               
-              <BackendEditor onConfigChange={handleConfigChange} />
+              <BackendEditor 
+                settings={settings} 
+                onConfigChange={handleConfigChange} 
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -98,7 +178,10 @@ const WebsiteEditor = () => {
                 <h3 className="text-lg font-medium">Frontend Editor</h3>
               </div>
               
-              <FrontendEditor />
+              <FrontendEditor 
+                settings={settings}
+                onConfigChange={handleConfigChange}
+              />
             </CardContent>
           </Card>
         </TabsContent>
