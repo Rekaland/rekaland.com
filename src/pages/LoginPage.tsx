@@ -26,6 +26,7 @@ const LoginPage = () => {
 
   // Redirect ke halaman utama jika sudah login
   useEffect(() => {
+    console.log("Auth status changed in LoginPage, isAuthenticated:", isAuthenticated);
     if (isAuthenticated) {
       navigate(redirectTo);
     }
@@ -40,11 +41,10 @@ const LoginPage = () => {
       console.log("Attempting login with:", email, password);
       const success = await login(email, password);
       console.log("Login success:", success);
-      if (success) {
-        navigate(redirectTo);
-      } else {
-        setError("Login gagal. Periksa kembali email dan kata sandi Anda.");
-      }
+      
+      // Tidak perlu melakukan navigasi manual di sini karena
+      // useEffect di atas akan menangani navigasi otomatis ketika 
+      // isAuthenticated berubah menjadi true
     } catch (err: any) {
       console.error("Login error:", err);
       setError(err.message || "Terjadi kesalahan saat login.");
@@ -55,12 +55,15 @@ const LoginPage = () => {
 
   const handleGoogleLogin = async () => {
     setError("");
+    setIsLoading(true);
     try {
       await loginWithGoogle();
       // Redirect akan ditangani oleh hook useAuth
     } catch (err: any) {
       console.error("Google login error:", err);
       setError(err.message || "Terjadi kesalahan saat login dengan Google.");
+    } finally {
+      setIsLoading(false);
     }
   };
 

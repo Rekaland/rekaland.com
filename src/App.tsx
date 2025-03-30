@@ -12,6 +12,8 @@ import ContactPage from './pages/ContactPage';
 import AdminPage from './pages/AdminPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import ProfilePage from './pages/ProfilePage';
+import EmailConfirmPage from './pages/EmailConfirmPage';
 import { Toaster } from './components/ui/toaster';
 import AdminSetupPage from "./pages/AdminSetupPage";
 
@@ -32,6 +34,8 @@ function App() {
               <Route path="/admin" element={<AdminPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/daftar" element={<RegisterPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/confirm-email" element={<EmailConfirmPage />} />
               <Route path="/admin-setup" element={<AdminSetupPage />} />
               <Route path="/auth/callback" element={<div>Loading...</div>} />
             </Routes>

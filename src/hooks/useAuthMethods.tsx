@@ -14,7 +14,21 @@ export const useAuthMethods = () => {
       if (error) {
         console.error("Login error:", error);
         
-        if (error.message.includes("Invalid login credentials")) {
+        if (error.message.includes("Email not confirmed")) {
+          await supabase.auth.resend({
+            type: 'signup',
+            email: email
+          });
+          
+          toast({
+            title: "Email belum dikonfirmasi",
+            description: "Kami telah mengirim ulang email konfirmasi. Silakan cek kotak masuk email Anda dan klik tautan konfirmasi.",
+            variant: "destructive",
+            duration: 6000,
+          });
+          
+          return false;
+        } else if (error.message.includes("Invalid login credentials")) {
           toast({
             title: "Email atau kata sandi salah",
             description: "Periksa kembali email dan kata sandi Anda, atau daftar jika Anda belum memiliki akun.",
@@ -185,6 +199,37 @@ export const useAuthMethods = () => {
     }
   };
 
+  const confirmEmail = async (token: string) => {
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        token_hash: token,
+        type: 'email'
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Email berhasil dikonfirmasi",
+        description: "Anda sekarang dapat login dengan akun Anda.",
+        className: "bg-gradient-to-r from-green-500 to-green-600 text-white border-none",
+        duration: 3000,
+      });
+      
+      return true;
+    } catch (error: any) {
+      console.error("Email confirmation failed:", error);
+      
+      toast({
+        title: "Konfirmasi email gagal",
+        description: error.message || "Terjadi kesalahan saat mencoba konfirmasi email",
+        variant: "destructive",
+        duration: 3000,
+      });
+      
+      return false;
+    }
+  };
+
   const logout = async () => {
     try {
       console.log("Attempting logout");
@@ -214,6 +259,7 @@ export const useAuthMethods = () => {
     loginWithGoogle,
     register,
     registerAdmin,
+    confirmEmail,
     logout
   };
 };
