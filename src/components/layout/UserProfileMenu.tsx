@@ -65,6 +65,8 @@ export const UserProfileMenu = () => {
     return user.name.split(" ")[0]; // Just first name for compact display
   };
 
+  console.log("UserProfileMenu - isAdmin:", isAdmin); // Debugging
+
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
@@ -87,6 +89,11 @@ export const UserProfileMenu = () => {
         <div className="px-2 py-1.5">
           <p className="text-sm font-medium">{user?.name || "Pengguna"}</p>
           <p className="text-xs text-muted-foreground truncate">{user?.email || ""}</p>
+          {isAdmin && (
+            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full mt-1 inline-block">
+              Admin
+            </span>
+          )}
         </div>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={goToProfile} className="cursor-pointer hover:bg-orange-50">
@@ -98,7 +105,7 @@ export const UserProfileMenu = () => {
           <span>Pengaturan</span>
         </DropdownMenuItem>
         {isAdmin && (
-          <DropdownMenuItem onClick={goToAdmin} className="cursor-pointer hover:bg-orange-50">
+          <DropdownMenuItem onClick={goToAdmin} className="cursor-pointer hover:bg-orange-50 bg-blue-50 font-medium text-blue-700">
             <LayoutDashboard className="mr-2 h-4 w-4" />
             <span>Dashboard Admin</span>
           </DropdownMenuItem>

@@ -6,9 +6,9 @@ import { UserProfileMenu } from "./UserProfileMenu";
 import { LogIn, UserPlus } from "lucide-react";
 
 export const AuthButtons = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isAdmin } = useAuth();
 
-  console.log("AuthButtons - isAuthenticated:", isAuthenticated);
+  console.log("AuthButtons - isAuthenticated:", isAuthenticated, "isAdmin:", isAdmin);
 
   return (
     <>
