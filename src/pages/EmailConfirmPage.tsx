@@ -23,14 +23,17 @@ const EmailConfirmPage = () => {
     const verifyEmail = async () => {
       if (token && type === "email") {
         try {
+          console.log("Attempting to verify email with token:", token);
           const success = await confirmEmail(token);
           setIsSuccess(success);
         } catch (err: any) {
+          console.error("Email verification error:", err);
           setError(err.message || "Terjadi kesalahan saat memverifikasi email.");
         } finally {
           setIsVerifying(false);
         }
       } else {
+        console.error("Invalid token parameters:", { token, type });
         setError("Parameter token tidak valid.");
         setIsVerifying(false);
       }

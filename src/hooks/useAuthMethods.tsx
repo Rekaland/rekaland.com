@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -148,6 +149,7 @@ export const useAuthMethods = () => {
     try {
       console.log("Attempting registration for admin:", email);
       
+      // 1. Daftarkan pengguna baru
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -156,6 +158,7 @@ export const useAuthMethods = () => {
             full_name: name,
             is_admin: true,
           },
+          emailRedirectTo: `${window.location.origin}/confirm-email`,
         }
       });
 
@@ -166,6 +169,7 @@ export const useAuthMethods = () => {
 
       console.log("Admin registration successful:", data);
 
+      // 2. Tambahkan role admin ke user_roles tabel
       if (data.user) {
         const { error: roleError } = await supabase
           .from('user_roles')
@@ -175,13 +179,16 @@ export const useAuthMethods = () => {
           
         if (roleError) {
           console.error("Error setting admin role:", roleError);
+          throw roleError;
         }
+        
+        console.log("Admin role set successfully for user:", data.user.id);
       }
 
       toast({
         title: "Registrasi Admin Berhasil!",
-        description: "Selamat datang di Rekaland.",
-        duration: 3000,
+        description: "Akun admin telah dibuat. Silakan cek email Anda untuk konfirmasi.",
+        duration: 5000,
         className: "bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0",
       });
 
@@ -201,12 +208,18 @@ export const useAuthMethods = () => {
 
   const confirmEmail = async (token: string) => {
     try {
+      console.log("Confirming email with token:", token);
       const { error } = await supabase.auth.verifyOtp({
         token_hash: token,
         type: 'email'
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Email confirmation error:", error);
+        throw error;
+      }
+      
+      console.log("Email confirmation successful");
       
       toast({
         title: "Email berhasil dikonfirmasi",

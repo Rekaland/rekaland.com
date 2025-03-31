@@ -17,6 +17,8 @@ interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<boolean>;
   loginWithGoogle: () => Promise<boolean>;
   register: (name: string, email: string, password: string) => Promise<boolean>;
+  registerAdmin: (email: string, password: string, name: string) => Promise<boolean>;
+  confirmEmail: (token: string) => Promise<boolean>;
   logout: () => Promise<void>;
 }
 

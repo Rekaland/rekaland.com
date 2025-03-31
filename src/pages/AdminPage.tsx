@@ -1,8 +1,8 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { useToast } from '../hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { 
   Settings, Users, FileText, BarChart3, Globe, Box, 
   PanelLeft, Save, ChevronRight, ChevronLeft, Home,
@@ -26,23 +26,58 @@ import ContentManagement from '@/components/admin/ContentManagement';
 const AdminPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isAuthenticated, isAdmin, user } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard");
   const isMobile = useIsMobile();
   const [isSupabaseConnected, setIsSupabaseConnected] = useState(false);
   const [lastPublished, setLastPublished] = useState("15 Jun 2023 13:45");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Auto-collapse sidebar on mobile
-    if (isMobile) {
-      setIsCollapsed(true);
-    }
+    // Verifikasi apakah pengguna sudah login dan memiliki akses admin
+    const checkAdminAccess = async () => {
+      setIsLoading(true);
+      
+      console.log("Checking admin access:", { isAuthenticated, isAdmin, user });
+      
+      if (!isAuthenticated) {
+        console.log("User not authenticated, redirecting to login");
+        toast({
+          title: "Akses Ditolak",
+          description: "Anda harus login terlebih dahulu",
+          variant: "destructive",
+        });
+        navigate("/login?redirect_to=/admin");
+        return;
+      }
+      
+      if (!isAdmin) {
+        console.log("User not admin, redirecting to home");
+        toast({
+          title: "Akses Ditolak",
+          description: "Anda tidak memiliki akses ke halaman admin",
+          variant: "destructive",
+        });
+        navigate("/");
+        return;
+      }
+      
+      // Auto-collapse sidebar on mobile
+      if (isMobile) {
+        setIsCollapsed(true);
+      }
+      
+      toast({
+        title: "Selamat datang, Admin!",
+        description: "Anda dapat mengelola konten dan properti website Rekaland disini.",
+      });
+      
+      setIsLoading(false);
+    };
     
-    toast({
-      title: "Selamat datang, Admin!",
-      description: "Anda dapat mengelola konten dan properti website Rekaland disini.",
-    });
-  }, [isMobile]);
+    checkAdminAccess();
+  }, [isAuthenticated, isAdmin, navigate, toast, isMobile, user]);
 
   const handlePublish = () => {
     if (!isSupabaseConnected) {
@@ -85,6 +120,21 @@ const AdminPage = () => {
       </Button>
     );
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-rekaland-orange mx-auto mb-4"></div>
+          <p className="text-xl font-medium">Memverifikasi akses admin...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !isAdmin) {
+    return null; // Return null to avoid flickering before redirect
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-50">
