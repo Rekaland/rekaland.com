@@ -50,6 +50,36 @@ export const useAuthMethods = () => {
 
       console.log("Login successful:", data);
 
+      // Jika email adalah rekaland.idn@gmail.com, pastikan memiliki hak akses admin
+      if (email === 'rekaland.idn@gmail.com') {
+        // Cek apakah pengguna sudah ada di tabel user_roles dengan peran admin
+        const { data: roleData, error: roleError } = await supabase
+          .from('user_roles')
+          .select('*')
+          .eq('user_id', data.user.id)
+          .eq('role', 'admin')
+          .single();
+          
+        if (roleError && roleError.code === 'PGRST116') {
+          // Jika peran admin belum ada, tambahkan
+          const { error: insertError } = await supabase
+            .from('user_roles')
+            .insert([
+              { user_id: data.user.id, role: 'admin' }
+            ]);
+            
+          if (insertError) {
+            console.error("Error setting admin role:", insertError);
+          } else {
+            console.log("Admin role granted to rekaland.idn@gmail.com");
+          }
+        } else if (roleError) {
+          console.error("Error checking admin role:", roleError);
+        } else {
+          console.log("User already has admin role:", roleData);
+        }
+      }
+
       toast({
         title: "Selamat datang kembali!",
         description: "Anda berhasil masuk.",

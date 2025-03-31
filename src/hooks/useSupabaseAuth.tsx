@@ -210,7 +210,57 @@ export const useSupabaseAuth = () => {
   
   const checkAdminStatus = async (userId: string) => {
     try {
-      // Cek apakah pengguna adalah admin
+      console.log("Checking admin status for user:", userId);
+      
+      // Cek email pengguna, jika rekaland.idn@gmail.com, pastikan sebagai admin
+      const { data: userData } = await supabase.auth.getUser();
+      if (userData && userData.user && userData.user.email === 'rekaland.idn@gmail.com') {
+        console.log("User is rekaland.idn@gmail.com, checking/setting admin role");
+        
+        // Periksa apakah sudah ada di user_roles
+        const { data: roleData, error: roleCheckError } = await supabase
+          .from('user_roles')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('role', 'admin');
+          
+        if (roleCheckError) {
+          console.error("Error checking admin role:", roleCheckError);
+        } else if (!roleData || roleData.length === 0) {
+          // Tambahkan peran admin jika belum ada
+          const { error: insertError } = await supabase
+            .from('user_roles')
+            .insert([
+              { user_id: userId, role: 'admin' }
+            ]);
+            
+          if (insertError) {
+            console.error("Error setting admin role:", insertError);
+          } else {
+            console.log("Admin role granted to rekaland.idn@gmail.com");
+            
+            // Set admin state to true
+            setAuthState(prevState => ({
+              ...prevState,
+              isAdmin: true,
+            }));
+            
+            return;
+          }
+        } else {
+          console.log("User already has admin role");
+          
+          // Set admin state to true
+          setAuthState(prevState => ({
+            ...prevState,
+            isAdmin: true,
+          }));
+          
+          return;
+        }
+      }
+      
+      // For other users, check admin status using RPC
       const { data: isAdminData, error: isAdminError } = await supabase
         .rpc('is_admin', { user_id: userId });
 

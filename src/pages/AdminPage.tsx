@@ -30,12 +30,11 @@ const AdminPage = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard");
   const isMobile = useIsMobile();
-  const [isSupabaseConnected, setIsSupabaseConnected] = useState(false);
+  const [isSupabaseConnected, setIsSupabaseConnected] = useState(true);
   const [lastPublished, setLastPublished] = useState("15 Jun 2023 13:45");
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Verifikasi apakah pengguna sudah login dan memiliki akses admin
     const checkAdminAccess = async () => {
       setIsLoading(true);
       
@@ -63,14 +62,13 @@ const AdminPage = () => {
         return;
       }
       
-      // Auto-collapse sidebar on mobile
       if (isMobile) {
         setIsCollapsed(true);
       }
       
       toast({
         title: "Selamat datang, Admin!",
-        description: "Anda dapat mengelola konten dan properti website Rekaland disini.",
+        description: `${user?.name || ''}, Anda dapat mengelola konten dan properti website Rekaland disini.`,
       });
       
       setIsLoading(false);
@@ -80,15 +78,6 @@ const AdminPage = () => {
   }, [isAuthenticated, isAdmin, navigate, toast, isMobile, user]);
 
   const handlePublish = () => {
-    if (!isSupabaseConnected) {
-      toast({
-        title: "Koneksi diperlukan",
-        description: "Hubungkan dengan Supabase terlebih dahulu untuk publikasi",
-        variant: "destructive"
-      });
-      return;
-    }
-    
     toast({
       title: "Perubahan dipublikasikan!",
       description: "Seluruh perubahan berhasil dipublikasikan ke website",
@@ -133,12 +122,11 @@ const AdminPage = () => {
   }
 
   if (!isAuthenticated || !isAdmin) {
-    return null; // Return null to avoid flickering before redirect
+    return null;
   }
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar */}
       <div className={`bg-white border-r shadow-sm transition-all duration-300 flex flex-col ${isCollapsed ? 'w-16' : 'w-64'} fixed h-screen z-30`}>
         <div className="p-4 border-b flex items-center justify-between">
           {!isCollapsed && <h2 className="font-bold text-xl">Rekaland Admin</h2>}
@@ -206,9 +194,7 @@ const AdminPage = () => {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className={`flex-1 transition-all duration-300 ${isCollapsed ? 'ml-16' : 'ml-64'}`}>
-        {/* Top Navigation */}
         <header className="bg-white border-b p-4 sticky top-0 z-20 shadow-sm">
           <div className="flex justify-between items-center">
             <div className="flex items-center">
@@ -235,10 +221,8 @@ const AdminPage = () => {
           </div>
         </header>
 
-        {/* Main Content Area */}
         <div className="p-6">
           <div className="max-w-7xl mx-auto">
-            {/* Page Header with Actions */}
             <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <h1 className="text-2xl font-bold">
@@ -285,10 +269,8 @@ const AdminPage = () => {
               </div>
             </div>
 
-            {/* Dashboard Components */}
             {activeTab === "dashboard" && (
               <div className="space-y-6">
-                {/* Status Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <Card>
                     <CardContent className="p-6">
@@ -377,7 +359,6 @@ const AdminPage = () => {
                   </Card>
                 </div>
                 
-                {/* Statistics and Recent Activity */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   <Card className="lg:col-span-2">
                     <CardHeader>
@@ -388,7 +369,6 @@ const AdminPage = () => {
                       <div className="h-72">
                         <div className="w-full h-full flex flex-col">
                           <div className="flex-1 flex">
-                            {/* Simplified Chart */}
                             <div className="w-10 flex flex-col justify-between text-xs text-gray-500 pt-2 pb-4">
                               <div>1500</div>
                               <div>1000</div>
@@ -502,7 +482,6 @@ const AdminPage = () => {
                   </Card>
                 </div>
                 
-                {/* Quick Actions & Website Preview */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   <Card>
                     <CardHeader>
@@ -590,25 +569,18 @@ const AdminPage = () => {
               </div>
             )}
 
-            {/* Content Management */}
             {activeTab === "content" && <ContentManagement />}
             
-            {/* Property Management */}
             {activeTab === "property" && <EnhancedPropertyManagement />}
             
-            {/* User Management */}
             {activeTab === "users" && <UserManagement />}
             
-            {/* Analytics */}
             {activeTab === "analytics" && <AnalyticsDashboard />}
             
-            {/* Website Editor */}
             {activeTab === "website" && <WebsiteEditor />}
             
-            {/* Messaging Center */}
             {activeTab === "messages" && <MessagingCenter />}
             
-            {/* System Settings */}
             {activeTab === "settings" && <SystemSettings />}
           </div>
         </div>

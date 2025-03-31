@@ -8,6 +8,8 @@ import { LogIn, UserPlus } from "lucide-react";
 export const AuthButtons = () => {
   const { isAuthenticated } = useAuth();
 
+  console.log("AuthButtons - isAuthenticated:", isAuthenticated);
+
   return (
     <>
       {isAuthenticated ? (
