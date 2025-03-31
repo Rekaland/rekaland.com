@@ -17,6 +17,7 @@ import SettingsPage from './pages/SettingsPage';
 import NotFound from './pages/NotFound';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminPage from './pages/AdminPage';
+import AdminSetupPage from './pages/AdminSetupPage';
 
 const router = createBrowserRouter([
   {
@@ -84,6 +85,10 @@ const router = createBrowserRouter([
   {
     path: "/admin-dashboard",
     element: <AdminDashboard />,
+  },
+  {
+    path: "/admin-setup",
+    element: <AdminSetupPage />,
   },
 ]);
 

@@ -44,6 +44,7 @@ export const UserProfileMenu = () => {
   };
 
   const goToAdmin = () => {
+    console.log("Navigating to admin dashboard...");
     navigate("/admin");
     setIsOpen(false);
   };
@@ -65,7 +66,7 @@ export const UserProfileMenu = () => {
     return user.name.split(" ")[0]; // Just first name for compact display
   };
 
-  console.log("UserProfileMenu - isAdmin:", isAdmin); // Debugging
+  console.log("UserProfileMenu - isAdmin:", isAdmin, "User:", user?.email); // Debugging
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>

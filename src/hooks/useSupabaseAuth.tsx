@@ -218,53 +218,17 @@ export const useSupabaseAuth = () => {
       
       // Cek email pengguna, jika rekaland.idn@gmail.com atau official.rbnsyaf@gmail.com, pastikan sebagai admin
       const { data: userData } = await supabase.auth.getUser();
-      const adminEmails = ['rekaland.idn@gmail.com', 'official.rbnsyaf@gmail.com'];
       
-      if (userData && userData.user && adminEmails.includes(userData.user.email || '')) {
-        console.log("User has admin email, checking/setting admin role");
+      if (userData && userData.user) {
+        console.log("Current user email:", userData.user.email);
         
-        // Periksa apakah sudah ada di user_roles
-        const { data: roleData, error: roleCheckError } = await supabase
-          .from('user_roles')
-          .select('*')
-          .eq('user_id', userId)
-          .eq('role', 'admin');
+        const adminEmails = ['rekaland.idn@gmail.com', 'official.rbnsyaf@gmail.com'];
+        const userEmail = userData.user.email || '';
+        
+        // Periksa langsung apakah email adalah email admin
+        if (adminEmails.includes(userEmail)) {
+          console.log(`User email ${userEmail} matches admin email, setting admin status directly`);
           
-        if (roleCheckError) {
-          console.error("Error checking admin role:", roleCheckError);
-        } else if (!roleData || roleData.length === 0) {
-          // Tambahkan peran admin jika belum ada
-          const { error: insertError } = await supabase
-            .from('user_roles')
-            .insert([
-              { user_id: userId, role: 'admin' }
-            ]);
-            
-          if (insertError) {
-            console.error("Error setting admin role:", insertError);
-          } else {
-            console.log("Admin role granted to admin email");
-            
-            // Set admin state to true and update user role
-            setAuthState(prevState => {
-              const updatedUser = prevState.user ? {
-                ...prevState.user,
-                role: 'admin',
-              } : null;
-              
-              return {
-                ...prevState,
-                isAdmin: true,
-                user: updatedUser,
-              };
-            });
-            
-            return;
-          }
-        } else {
-          console.log("User already has admin role");
-          
-          // Set admin state to true and update user role
           setAuthState(prevState => {
             const updatedUser = prevState.user ? {
               ...prevState.user,
@@ -282,12 +246,15 @@ export const useSupabaseAuth = () => {
         }
       }
       
-      // For other users, check admin status using user_roles table
+      // Untuk pengguna lain, periksa status admin menggunakan tabel user_roles
+      console.log("Checking admin role in user_roles table");
       const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
         .select('*')
         .eq('user_id', userId)
         .eq('role', 'admin');
+      
+      console.log("Admin role check result:", roleData, roleError);
 
       if (roleError) {
         console.error("Error checking admin role:", roleError);

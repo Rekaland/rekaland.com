@@ -16,6 +16,8 @@ import ProfilePage from './pages/ProfilePage';
 import EmailConfirmPage from './pages/EmailConfirmPage';
 import { Toaster } from './components/ui/toaster';
 import AdminSetupPage from "./pages/AdminSetupPage";
+import AdminDashboard from './pages/AdminDashboard';
+import SettingsPage from './pages/SettingsPage';
 
 function App() {
   const queryClient = new QueryClient();
@@ -32,9 +34,11 @@ function App() {
               <Route path="/tentang" element={<AboutPage />} />
               <Route path="/kontak" element={<ContactPage />} />
               <Route path="/admin" element={<AdminPage />} />
+              <Route path="/admin-dashboard" element={<AdminDashboard />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/daftar" element={<RegisterPage />} />
               <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/settings" element={<SettingsPage />} />
               <Route path="/confirm-email" element={<EmailConfirmPage />} />
               <Route path="/admin-setup" element={<AdminSetupPage />} />
               <Route path="/auth/callback" element={<div>Loading...</div>} />
