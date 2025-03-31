@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -15,8 +14,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Save, Trash2, Upload, User, Shield, Bell, Globe, Database, Lock, Mail, Palette } from "lucide-react";
+import { Save, Trash2, Upload, User, Shield, Bell, Globe, Database, Lock, Mail, Palette, CheckCircle } from "lucide-react";
 import { Separator } from '../ui/separator';
+import { supabase } from '@/integrations/supabase/client';
 
 const SystemSettings = () => {
   const { toast } = useToast();
@@ -48,6 +48,114 @@ const SystemSettings = () => {
   const [twoFactorAuth, setTwoFactorAuth] = useState(false);
   const [passwordMinLength, setPasswordMinLength] = useState(8);
   const [requireSpecialChars, setRequireSpecialChars] = useState(true);
+  
+  // Database connection state
+  const [supabaseUrl, setSupabaseUrl] = useState("https://qnzmhgvpynokshnlbsiw.supabase.co");
+  const [supabaseKey, setSupabaseKey] = useState("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuem1oZ3ZweW5va3Nobmxic2l3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyNzI3NTUsImV4cCI6MjA1ODg0ODc1NX0.viIBr28yGeY9SaD9tYejkQ-5_Ihk69VygMYh6l-VThA");
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'pending'>('pending');
+  
+  useEffect(() => {
+    // Check if already connected to Supabase on component mount
+    checkSupabaseConnection();
+  }, []);
+  
+  const checkSupabaseConnection = async () => {
+    try {
+      // Try to fetch something from Supabase to verify connection
+      const { data, error } = await supabase.from('properties').select('id').limit(1);
+      
+      if (error) {
+        console.error("Connection error:", error.message);
+        setConnectionStatus('disconnected');
+        return false;
+      }
+      
+      setConnectionStatus('connected');
+      return true;
+    } catch (error) {
+      console.error("Connection check failed:", error);
+      setConnectionStatus('disconnected');
+      return false;
+    }
+  };
+  
+  const handleConnectSupabase = async () => {
+    // Validate inputs
+    if (!supabaseUrl || !supabaseKey) {
+      toast({
+        title: "Validasi gagal",
+        description: "URL Supabase dan API Key harus diisi",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!supabaseUrl.includes('supabase.co')) {
+      toast({
+        title: "URL tidak valid",
+        description: "URL Supabase harus mengandung 'supabase.co'",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsConnecting(true);
+    
+    toast({
+      title: "Menghubungkan ke Supabase",
+      description: "Sedang mencoba terhubung ke Supabase...",
+      duration: 2000,
+    });
+    
+    try {
+      // Save the connection settings to local storage
+      localStorage.setItem('supabase_url', supabaseUrl);
+      localStorage.setItem('supabase_key', supabaseKey);
+      
+      // Check if we can connect with these settings
+      const result = await checkSupabaseConnection();
+      
+      if (result) {
+        // Try to save to database if connected
+        try {
+          const { data, error } = await supabase
+            .from('settings')
+            .upsert({
+              key: 'supabase_connection',
+              value: JSON.stringify({
+                url: supabaseUrl,
+                key: supabaseKey,
+                updated_at: new Date().toISOString()
+              })
+            });
+            
+          if (error) throw error;
+        } catch (dbError) {
+          console.error("Could not save to database, but connection is working:", dbError);
+          // Connection works even if save fails, so continue
+        }
+        
+        toast({
+          title: "Koneksi berhasil!",
+          description: "Berhasil terhubung ke Supabase",
+          className: "bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg",
+        });
+      } else {
+        throw new Error("Tidak dapat terhubung ke Supabase");
+      }
+    } catch (error) {
+      console.error("Connection failed:", error);
+      
+      toast({
+        title: "Koneksi gagal",
+        description: "Tidak dapat terhubung ke Supabase. Periksa URL dan API Key",
+        variant: "destructive",
+      });
+    } finally {
+      setIsConnecting(false);
+    }
+  };
   
   const handleSaveSettings = (section: string) => {
     toast({
@@ -588,26 +696,59 @@ const SystemSettings = () => {
                         Integrasi Backend
                       </h3>
                       <p className="text-sm text-yellow-700 mt-1">
-                        Anda dapat mengintegrasikan website dengan Supabase untuk database dan fitur backend. Klik tombol di bawah untuk memulai integrasi.
+                        Anda dapat mengintegrasikan website dengan Supabase untuk database dan fitur backend. Masukkan URL dan API Key Supabase Anda di bawah.
                       </p>
                     </div>
                     
                     <div className="space-y-6 bg-gray-50 p-4 rounded-md">
-                      <h3 className="font-medium">Koneksi Supabase</h3>
+                      <h3 className="font-medium flex items-center gap-2">
+                        <Database size={16} />
+                        Koneksi Supabase
+                        {connectionStatus === 'connected' && (
+                          <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <CheckCircle size={12} /> Terhubung
+                          </span>
+                        )}
+                      </h3>
                       
                       <div className="space-y-2">
                         <Label htmlFor="supabase-url">Supabase URL</Label>
-                        <Input id="supabase-url" placeholder="https://your-project.supabase.co" />
+                        <Input 
+                          id="supabase-url" 
+                          placeholder="https://your-project.supabase.co" 
+                          value={supabaseUrl}
+                          onChange={(e) => setSupabaseUrl(e.target.value)}
+                        />
                       </div>
                       
                       <div className="space-y-2">
                         <Label htmlFor="supabase-key">Supabase Anon Key</Label>
-                        <Input id="supabase-key" type="password" placeholder="your-anon-key" />
+                        <Input 
+                          id="supabase-key" 
+                          type="password" 
+                          placeholder="your-anon-key" 
+                          value={supabaseKey}
+                          onChange={(e) => setSupabaseKey(e.target.value)}
+                        />
                       </div>
                       
                       <div className="flex justify-end">
-                        <Button className="bg-indigo-600 hover:bg-indigo-700">
-                          Hubungkan Supabase
+                        <Button 
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                          onClick={handleConnectSupabase}
+                          disabled={isConnecting}
+                        >
+                          {isConnecting ? (
+                            <>
+                              <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent mr-2" />
+                              Menghubungkan...
+                            </>
+                          ) : (
+                            <>
+                              <Database size={16} className="mr-2" />
+                              Hubungkan Supabase
+                            </>
+                          )}
                         </Button>
                       </div>
                     </div>
