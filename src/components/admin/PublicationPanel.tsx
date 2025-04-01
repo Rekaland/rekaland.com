@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Clock, Database, Server, Globe, ArrowRight, History, ExternalLink } from "lucide-react";
+import { Calendar, Clock, Database, Server, Globe, ArrowRight, History, ExternalLink, Check, X } from "lucide-react";
 import SupabaseConnection from "./publication/SupabaseConnection";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,7 +47,7 @@ const PublicationPanel = ({ hasUnsavedChanges = false, lastSaved = null }: Publi
       }
 
       if (data?.value) {
-        const historyData = data.value as any;
+        const historyData = data.value as DeploymentHistoryItem[];
         setDeploymentHistory(historyData);
       }
     } catch (err) {
@@ -97,12 +97,12 @@ const PublicationPanel = ({ hasUnsavedChanges = false, lastSaved = null }: Publi
       const updatedHistory = [newDeployment, ...deploymentHistory].slice(0, 10);
       setDeploymentHistory(updatedHistory);
 
-      // Save to settings table
+      // Save to settings table - we need to cast to Json type
       await supabase
         .from('settings')
         .upsert({
           key: 'deployment_history',
-          value: updatedHistory,
+          value: updatedHistory as any, // Using type assertion to avoid Json type error
           updated_at: new Date().toISOString()
         });
 

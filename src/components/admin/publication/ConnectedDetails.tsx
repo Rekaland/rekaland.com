@@ -70,7 +70,11 @@ const ConnectedDetails = ({
         </div>
       </div>
 
-      <ConnectedTablesStatus tables={tables} />
+      <ConnectedTablesStatus 
+        tables={tables} 
+        isSyncing={isSyncing} 
+        onSync={onSync} 
+      />
 
       <Button 
         variant="outline" 

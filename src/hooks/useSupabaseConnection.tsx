@@ -99,8 +99,11 @@ export const useSupabaseConnection = (isConnected: boolean = false) => {
       
       for (let i = 0; i < newTables.length; i++) {
         try {
+          // Use a type-safe table name directly
+          const tableName = newTables[i].name as 'properties' | 'profiles' | 'inquiries' | 'testimonials' | 'contents' | 'settings'; 
+          
           const { count, error } = await supabase
-            .from(newTables[i].name)
+            .from(tableName)
             .select('*', { count: 'exact', head: true });
           
           if (error) {
@@ -215,8 +218,11 @@ export const useSupabaseConnection = (isConnected: boolean = false) => {
           // Simulate sync
           await new Promise(resolve => setTimeout(resolve, 500));
           
+          // Use type-safe table name
+          const tableName = newTables[i].name as 'properties' | 'profiles' | 'inquiries' | 'testimonials' | 'contents' | 'settings';
+          
           const { count, error } = await supabase
-            .from(newTables[i].name)
+            .from(tableName)
             .select('*', { count: 'exact', head: true });
           
           if (error) {
