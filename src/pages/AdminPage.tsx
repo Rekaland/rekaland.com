@@ -22,6 +22,7 @@ import MessagingCenter from '@/components/admin/MessagingCenter';
 import SystemSettings from '@/components/admin/SystemSettings';
 import WebsiteEditor from '@/components/admin/WebsiteEditor';
 import ContentManagement from '@/components/admin/ContentManagement';
+import RealTimeSync from '@/components/admin/RealTimeSync';
 
 const AdminPage = () => {
   const navigate = useNavigate();

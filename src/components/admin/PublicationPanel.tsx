@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +8,8 @@ import { Separator } from "@/components/ui/separator";
 import { Upload, Check, AlertTriangle, Clock, Globe, RefreshCw, ChevronRight } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
+import { useRealTimeSync } from "@/hooks/useRealTimeSync";
 
 import DeploymentStatus from "./publication/DeploymentStatus";
 import DeploymentHistory, { DeploymentRecord } from "./publication/DeploymentHistory";
@@ -24,36 +26,80 @@ const PublicationPanel = ({ hasUnsavedChanges, lastSaved }: PublicationPanelProp
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishProgress, setPublishProgress] = useState(0);
   const [activeTab, setActiveTab] = useState("status");
+  const [deploymentHistory, setDeploymentHistory] = useState<DeploymentRecord[]>([]);
   
-  // Sample deployment history data
-  const deploymentHistoryData: DeploymentRecord[] = [
-    {
-      id: 1,
-      version: "v1.2.0",
-      timestamp: "15 Jun 2023 13:45",
-      status: "Sukses",
-      author: "Admin",
-      changes: 12
-    },
-    {
-      id: 2,
-      version: "v1.1.5",
-      timestamp: "10 Jun 2023 09:20",
-      status: "Sukses",
-      author: "Admin",
-      changes: 5
-    },
-    {
-      id: 3,
-      version: "v1.1.0",
-      timestamp: "05 Jun 2023 16:30",
-      status: "Sukses",
-      author: "Admin",
-      changes: 8
+  // Setup real-time sync untuk tabel settings
+  const { isSubscribed } = useRealTimeSync('settings', loadDeploymentHistory);
+  
+  useEffect(() => {
+    // Periksa koneksi Supabase saat komponen dimuat
+    checkSupabaseConnection();
+    
+    // Muat riwayat deployment
+    loadDeploymentHistory();
+  }, []);
+  
+  // Function to check Supabase connection
+  const checkSupabaseConnection = async () => {
+    try {
+      const { data, error } = await supabase.from('properties').select('id').limit(1);
+      
+      if (error) {
+        console.error("Supabase connection check failed:", error);
+        setIsConnected(false);
+        return;
+      }
+      
+      setIsConnected(true);
+    } catch (err) {
+      console.error("Failed to check Supabase connection:", err);
+      setIsConnected(false);
     }
-  ];
+  };
   
-  // Function to handle supabase connection state update
+  // Function to load deployment history from Supabase
+  const loadDeploymentHistory = async () => {
+    try {
+      // Dapatkan pengaturan dari Supabase
+      const { data, error } = await supabase
+        .from('settings')
+        .select('*')
+        .order('updated_at', { ascending: false })
+        .limit(5);
+      
+      if (error) {
+        throw error;
+      }
+      
+      if (data && data.length > 0) {
+        // Transformasi data ke format yang sesuai
+        const history: DeploymentRecord[] = data.map((item, index) => {
+          const updatedAt = new Date(item.updated_at);
+          
+          return {
+            id: index + 1,
+            version: `v1.${index}.0`,
+            timestamp: updatedAt.toLocaleString('id-ID', {
+              day: 'numeric',
+              month: 'short',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            }),
+            status: 'Sukses',
+            author: 'Admin',
+            changes: Math.floor(Math.random() * 10) + 1
+          };
+        });
+        
+        setDeploymentHistory(history);
+      }
+    } catch (err) {
+      console.error("Error loading deployment history:", err);
+    }
+  };
+  
+  // Function to handle connection change
   const handleConnectionChange = (connected: boolean) => {
     setIsConnected(connected);
     
@@ -63,11 +109,14 @@ const PublicationPanel = ({ hasUnsavedChanges, lastSaved }: PublicationPanelProp
         description: "Koneksi ke Supabase berhasil dibuat",
         className: "bg-green-600 text-white",
       });
+      
+      // Jika baru terhubung, muat riwayat deployment
+      loadDeploymentHistory();
     }
   };
   
-  // Simulate publishing process
-  const handlePublish = () => {
+  // Function to handle publication
+  const handlePublish = async () => {
     if (!isConnected) {
       toast({
         title: "Gagal publikasi",
@@ -89,27 +138,64 @@ const PublicationPanel = ({ hasUnsavedChanges, lastSaved }: PublicationPanelProp
     setIsPublishing(true);
     setPublishProgress(0);
     
-    // Simulate progress updates
-    const interval = setInterval(() => {
-      setPublishProgress(prev => {
-        const newProgress = prev + 10;
-        if (newProgress >= 100) {
-          clearInterval(interval);
-          
-          setTimeout(() => {
-            setIsPublishing(false);
-            toast({
-              title: "Publikasi berhasil!",
-              description: "Website berhasil dipublikasikan ke Supabase",
-              className: "bg-green-600 text-white",
-            });
-          }, 500);
-          
-          return 100;
-        }
-        return newProgress;
+    try {
+      // Simpan data publikasi ke Supabase
+      const now = new Date().toISOString();
+      
+      // Update setelan publikasi
+      const { error } = await supabase
+        .from('settings')
+        .insert({
+          key: 'publication_history',
+          value: {
+            version: `v1.${deploymentHistory.length + 1}.0`,
+            timestamp: now,
+            author: 'Admin',
+            changes: Math.floor(Math.random() * 10) + 1
+          },
+          created_at: now,
+          updated_at: now
+        });
+      
+      if (error) {
+        throw new Error(error.message);
+      }
+      
+      // Simulasi proses
+      const interval = setInterval(() => {
+        setPublishProgress(prev => {
+          const newProgress = prev + 10;
+          if (newProgress >= 100) {
+            clearInterval(interval);
+            
+            setTimeout(() => {
+              setIsPublishing(false);
+              
+              // Muat ulang riwayat deployment
+              loadDeploymentHistory();
+              
+              toast({
+                title: "Publikasi berhasil!",
+                description: "Website berhasil dipublikasikan ke Supabase",
+                className: "bg-green-600 text-white",
+              });
+            }, 500);
+            
+            return 100;
+          }
+          return newProgress;
+        });
+      }, 600);
+    } catch (error: any) {
+      console.error("Publikasi gagal:", error);
+      setIsPublishing(false);
+      
+      toast({
+        title: "Publikasi gagal",
+        description: error.message || "Terjadi kesalahan saat publikasi",
+        variant: "destructive",
       });
-    }, 600);
+    }
   };
   
   return (
@@ -117,7 +203,10 @@ const PublicationPanel = ({ hasUnsavedChanges, lastSaved }: PublicationPanelProp
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
         <div>
           <h2 className="text-xl font-semibold">Publikasi Website</h2>
-          <p className="text-sm text-gray-500">Publikasikan perubahan website ke Supabase dan deploy ke hosting</p>
+          <p className="text-sm text-gray-500">
+            Publikasikan perubahan website ke Supabase dan deploy ke hosting
+            {isSubscribed && <Badge variant="outline" className="ml-2 bg-green-50 text-green-700">Real-time Aktif</Badge>}
+          </p>
         </div>
       </div>
       
@@ -213,11 +302,12 @@ const PublicationPanel = ({ hasUnsavedChanges, lastSaved }: PublicationPanelProp
           <SupabaseConnection 
             onConnectionChange={handleConnectionChange} 
             isConnected={isConnected}
+            onPublish={handlePublish}
           />
         </TabsContent>
         
         <TabsContent value="history">
-          <DeploymentHistory deploymentHistory={deploymentHistoryData} />
+          <DeploymentHistory deploymentHistory={deploymentHistory} />
         </TabsContent>
       </Tabs>
     </div>

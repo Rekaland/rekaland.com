@@ -10,6 +10,7 @@ import ConnectionStatus from "./ConnectionStatus";
 import ConnectionForm from "./ConnectionForm";
 import ConnectedDetails from "./ConnectedDetails";
 import ConnectionHelp from "./ConnectionHelp";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SupabaseConnectionProps {
   onPublish?: () => void;
@@ -20,6 +21,7 @@ interface SupabaseConnectionProps {
 const SupabaseConnection = ({ onPublish, onConnectionChange, isConnected: initialIsConnected }: SupabaseConnectionProps) => {
   const { toast } = useToast();
   const [showApiKey, setShowApiKey] = useState(false);
+  const [publicationInProgress, setPublicationInProgress] = useState(false);
   
   const {
     connectionStatus,
@@ -46,6 +48,100 @@ const SupabaseConnection = ({ onPublish, onConnectionChange, isConnected: initia
       onConnectionChange(connectionStatus === 'connected');
     }
   }, [connectionStatus, onConnectionChange]);
+
+  // Function to handle actual publication to Supabase
+  const handleActualPublish = async () => {
+    if (connectionStatus !== 'connected') {
+      toast({
+        title: "Koneksi tidak aktif",
+        description: "Harap hubungkan ke Supabase terlebih dahulu",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      setPublicationInProgress(true);
+      
+      toast({
+        title: "Publikasi dimulai",
+        description: "Sedang mempublikasikan data ke Supabase...",
+        duration: 2000,
+      });
+      
+      // Simpan pengaturan ke database Supabase
+      const now = new Date().toISOString();
+      
+      // Cek apakah pengaturan sudah ada
+      const { data: existingSettings, error: fetchError } = await supabase
+        .from('settings')
+        .select('*')
+        .eq('key', 'website_settings')
+        .maybeSingle();
+      
+      let saveResult;
+      
+      // Buat objek pengaturan
+      const settingsObject = {
+        supabaseUrl: apiUrl,
+        supabaseKey: apiKey,
+        projectId: projectId,
+        lastPublished: now,
+        tables: tables
+      };
+      
+      if (existingSettings) {
+        // Update pengaturan yang ada
+        saveResult = await supabase
+          .from('settings')
+          .update({
+            value: settingsObject,
+            updated_at: now
+          })
+          .eq('key', 'website_settings');
+      } else {
+        // Buat pengaturan baru
+        saveResult = await supabase
+          .from('settings')
+          .insert({
+            key: 'website_settings',
+            value: settingsObject,
+            created_at: now,
+            updated_at: now
+          });
+      }
+      
+      if (saveResult.error) {
+        throw new Error(saveResult.error.message);
+      }
+      
+      // Simulasi proses publikasi
+      setTimeout(() => {
+        setPublicationInProgress(false);
+        
+        toast({
+          title: "Publikasi berhasil!",
+          description: "Data berhasil dipublikasikan ke Supabase",
+          className: "bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg",
+        });
+        
+        // Panggil callback publikasi jika disediakan
+        if (onPublish) {
+          onPublish();
+        }
+      }, 2000);
+    } catch (error: any) {
+      console.error("Error during publication:", error);
+      setPublicationInProgress(false);
+      
+      toast({
+        title: "Publikasi gagal",
+        description: error.message || "Terjadi kesalahan saat publikasi ke Supabase",
+        variant: "destructive",
+        duration: 5000,
+      });
+    }
+  };
 
   return (
     <Card>
@@ -96,10 +192,11 @@ const SupabaseConnection = ({ onPublish, onConnectionChange, isConnected: initia
                     <Button 
                       variant="default" 
                       className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600"
-                      onClick={onPublish}
+                      onClick={handleActualPublish}
+                      disabled={publicationInProgress}
                     >
                       <Database size={16} className="mr-2" />
-                      Publikasikan ke Supabase
+                      {publicationInProgress ? "Sedang Publikasi..." : "Publikasikan ke Supabase"}
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
