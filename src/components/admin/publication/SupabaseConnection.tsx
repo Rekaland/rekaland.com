@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Database, Eye, FileText, RefreshCw, Check, X, Save, Globe, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -44,13 +43,11 @@ const SupabaseConnection = ({ onPublish, onConnectionChange, isConnected: initia
   } = useSupabaseConnection(initialIsConnected);
   
   useEffect(() => {
-    // Notify parent component about connection status
     if (onConnectionChange) {
       onConnectionChange(connectionStatus === 'connected');
     }
   }, [connectionStatus, onConnectionChange]);
 
-  // Function to handle actual publication to Supabase
   const handleActualPublish = async () => {
     if (connectionStatus !== 'connected') {
       toast({
@@ -70,10 +67,8 @@ const SupabaseConnection = ({ onPublish, onConnectionChange, isConnected: initia
         duration: 2000,
       });
       
-      // Simpan pengaturan ke database Supabase
       const now = new Date().toISOString();
       
-      // Cek apakah pengaturan sudah ada
       const { data: existingSettings, error: fetchError } = await supabase
         .from('settings')
         .select('*')
@@ -82,7 +77,6 @@ const SupabaseConnection = ({ onPublish, onConnectionChange, isConnected: initia
       
       let saveResult;
       
-      // Serialize TableInfo objects to make them compatible with Json type
       const tablesJson = tables.map(table => ({
         name: table.name,
         status: table.status,
@@ -98,21 +92,19 @@ const SupabaseConnection = ({ onPublish, onConnectionChange, isConnected: initia
       };
       
       if (existingSettings) {
-        // Update pengaturan yang ada
         saveResult = await supabase
           .from('settings')
           .update({
-            value: settingsObject as any, // Cast to any to bypass type checking
+            value: settingsObject as any,
             updated_at: now
           })
           .eq('key', 'website_settings');
       } else {
-        // Buat pengaturan baru
         saveResult = await supabase
           .from('settings')
           .insert({
             key: 'website_settings',
-            value: settingsObject as any, // Cast to any to bypass type checking
+            value: settingsObject as any,
             created_at: now,
             updated_at: now
           });
@@ -122,7 +114,6 @@ const SupabaseConnection = ({ onPublish, onConnectionChange, isConnected: initia
         throw new Error(saveResult.error.message);
       }
       
-      // Simulasi proses publikasi
       setTimeout(() => {
         setPublicationInProgress(false);
         
@@ -132,7 +123,6 @@ const SupabaseConnection = ({ onPublish, onConnectionChange, isConnected: initia
           className: "bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg",
         });
         
-        // Panggil callback publikasi jika disediakan
         if (onPublish) {
           onPublish();
         }
@@ -158,7 +148,6 @@ const SupabaseConnection = ({ onPublish, onConnectionChange, isConnected: initia
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
-          {/* Connection Status Card */}
           <ConnectionStatus 
             status={connectionStatus === 'failed' ? 'disconnected' : connectionStatus} 
             onTestConnection={handleTestConnection}

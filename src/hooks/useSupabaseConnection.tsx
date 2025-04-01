@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { TableInfo } from "@/components/admin/publication/ConnectedTablesStatus";
@@ -26,7 +25,6 @@ export const useSupabaseConnection = (isConnected: boolean = false) => {
     apiKey: ''
   });
 
-  // Load existing connection settings on mount
   useEffect(() => {
     const loadConnectionSettings = async () => {
       if (isConnected) {
@@ -38,7 +36,7 @@ export const useSupabaseConnection = (isConnected: boolean = false) => {
             .maybeSingle();
           
           if (error) {
-            if (error.code !== 'PGRST116') { // Ignore "not found" errors
+            if (error.code !== 'PGRST116') {
               console.error('Error fetching connection settings:', error);
             }
             return;
@@ -50,7 +48,6 @@ export const useSupabaseConnection = (isConnected: boolean = false) => {
             if (settings.supabaseKey) setApiKey(settings.supabaseKey);
             if (settings.projectId) setProjectId(settings.projectId);
             if (settings.tables) {
-              // Map incoming table data to our TableInfo format
               const tablesData = settings.tables as any[];
               setTables(prev => 
                 prev.map(table => {
@@ -81,7 +78,6 @@ export const useSupabaseConnection = (isConnected: boolean = false) => {
     loadConnectionSettings();
   }, [isConnected]);
 
-  // Function to test connection
   const handleTestConnection = async () => {
     if (connectionStatus !== 'connected') {
       return;
@@ -90,17 +86,14 @@ export const useSupabaseConnection = (isConnected: boolean = false) => {
     setConnectionInProgress(true);
     
     try {
-      // Simulate connection test
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Check tables status
       const newTables = [...tables];
       let allSynced = true;
       
       for (let i = 0; i < newTables.length; i++) {
         try {
-          // Use a type-safe table name directly
-          const tableName = newTables[i].name as 'properties' | 'profiles' | 'inquiries' | 'testimonials' | 'contents' | 'settings'; 
+          const tableName = newTables[i].name as 'properties' | 'profiles' | 'inquiries' | 'testimonials' | 'contents' | 'settings';
           
           const { count, error } = await supabase
             .from(tableName)
@@ -141,16 +134,13 @@ export const useSupabaseConnection = (isConnected: boolean = false) => {
     }
   };
 
-  // Function to connect to Supabase
   const handleConnect = async () => {
-    // Reset errors
     setFormErrors({
       projectId: '',
       apiUrl: '',
       apiKey: ''
     });
     
-    // Validate inputs
     let hasErrors = false;
     const newErrors = {
       projectId: '',
@@ -184,10 +174,8 @@ export const useSupabaseConnection = (isConnected: boolean = false) => {
     setConnectionInProgress(true);
     
     try {
-      // Simulate connection attempt
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Update connection status
       setConnectionStatus('connected');
       setLastSync(new Date().toLocaleTimeString('id-ID', {
         hour: '2-digit',
@@ -195,7 +183,6 @@ export const useSupabaseConnection = (isConnected: boolean = false) => {
         second: '2-digit'
       }));
       
-      // Check tables status
       await handleTestConnection();
     } catch (error) {
       console.error('Connection failed:', error);
@@ -205,20 +192,16 @@ export const useSupabaseConnection = (isConnected: boolean = false) => {
     }
   };
 
-  // Function to sync tables
   const handleSync = async () => {
     setIsSyncing(true);
     
     try {
-      // Update tables status
       const newTables = [...tables];
       
       for (let i = 0; i < newTables.length; i++) {
         try {
-          // Simulate sync
           await new Promise(resolve => setTimeout(resolve, 500));
           
-          // Use type-safe table name
           const tableName = newTables[i].name as 'properties' | 'profiles' | 'inquiries' | 'testimonials' | 'contents' | 'settings';
           
           const { count, error } = await supabase

@@ -18,9 +18,9 @@ interface ConnectionFormProps {
   onApiKeyChange: (value: string) => void;
   onConnect: () => void;
   formErrors: {
-    projectId: boolean;
-    apiUrl: boolean;
-    apiKey: boolean;
+    projectId: string; // Changed from boolean to string for error messages
+    apiUrl: string;    // Changed from boolean to string for error messages
+    apiKey: string;    // Changed from boolean to string for error messages
   };
   connectionInProgress: boolean;
 }

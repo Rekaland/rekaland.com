@@ -47,7 +47,8 @@ const PublicationPanel = ({ hasUnsavedChanges = false, lastSaved = null }: Publi
       }
 
       if (data?.value) {
-        const historyData = data.value as DeploymentHistoryItem[];
+        // Fix type conversion by using double casting
+        const historyData = (data.value as unknown) as DeploymentHistoryItem[];
         setDeploymentHistory(historyData);
       }
     } catch (err) {
