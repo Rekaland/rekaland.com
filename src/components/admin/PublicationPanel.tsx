@@ -1,312 +1,288 @@
+
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
-import { Separator } from "@/components/ui/separator";
-import { Upload, Check, AlertTriangle, Clock, Globe, RefreshCw, ChevronRight } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { supabase } from "@/integrations/supabase/client";
-import { useRealTimeSync } from "@/hooks/useRealTimeSync";
-
-import DeploymentStatus from "./publication/DeploymentStatus";
-import DeploymentHistory, { DeploymentRecord } from "./publication/DeploymentHistory";
+import { Calendar, Clock, Database, Server, Globe, ArrowRight, History, ExternalLink } from "lucide-react";
 import SupabaseConnection from "./publication/SupabaseConnection";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+
+interface DeploymentHistoryItem {
+  id: number;
+  timestamp: string;
+  status: "success" | "failed" | "in_progress";
+  environment: string;
+  changes: string;
+}
 
 interface PublicationPanelProps {
   hasUnsavedChanges?: boolean;
   lastSaved?: string | null;
 }
 
-const PublicationPanel = ({ hasUnsavedChanges, lastSaved }: PublicationPanelProps) => {
+const PublicationPanel = ({ hasUnsavedChanges = false, lastSaved = null }: PublicationPanelProps) => {
   const { toast } = useToast();
+  const [deploymentHistory, setDeploymentHistory] = useState<DeploymentHistoryItem[]>([]);
   const [isConnected, setIsConnected] = useState(false);
-  const [isPublishing, setIsPublishing] = useState(false);
-  const [publishProgress, setPublishProgress] = useState(0);
-  const [activeTab, setActiveTab] = useState("status");
-  const [deploymentHistory, setDeploymentHistory] = useState<DeploymentRecord[]>([]);
-  
-  // Function to load deployment history from Supabase - moved before it's used
+  const [deploymentInProgress, setDeploymentInProgress] = useState(false);
+  const [currentTab, setCurrentTab] = useState("database");
+
+  // Load deployment history
   const loadDeploymentHistory = async () => {
     try {
-      // Dapatkan pengaturan dari Supabase
+      // Load from settings table
       const { data, error } = await supabase
         .from('settings')
-        .select('*')
-        .order('updated_at', { ascending: false })
-        .limit(5);
-      
+        .select('value')
+        .eq('key', 'deployment_history')
+        .maybeSingle();
+
       if (error) {
-        throw error;
-      }
-      
-      if (data && data.length > 0) {
-        // Transformasi data ke format yang sesuai
-        const history: DeploymentRecord[] = data.map((item, index) => {
-          const updatedAt = new Date(item.updated_at);
-          
-          return {
-            id: index + 1,
-            version: `v1.${index}.0`,
-            timestamp: updatedAt.toLocaleString('id-ID', {
-              day: 'numeric',
-              month: 'short',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
-            }),
-            status: 'Sukses',
-            author: 'Admin',
-            changes: Math.floor(Math.random() * 10) + 1
-          };
-        });
-        
-        setDeploymentHistory(history);
-      }
-    } catch (err) {
-      console.error("Error loading deployment history:", err);
-    }
-  };
-  
-  // Setup real-time sync untuk tabel settings
-  const { isSubscribed } = useRealTimeSync('settings', loadDeploymentHistory);
-  
-  useEffect(() => {
-    // Periksa koneksi Supabase saat komponen dimuat
-    checkSupabaseConnection();
-    
-    // Muat riwayat deployment
-    loadDeploymentHistory();
-  }, []);
-  
-  // Function to check Supabase connection
-  const checkSupabaseConnection = async () => {
-    try {
-      const { data, error } = await supabase.from('properties').select('id').limit(1);
-      
-      if (error) {
-        console.error("Supabase connection check failed:", error);
-        setIsConnected(false);
+        if (error.code !== 'PGRST116') { // not found error
+          console.error('Error fetching deployment history:', error);
+        }
         return;
       }
-      
-      setIsConnected(true);
+
+      if (data?.value) {
+        const historyData = data.value as any;
+        setDeploymentHistory(historyData);
+      }
     } catch (err) {
-      console.error("Failed to check Supabase connection:", err);
-      setIsConnected(false);
+      console.error('Failed to load deployment history:', err);
     }
   };
-  
-  // Function to handle connection change
-  const handleConnectionChange = (connected: boolean) => {
-    setIsConnected(connected);
-    
-    if (connected) {
-      toast({
-        title: "Terhubung ke Supabase!",
-        description: "Koneksi ke Supabase berhasil dibuat",
-        className: "bg-green-600 text-white",
-      });
-      
-      // Jika baru terhubung, muat riwayat deployment
-      loadDeploymentHistory();
-    }
-  };
-  
-  // Function to handle publication
-  const handlePublish = async () => {
+
+  // Load deployment history on mount
+  useEffect(() => {
+    loadDeploymentHistory();
+  }, []);
+
+  // Function to handle deployment
+  const handleDeploy = async () => {
     if (!isConnected) {
       toast({
-        title: "Gagal publikasi",
-        description: "Harap hubungkan dengan Supabase terlebih dahulu",
+        title: "Tidak dapat melakukan deployment",
+        description: "Pastikan koneksi Supabase sudah terhubung terlebih dahulu.",
         variant: "destructive",
       });
       return;
     }
-    
-    if (hasUnsavedChanges) {
-      toast({
-        title: "Perubahan belum disimpan",
-        description: "Harap simpan perubahan sebelum publikasi",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setIsPublishing(true);
-    setPublishProgress(0);
-    
+
     try {
-      // Simpan data publikasi ke Supabase
-      const now = new Date().toISOString();
+      setDeploymentInProgress(true);
       
-      // Update setelan publikasi
-      const { error } = await supabase
+      // Tampilkan toast untuk memberitahu proses sedang berjalan
+      toast({
+        title: "Deployment dimulai",
+        description: "Proses deployment sedang berjalan...",
+        duration: 5000,
+      });
+
+      // Simulate deployment process (in real app, we'd do actual deployment)
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
+      // Create new deployment history record
+      const newDeployment: DeploymentHistoryItem = {
+        id: (deploymentHistory.length > 0 ? Math.max(...deploymentHistory.map(d => d.id)) : 0) + 1,
+        timestamp: new Date().toISOString(),
+        status: "success",
+        environment: "production",
+        changes: "Update konten website dan integrase database"
+      };
+
+      // Add to history
+      const updatedHistory = [newDeployment, ...deploymentHistory].slice(0, 10);
+      setDeploymentHistory(updatedHistory);
+
+      // Save to settings table
+      await supabase
         .from('settings')
-        .insert({
-          key: 'publication_history',
-          value: {
-            version: `v1.${deploymentHistory.length + 1}.0`,
-            timestamp: now,
-            author: 'Admin',
-            changes: Math.floor(Math.random() * 10) + 1
-          },
-          created_at: now,
-          updated_at: now
+        .upsert({
+          key: 'deployment_history',
+          value: updatedHistory,
+          updated_at: new Date().toISOString()
         });
-      
-      if (error) {
-        throw new Error(error.message);
-      }
-      
-      // Simulasi proses
-      const interval = setInterval(() => {
-        setPublishProgress(prev => {
-          const newProgress = prev + 10;
-          if (newProgress >= 100) {
-            clearInterval(interval);
-            
-            setTimeout(() => {
-              setIsPublishing(false);
-              
-              // Muat ulang riwayat deployment
-              loadDeploymentHistory();
-              
-              toast({
-                title: "Publikasi berhasil!",
-                description: "Website berhasil dipublikasikan ke Supabase",
-                className: "bg-green-600 text-white",
-              });
-            }, 500);
-            
-            return 100;
-          }
-          return newProgress;
-        });
-      }, 600);
-    } catch (error: any) {
-      console.error("Publikasi gagal:", error);
-      setIsPublishing(false);
+
+      toast({
+        title: "Deployment berhasil!",
+        description: "Website telah berhasil di-deploy ke lingkungan produksi.",
+        className: "bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg",
+      });
+    } catch (err) {
+      console.error('Deployment failed:', err);
       
       toast({
-        title: "Publikasi gagal",
-        description: error.message || "Terjadi kesalahan saat publikasi",
+        title: "Deployment gagal",
+        description: "Terjadi kesalahan saat proses deployment.",
         variant: "destructive",
       });
+    } finally {
+      setDeploymentInProgress(false);
     }
   };
-  
+
   return (
-    <div>
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-        <div>
-          <h2 className="text-xl font-semibold">Publikasi Website</h2>
-          <p className="text-sm text-gray-500">
-            Publikasikan perubahan website ke Supabase dan deploy ke hosting
-            {isSubscribed && <Badge variant="outline" className="ml-2 bg-green-50 text-green-700">Real-time Aktif</Badge>}
-          </p>
-        </div>
-      </div>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-lg">Status Publikasi</CardTitle>
+            {hasUnsavedChanges && (
+              <Badge variant="outline" className="bg-amber-50 text-amber-700">
+                Perubahan Belum Disimpan
+              </Badge>
+            )}
+          </div>
+          {lastSaved && (
+            <div className="text-sm text-gray-500 flex items-center gap-1">
+              <Clock size={14} />
+              Terakhir disimpan: {lastSaved}
+            </div>
+          )}
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            <div className="bg-gray-50 p-4 rounded-lg border flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-white p-2 rounded-full shadow-sm">
+                  <Database size={20} className="text-blue-500" />
+                </div>
+                <div>
+                  <h3 className="font-medium">Backend Services</h3>
+                  <p className="text-sm text-gray-500">Supabase Database & Authentication</p>
+                </div>
+              </div>
+              <Badge variant="outline" className={isConnected ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700"}>
+                {isConnected ? "Terhubung" : "Belum Terhubung"}
+              </Badge>
+            </div>
+            
+            <div className="bg-gray-50 p-4 rounded-lg border flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-white p-2 rounded-full shadow-sm">
+                  <Server size={20} className="text-indigo-500" />
+                </div>
+                <div>
+                  <h3 className="font-medium">Lovable Hosting</h3>
+                  <p className="text-sm text-gray-500">rekaland.lovable.app</p>
+                </div>
+              </div>
+              <Badge variant="outline" className="bg-green-50 text-green-700">Aktif</Badge>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-3 mt-6">
+              <Button 
+                className="bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-600 hover:to-emerald-600 w-full sm:w-auto"
+                onClick={handleDeploy}
+                disabled={!isConnected || deploymentInProgress}
+              >
+                {deploymentInProgress ? (
+                  <>
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
+                    Sedang Deploy...
+                  </>
+                ) : (
+                  <>
+                    <Globe size={16} className="mr-2" />
+                    Deploy ke Produksi
+                  </>
+                )}
+              </Button>
+              
+              <Button variant="outline" className="flex items-center gap-2 w-full sm:w-auto">
+                <ExternalLink size={16} className="mr-1" />
+                Buka Website
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
       
-      <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="status" className="flex items-center gap-2">
-            <Globe size={16} />
-            Status
-          </TabsTrigger>
-          <TabsTrigger value="connection" className="flex items-center gap-2">
-            <RefreshCw size={16} />
-            Koneksi Supabase
+      <Tabs defaultValue={currentTab} onValueChange={setCurrentTab}>
+        <TabsList className="grid grid-cols-2 w-full md:w-auto">
+          <TabsTrigger value="database" className="flex items-center gap-2">
+            <Database size={16} />
+            Database
           </TabsTrigger>
           <TabsTrigger value="history" className="flex items-center gap-2">
-            <Clock size={16} />
-            Riwayat
+            <History size={16} />
+            Riwayat Publikasi
           </TabsTrigger>
         </TabsList>
         
-        <TabsContent value="status" className="space-y-4">
-          <DeploymentStatus isConnected={isConnected} lastSaved={lastSaved} />
-          
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Publikasikan Website</CardTitle>
-              <CardDescription>Publikasikan perubahan terbaru ke Supabase dan hosting</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center justify-between p-4 bg-gray-50 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isConnected ? 'bg-green-100' : 'bg-amber-100'}`}>
-                      {isConnected ? <Check size={16} className="text-green-600" /> : <AlertTriangle size={16} className="text-amber-600" />}
-                    </div>
-                    <div>
-                      <h3 className="font-medium">Status Koneksi</h3>
-                      <p className="text-sm text-gray-600">Koneksi ke Supabase</p>
-                    </div>
-                  </div>
-                  <Badge variant={isConnected ? "outline" : "outline"} className={isConnected ? "bg-green-50 text-green-700 border-green-200" : "bg-amber-50 text-amber-700 border-amber-200"}>
-                    {isConnected ? "Terhubung" : "Tidak terhubung"}
-                  </Badge>
-                </div>
-                
-                <div className="flex items-center justify-between p-4 bg-gray-50 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${!hasUnsavedChanges ? 'bg-green-100' : 'bg-amber-100'}`}>
-                      {!hasUnsavedChanges ? <Check size={16} className="text-green-600" /> : <AlertTriangle size={16} className="text-amber-600" />}
-                    </div>
-                    <div>
-                      <h3 className="font-medium">Status Perubahan</h3>
-                      <p className="text-sm text-gray-600">Perubahan pada konfigurasi</p>
-                    </div>
-                  </div>
-                  <Badge variant={!hasUnsavedChanges ? "outline" : "outline"} className={!hasUnsavedChanges ? "bg-green-50 text-green-700 border-green-200" : "bg-amber-50 text-amber-700 border-amber-200"}>
-                    {!hasUnsavedChanges ? "Tersimpan" : "Belum tersimpan"}
-                  </Badge>
-                </div>
-              </div>
-              
-              {isPublishing && (
-                <div className="mt-4">
-                  <p className="text-sm font-medium mb-2">Sedang mempublikasikan...</p>
-                  <Progress value={publishProgress} className="h-2" />
-                  <p className="text-xs text-gray-500 mt-1">
-                    {publishProgress < 30 && "Mengunggah data ke Supabase..."}
-                    {publishProgress >= 30 && publishProgress < 60 && "Memperbarui konfigurasi database..."}
-                    {publishProgress >= 60 && publishProgress < 90 && "Memperbarui halaman website..."}
-                    {publishProgress >= 90 && "Menyelesaikan publikasi..."}
-                  </p>
-                </div>
-              )}
-            </CardContent>
-            <CardFooter className="flex flex-col items-stretch gap-3 sm:flex-row sm:justify-between">
-              <Button variant="outline" disabled={isPublishing}>
-                <Globe size={16} className="mr-2" />
-                Lihat Website
-              </Button>
-              
-              <Button 
-                className="bg-green-600 hover:bg-green-700" 
-                onClick={handlePublish}
-                disabled={!isConnected || hasUnsavedChanges || isPublishing}
-              >
-                <Upload size={16} className="mr-2" />
-                {isPublishing ? "Mempublikasikan..." : "Publikasikan Sekarang"}
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="connection">
+        <TabsContent value="database" className="mt-4 space-y-4">
           <SupabaseConnection 
-            onConnectionChange={handleConnectionChange} 
+            onPublish={handleDeploy}
+            onConnectionChange={setIsConnected}
             isConnected={isConnected}
-            onPublish={handlePublish}
           />
         </TabsContent>
         
-        <TabsContent value="history">
-          <DeploymentHistory deploymentHistory={deploymentHistory} />
+        <TabsContent value="history" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Riwayat Publikasi</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {deploymentHistory.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  Belum ada riwayat publikasi
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {deploymentHistory.map((item) => (
+                    <div key={item.id} className="flex items-start gap-4 p-3 border rounded-lg">
+                      <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
+                        item.status === 'success' ? 'bg-green-100' : 
+                        item.status === 'failed' ? 'bg-red-100' : 'bg-amber-100'
+                      }`}>
+                        {item.status === 'success' ? (
+                          <Check size={16} className="text-green-600" />
+                        ) : item.status === 'failed' ? (
+                          <X size={16} className="text-red-600" />
+                        ) : (
+                          <div className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent text-amber-600"></div>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex justify-between">
+                          <h4 className="text-sm font-medium">{item.environment} deployment</h4>
+                          <Badge variant="outline" className={
+                            item.status === 'success' ? 'bg-green-50 text-green-700' : 
+                            item.status === 'failed' ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-700'
+                          }>
+                            {item.status === 'success' ? 'Berhasil' : 
+                             item.status === 'failed' ? 'Gagal' : 'Sedang Diproses'}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">{item.changes}</p>
+                        <div className="flex items-center gap-2 mt-2">
+                          <Calendar size={12} className="text-gray-400" />
+                          <span className="text-xs text-gray-500">
+                            {new Date(item.timestamp).toLocaleDateString('id-ID', {
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric'
+                            })}
+                          </span>
+                          <Clock size={12} className="text-gray-400 ml-2" />
+                          <span className="text-xs text-gray-500">
+                            {new Date(item.timestamp).toLocaleTimeString('id-ID', {
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 
 export const useRealTimeSync = (tableName: string, onChange?: () => void) => {
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [lastEvent, setLastEvent] = useState<any>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -18,6 +19,11 @@ export const useRealTimeSync = (tableName: string, onChange?: () => void) => {
               { event: '*', schema: 'public', table: tableName }, 
               (payload) => {
                 console.log('Real-time update received:', payload);
+                setLastEvent({
+                  type: payload.eventType,
+                  timestamp: new Date().toISOString(),
+                  data: payload.new || payload.old
+                });
                 
                 // Panggil callback onChange jika disediakan
                 if (onChange) {
@@ -70,5 +76,5 @@ export const useRealTimeSync = (tableName: string, onChange?: () => void) => {
     setupRealtime();
   }, [tableName, onChange, toast]);
   
-  return { isSubscribed };
+  return { isSubscribed, lastEvent };
 };

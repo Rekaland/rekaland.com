@@ -82,10 +82,11 @@ const SupabaseConnection = ({ onPublish, onConnectionChange, isConnected: initia
       
       let saveResult;
       
-      // Buat objek pengaturan - serialize TableInfo objects to make them compatible with Json type
+      // Serialize TableInfo objects to make them compatible with Json type
       const tablesJson = tables.map(table => ({
         name: table.name,
-        status: table.status
+        status: table.status,
+        lastSync: table.lastSync
       }));
       
       const settingsObject = {

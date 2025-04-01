@@ -1,21 +1,28 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Database, Save, Globe } from "lucide-react";
 import BackendEditor from "./website/BackendEditor";
 import PublicationPanel from "./PublicationPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import FrontendEditor from "./website/FrontendEditor";
-import { supabase } from "@/integrations/supabase/client";
+import { useSettings } from "@/hooks/useSettings";
 
 const WebsiteEditor = () => {
-  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("backend");
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [lastSaved, setLastSaved] = useState<string | null>(null);
-  const [settings, setSettings] = useState({
+  
+  const { 
+    settings, 
+    setSettings, 
+    loading, 
+    lastSaved, 
+    saveSettings 
+  } = useSettings('website_settings');
+  
+  // Default settings if none are loaded
+  const defaultSettings = {
     supabaseUrl: '',
     supabaseKey: '',
     siteTitle: 'Rekaland',
@@ -28,111 +35,19 @@ const WebsiteEditor = () => {
       instagram: '',
       twitter: ''
     }
-  });
+  };
   
-  // Ambil pengaturan saat komponen dimuat
+  // Use default settings if no settings are loaded
   useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('settings')
-          .select('*')
-          .eq('key', 'website_settings')
-          .single();
-        
-        if (error) {
-          if (error.code !== 'PGRST116') { // Ignore "not found" errors
-            console.error('Error fetching settings:', error);
-            throw error;
-          }
-        }
-        
-        if (data) {
-          const settingsData = data.value ? JSON.parse(data.value as string) : {};
-          setSettings(settingsData);
-          
-          if (data.updated_at) {
-            const updatedAt = new Date(data.updated_at);
-            const formattedTime = updatedAt.toLocaleTimeString('id-ID', { 
-              hour: '2-digit', 
-              minute: '2-digit',
-              second: '2-digit'
-            });
-            setLastSaved(formattedTime);
-          }
-        }
-      } catch (err) {
-        console.error('Failed to fetch settings:', err);
-      }
-    };
-    
-    fetchSettings();
-  }, []);
+    if (!loading && !settings) {
+      setSettings(defaultSettings);
+    }
+  }, [loading, settings]);
   
   const handleSaveBackendChanges = async () => {
-    try {
-      const now = new Date();
-      
-      // Check if settings already exist
-      const { data: existingData, error: fetchError } = await supabase
-        .from('settings')
-        .select('id')
-        .eq('key', 'website_settings')
-        .maybeSingle();
-      
-      if (fetchError && fetchError.code !== 'PGRST116') {
-        throw fetchError;
-      }
-      
-      let result;
-      
-      if (existingData) {
-        // Update existing settings
-        result = await supabase
-          .from('settings')
-          .update({
-            value: JSON.stringify(settings),
-            updated_at: now.toISOString()
-          })
-          .eq('key', 'website_settings');
-      } else {
-        // Insert new settings
-        result = await supabase
-          .from('settings')
-          .insert({
-            key: 'website_settings',
-            value: JSON.stringify(settings),
-            updated_at: now.toISOString()
-          });
-      }
-      
-      if (result.error) {
-        throw result.error;
-      }
-      
-      const formattedTime = now.toLocaleTimeString('id-ID', { 
-        hour: '2-digit', 
-        minute: '2-digit',
-        second: '2-digit'
-      });
-      
+    const result = await saveSettings(settings);
+    if (result.success) {
       setHasUnsavedChanges(false);
-      setLastSaved(formattedTime);
-      
-      toast({
-        title: "Perubahan tersimpan!",
-        description: "Perubahan pada backend berhasil disimpan ke database",
-        className: "bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg animate-in fade-in-80 slide-in-from-bottom-10",
-      });
-    } catch (err: any) {
-      console.error('Error saving settings:', err);
-      
-      toast({
-        title: "Gagal menyimpan perubahan",
-        description: err.message || "Terjadi kesalahan saat menyimpan pengaturan",
-        variant: "destructive",
-        duration: 5000,
-      });
     }
   };
 
@@ -141,6 +56,15 @@ const WebsiteEditor = () => {
     setSettings(newSettings);
     setHasUnsavedChanges(true);
   };
+  
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-blue-500"></div>
+        <span className="ml-2">Memuat pengaturan...</span>
+      </div>
+    );
+  }
   
   return (
     <div>
@@ -166,8 +90,8 @@ const WebsiteEditor = () => {
         </div>
       </div>
 
-      <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid grid-cols-3 w-full md:w-auto">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="mb-4">
           <TabsTrigger value="backend" className="flex items-center gap-2">
             <Database size={16} />
             Backend Config
@@ -191,7 +115,7 @@ const WebsiteEditor = () => {
               </div>
               
               <BackendEditor 
-                settings={settings} 
+                settings={settings || defaultSettings} 
                 onConfigChange={handleConfigChange} 
               />
             </CardContent>
@@ -207,7 +131,7 @@ const WebsiteEditor = () => {
               </div>
               
               <FrontendEditor 
-                settings={settings}
+                settings={settings || defaultSettings}
                 onConfigChange={handleConfigChange}
               />
             </CardContent>
