@@ -15,6 +15,8 @@ export const useProperties = (featured?: boolean, category?: string, limit?: num
       setLoading(true);
       
       try {
+        console.log('Fetching properties with params:', { featured, category, limit });
+        
         let query = supabase
           .from('properties')
           .select('*');
@@ -41,6 +43,7 @@ export const useProperties = (featured?: boolean, category?: string, limit?: num
           throw error;
         }
         
+        console.log('Properties data fetched:', data);
         setProperties(data || []);
       } catch (err: any) {
         console.error('Error fetching properties:', err);
@@ -48,7 +51,7 @@ export const useProperties = (featured?: boolean, category?: string, limit?: num
         
         toast({
           title: "Gagal memuat data properti",
-          description: "Terjadi kesalahan saat mengambil data dari server.",
+          description: "Terjadi kesalahan saat mengambil data dari server. Detail: " + err.message,
           variant: "destructive",
         });
       } finally {
@@ -79,16 +82,19 @@ export const usePropertyDetail = (id?: string) => {
       setLoading(true);
       
       try {
+        console.log('Fetching property detail for ID:', id);
+        
         const { data, error } = await supabase
           .from('properties')
           .select('*')
           .eq('id', id)
-          .single();
+          .maybeSingle();
         
         if (error) {
           throw error;
         }
         
+        console.log('Property detail fetched:', data);
         setProperty(data);
       } catch (err: any) {
         console.error('Error fetching property detail:', err);
@@ -96,7 +102,7 @@ export const usePropertyDetail = (id?: string) => {
         
         toast({
           title: "Gagal memuat detail properti",
-          description: "Terjadi kesalahan saat mengambil data dari server.",
+          description: "Terjadi kesalahan saat mengambil data dari server. Detail: " + err.message,
           variant: "destructive",
         });
       } finally {

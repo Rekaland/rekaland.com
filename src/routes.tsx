@@ -18,6 +18,7 @@ import NotFound from './pages/NotFound';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminPage from './pages/AdminPage';
 import AdminSetupPage from './pages/AdminSetupPage';
+import ProductDetailPage from './pages/ProductDetailPage';
 
 const router = createBrowserRouter([
   {
@@ -33,11 +34,27 @@ const router = createBrowserRouter([
         element: <AboutPage />,
       },
       {
+        path: "tentang",
+        element: <AboutPage />,
+      },
+      {
         path: "products",
         element: <ProductsPage />,
       },
       {
+        path: "produk",
+        element: <ProductsPage />,
+      },
+      {
+        path: "produk/:id",
+        element: <ProductDetailPage />,
+      },
+      {
         path: "products/empty-lot",
+        element: <EmptyLotPage />,
+      },
+      {
+        path: "produk/kavling-kosong",
         element: <EmptyLotPage />,
       },
       {
@@ -45,7 +62,15 @@ const router = createBrowserRouter([
         element: <SemiFinishedLotPage />,
       },
       {
+        path: "produk/semi-finished",
+        element: <SemiFinishedLotPage />,
+      },
+      {
         path: "products/ready-to-occupy",
+        element: <ReadyToOccupyPage />,
+      },
+      {
+        path: "produk/siap-huni",
         element: <ReadyToOccupyPage />,
       },
       {
@@ -53,7 +78,15 @@ const router = createBrowserRouter([
         element: <InformationPage />,
       },
       {
+        path: "informasi",
+        element: <InformationPage />,
+      },
+      {
         path: "help",
+        element: <HelpPage />,
+      },
+      {
+        path: "bantuan",
         element: <HelpPage />,
       },
       {
@@ -61,7 +94,15 @@ const router = createBrowserRouter([
         element: <ProfilePage />,
       },
       {
+        path: "profil",
+        element: <ProfilePage />,
+      },
+      {
         path: "settings",
+        element: <SettingsPage />,
+      },
+      {
+        path: "pengaturan",
         element: <SettingsPage />,
       },
       {
@@ -75,7 +116,15 @@ const router = createBrowserRouter([
     element: <LoginPage />,
   },
   {
+    path: "/masuk",
+    element: <LoginPage />,
+  },
+  {
     path: "/register",
+    element: <RegisterPage />,
+  },
+  {
+    path: "/daftar",
     element: <RegisterPage />,
   },
   {
