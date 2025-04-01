@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,36 +27,7 @@ const PublicationPanel = ({ hasUnsavedChanges, lastSaved }: PublicationPanelProp
   const [activeTab, setActiveTab] = useState("status");
   const [deploymentHistory, setDeploymentHistory] = useState<DeploymentRecord[]>([]);
   
-  // Setup real-time sync untuk tabel settings
-  const { isSubscribed } = useRealTimeSync('settings', loadDeploymentHistory);
-  
-  useEffect(() => {
-    // Periksa koneksi Supabase saat komponen dimuat
-    checkSupabaseConnection();
-    
-    // Muat riwayat deployment
-    loadDeploymentHistory();
-  }, []);
-  
-  // Function to check Supabase connection
-  const checkSupabaseConnection = async () => {
-    try {
-      const { data, error } = await supabase.from('properties').select('id').limit(1);
-      
-      if (error) {
-        console.error("Supabase connection check failed:", error);
-        setIsConnected(false);
-        return;
-      }
-      
-      setIsConnected(true);
-    } catch (err) {
-      console.error("Failed to check Supabase connection:", err);
-      setIsConnected(false);
-    }
-  };
-  
-  // Function to load deployment history from Supabase
+  // Function to load deployment history from Supabase - moved before it's used
   const loadDeploymentHistory = async () => {
     try {
       // Dapatkan pengaturan dari Supabase
@@ -96,6 +66,35 @@ const PublicationPanel = ({ hasUnsavedChanges, lastSaved }: PublicationPanelProp
       }
     } catch (err) {
       console.error("Error loading deployment history:", err);
+    }
+  };
+  
+  // Setup real-time sync untuk tabel settings
+  const { isSubscribed } = useRealTimeSync('settings', loadDeploymentHistory);
+  
+  useEffect(() => {
+    // Periksa koneksi Supabase saat komponen dimuat
+    checkSupabaseConnection();
+    
+    // Muat riwayat deployment
+    loadDeploymentHistory();
+  }, []);
+  
+  // Function to check Supabase connection
+  const checkSupabaseConnection = async () => {
+    try {
+      const { data, error } = await supabase.from('properties').select('id').limit(1);
+      
+      if (error) {
+        console.error("Supabase connection check failed:", error);
+        setIsConnected(false);
+        return;
+      }
+      
+      setIsConnected(true);
+    } catch (err) {
+      console.error("Failed to check Supabase connection:", err);
+      setIsConnected(false);
     }
   };
   

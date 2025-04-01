@@ -11,6 +11,7 @@ import ConnectionForm from "./ConnectionForm";
 import ConnectedDetails from "./ConnectedDetails";
 import ConnectionHelp from "./ConnectionHelp";
 import { supabase } from "@/integrations/supabase/client";
+import { TableInfo } from "./ConnectedTablesStatus";
 
 interface SupabaseConnectionProps {
   onPublish?: () => void;
@@ -81,13 +82,18 @@ const SupabaseConnection = ({ onPublish, onConnectionChange, isConnected: initia
       
       let saveResult;
       
-      // Buat objek pengaturan
+      // Buat objek pengaturan - serialize TableInfo objects to make them compatible with Json type
+      const tablesJson = tables.map(table => ({
+        name: table.name,
+        status: table.status
+      }));
+      
       const settingsObject = {
         supabaseUrl: apiUrl,
         supabaseKey: apiKey,
         projectId: projectId,
         lastPublished: now,
-        tables: tables
+        tables: tablesJson
       };
       
       if (existingSettings) {
