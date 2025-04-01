@@ -73,7 +73,7 @@ const PublicationPanel = ({ hasUnsavedChanges = false, lastSaved = null }: Publi
           try {
             const parsed = JSON.parse(data.value as any);
             if (Array.isArray(parsed)) {
-              historyData = parsed;
+              historyData = parsed as DeploymentHistoryItem[];
             } else {
               historyData = [];
             }
@@ -140,15 +140,15 @@ const PublicationPanel = ({ hasUnsavedChanges = false, lastSaved = null }: Publi
       let existingHistory: DeploymentHistoryItem[] = [];
       if (historyData?.value) {
         if (Array.isArray(historyData.value)) {
-          existingHistory = historyData.value;
+          existingHistory = historyData.value as DeploymentHistoryItem[];
         } else {
           try {
             const parsed = JSON.parse(historyData.value as any);
             if (Array.isArray(parsed)) {
-              existingHistory = parsed;
+              existingHistory = parsed as DeploymentHistoryItem[];
             }
           } catch (e) {
-            historyData = [];
+            console.error('Error parsing deployment history:', e);
           }
         }
       }
