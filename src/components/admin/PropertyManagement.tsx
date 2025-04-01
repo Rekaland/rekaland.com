@@ -13,6 +13,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { useRealTimeSync } from "@/hooks/useRealTimeSync";
 import { Property } from "@/integrations/supabase/client";
 
+// Define property types using proper TypeScript types from Supabase database
+type PropertyCategory = "ready_to_occupy" | "empty_lot" | "semi_finished";
+type PropertyStatus = "available" | "sold" | "pending";
+
+interface ActiveProperty {
+  id: string;
+  title: string;
+  type: PropertyCategory;
+  price: string;
+  location: string;
+  description: string;
+  status: PropertyStatus;
+}
+
 const PropertyManagement = () => {
   const { toast } = useToast();
   const [properties, setProperties] = useState<any[]>([]);
@@ -21,17 +35,17 @@ const PropertyManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   
-  const [activeProperty, setActiveProperty] = useState({
+  const [activeProperty, setActiveProperty] = useState<ActiveProperty>({
     id: "",
     title: "",
-    type: "ready_to_occupy", // Menyesuaikan dengan enum yang ada di database
+    type: "ready_to_occupy",
     price: "",
     location: "",
     description: "",
-    status: "available" // Menyesuaikan dengan enum yang ada di database
+    status: "available"
   });
 
-  // Setup real-time sync untuk tabel properties
+  // Setup real-time sync for tabel properties
   const { isSubscribed } = useRealTimeSync('properties', loadProperties);
 
   // Fungsi untuk memuat data properti dari Supabase
@@ -86,12 +100,14 @@ const PropertyManagement = () => {
       // Pemrosesan harga untuk memastikan format numerik
       const processedPrice = parseFloat(activeProperty.price.toString().replace(/[^0-9]/g, ''));
       
-      // Pemrosesan properti untuk format yang benar
+      // Pemrosesan properti untuk format yang benar sesuai dengan tipe data Supabase
       const processedProperty = {
-        ...activeProperty,
+        title: activeProperty.title,
         price: processedPrice,
-        category: activeProperty.type === "ready_to_occupy" ? "ready_to_occupy" : 
-                 activeProperty.type === "semi_finished" ? "semi_finished" : "empty_lot",
+        location: activeProperty.location,
+        description: activeProperty.description,
+        category: activeProperty.type,
+        status: activeProperty.status
       };
       
       let result;
@@ -114,14 +130,14 @@ const PropertyManagement = () => {
         // Membuat properti baru
         result = await supabase
           .from('properties')
-          .insert([{
+          .insert({
             title: processedProperty.title,
             price: processedProperty.price,
             location: processedProperty.location,
             description: processedProperty.description,
             category: processedProperty.category,
             status: processedProperty.status
-          }]);
+          });
       }
       
       if (result.error) {
@@ -176,15 +192,15 @@ const PropertyManagement = () => {
       }
       
       if (data) {
-        // Convert database property to form state
+        // Convert database property to form state with proper type casting
         setActiveProperty({
           id: data.id,
           title: data.title,
-          type: data.category,
+          type: data.category as PropertyCategory,
           price: data.price.toString(),
           location: data.location,
           description: data.description || "",
-          status: data.status || "available"
+          status: data.status as PropertyStatus || "available"
         });
         
         // Pindah ke tab edit
@@ -411,7 +427,7 @@ const PropertyManagement = () => {
                       id="property-type" 
                       className="w-full h-10 px-3 py-2 bg-white border border-input rounded-md"
                       value={activeProperty.type}
-                      onChange={(e) => setActiveProperty({...activeProperty, type: e.target.value})}
+                      onChange={(e) => setActiveProperty({...activeProperty, type: e.target.value as PropertyCategory})}
                     >
                       <option value="ready_to_occupy">Siap Huni</option>
                       <option value="semi_finished">Setengah Jadi</option>
@@ -444,7 +460,7 @@ const PropertyManagement = () => {
                       id="property-status" 
                       className="w-full h-10 px-3 py-2 bg-white border border-input rounded-md"
                       value={activeProperty.status}
-                      onChange={(e) => setActiveProperty({...activeProperty, status: e.target.value})}
+                      onChange={(e) => setActiveProperty({...activeProperty, status: e.target.value as PropertyStatus})}
                     >
                       <option value="available">Tersedia</option>
                       <option value="pending">Pending</option>
