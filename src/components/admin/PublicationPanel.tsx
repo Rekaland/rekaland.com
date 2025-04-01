@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,10 +28,27 @@ const PublicationPanel = ({ hasUnsavedChanges = false, lastSaved = null }: Publi
   const [deploymentInProgress, setDeploymentInProgress] = useState(false);
   const [currentTab, setCurrentTab] = useState("database");
 
-  // Load deployment history
-  const loadDeploymentHistory = async () => {
+  const formatLocalTime = useCallback((dateStr: string): string => {
+    const date = new Date(dateStr);
+    return date.toLocaleTimeString('id-ID', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+  }, []);
+
+  const formatLocalDate = useCallback((dateStr: string): string => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  }, []);
+
+  const loadDeploymentHistory = useCallback(async () => {
     try {
-      // Load from settings table
+      console.log("Memuat riwayat deployment...");
       const { data, error } = await supabase
         .from('settings')
         .select('value')
@@ -47,21 +63,42 @@ const PublicationPanel = ({ hasUnsavedChanges = false, lastSaved = null }: Publi
       }
 
       if (data?.value) {
-        // Fix type conversion by using double casting
-        const historyData = (data.value as unknown) as DeploymentHistoryItem[];
+        console.log("Data riwayat deployment terambil:", data.value);
+        
+        let historyData: DeploymentHistoryItem[] = [];
+        
+        if (Array.isArray(data.value)) {
+          historyData = data.value as DeploymentHistoryItem[];
+        } else {
+          try {
+            const parsed = JSON.parse(data.value as any);
+            if (Array.isArray(parsed)) {
+              historyData = parsed;
+            } else {
+              historyData = [];
+            }
+          } catch (e) {
+            historyData = [];
+          }
+        }
+        
         setDeploymentHistory(historyData);
       }
     } catch (err) {
       console.error('Failed to load deployment history:', err);
     }
-  };
-
-  // Load deployment history on mount
-  useEffect(() => {
-    loadDeploymentHistory();
   }, []);
 
-  // Function to handle deployment
+  useEffect(() => {
+    loadDeploymentHistory();
+    
+    const intervalId = setInterval(() => {
+      loadDeploymentHistory();
+    }, 60000); // 1 minute
+    
+    return () => clearInterval(intervalId);
+  }, [loadDeploymentHistory]);
+
   const handleDeploy = async () => {
     if (!isConnected) {
       toast({
@@ -75,36 +112,56 @@ const PublicationPanel = ({ hasUnsavedChanges = false, lastSaved = null }: Publi
     try {
       setDeploymentInProgress(true);
       
-      // Tampilkan toast untuk memberitahu proses sedang berjalan
       toast({
         title: "Deployment dimulai",
         description: "Proses deployment sedang berjalan...",
         duration: 5000,
       });
 
-      // Simulate deployment process (in real app, we'd do actual deployment)
       await new Promise(resolve => setTimeout(resolve, 3000));
 
-      // Create new deployment history record
+      const now = new Date();
+      const nowISO = now.toISOString();
+
       const newDeployment: DeploymentHistoryItem = {
-        id: (deploymentHistory.length > 0 ? Math.max(...deploymentHistory.map(d => d.id)) : 0) + 1,
-        timestamp: new Date().toISOString(),
+        id: Date.now(),
+        timestamp: nowISO,
         status: "success",
         environment: "production",
-        changes: "Update konten website dan integrase database"
+        changes: "Update konten website dan integrasi database"
       };
 
-      // Add to history
-      const updatedHistory = [newDeployment, ...deploymentHistory].slice(0, 10);
+      const { data: historyData } = await supabase
+        .from('settings')
+        .select('value')
+        .eq('key', 'deployment_history')
+        .maybeSingle();
+      
+      let existingHistory: DeploymentHistoryItem[] = [];
+      if (historyData?.value) {
+        if (Array.isArray(historyData.value)) {
+          existingHistory = historyData.value;
+        } else {
+          try {
+            const parsed = JSON.parse(historyData.value as any);
+            if (Array.isArray(parsed)) {
+              existingHistory = parsed;
+            }
+          } catch (e) {
+            historyData = [];
+          }
+        }
+      }
+
+      const updatedHistory = [newDeployment, ...existingHistory].slice(0, 10);
       setDeploymentHistory(updatedHistory);
 
-      // Save to settings table - we need to cast to Json type
       await supabase
         .from('settings')
         .upsert({
           key: 'deployment_history',
-          value: updatedHistory as any, // Using type assertion to avoid Json type error
-          updated_at: new Date().toISOString()
+          value: updatedHistory as any,
+          updated_at: nowISO
         });
 
       toast({
@@ -263,18 +320,11 @@ const PublicationPanel = ({ hasUnsavedChanges = false, lastSaved = null }: Publi
                         <div className="flex items-center gap-2 mt-2">
                           <Calendar size={12} className="text-gray-400" />
                           <span className="text-xs text-gray-500">
-                            {new Date(item.timestamp).toLocaleDateString('id-ID', {
-                              day: 'numeric',
-                              month: 'long',
-                              year: 'numeric'
-                            })}
+                            {formatLocalDate(item.timestamp)}
                           </span>
                           <Clock size={12} className="text-gray-400 ml-2" />
                           <span className="text-xs text-gray-500">
-                            {new Date(item.timestamp).toLocaleTimeString('id-ID', {
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
+                            {formatLocalTime(item.timestamp)}
                           </span>
                         </div>
                       </div>

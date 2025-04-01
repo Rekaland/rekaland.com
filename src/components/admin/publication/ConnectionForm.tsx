@@ -58,7 +58,7 @@ const ConnectionForm = ({
           className={formErrors.projectId ? "border-red-300" : ""}
         />
         {formErrors.projectId && (
-          <p className="text-sm text-red-500 mt-1">Project ID diperlukan</p>
+          <p className="text-sm text-red-500 mt-1">{formErrors.projectId}</p>
         )}
       </div>
       
@@ -72,7 +72,7 @@ const ConnectionForm = ({
           className={formErrors.apiUrl ? "border-red-300" : ""}
         />
         {formErrors.apiUrl && (
-          <p className="text-sm text-red-500 mt-1">URL API Supabase tidak valid</p>
+          <p className="text-sm text-red-500 mt-1">{formErrors.apiUrl}</p>
         )}
       </div>
       
@@ -96,7 +96,7 @@ const ConnectionForm = ({
           </Button>
         </div>
         {formErrors.apiKey && (
-          <p className="text-sm text-red-500 mt-1">API key diperlukan</p>
+          <p className="text-sm text-red-500 mt-1">{formErrors.apiKey}</p>
         )}
         <p className="text-xs text-gray-500 mt-1">Public API key untuk otentikasi klien</p>
       </div>

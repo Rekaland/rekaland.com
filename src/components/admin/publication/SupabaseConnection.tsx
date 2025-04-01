@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useCallback } from "react";
 import { Database, Eye, FileText, RefreshCw, Check, X, Save, Globe, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +23,7 @@ const SupabaseConnection = ({ onPublish, onConnectionChange, isConnected: initia
   const { toast } = useToast();
   const [showApiKey, setShowApiKey] = useState(false);
   const [publicationInProgress, setPublicationInProgress] = useState(false);
+  const [reconnectAttempt, setReconnectAttempt] = useState(0);
   
   const {
     connectionStatus,
@@ -39,14 +41,47 @@ const SupabaseConnection = ({ onPublish, onConnectionChange, isConnected: initia
     isSyncing,
     handleConnect,
     handleSync,
-    handleTestConnection
+    handleTestConnection,
+    loadConnectionSettings,
+    verifyConnection
   } = useSupabaseConnection(initialIsConnected);
   
+  // Efek untuk memantau status koneksi dan memberitahu komponen parent
   useEffect(() => {
     if (onConnectionChange) {
       onConnectionChange(connectionStatus === 'connected');
     }
   }, [connectionStatus, onConnectionChange]);
+
+  // Efek untuk mencoba ulang koneksi setiap 15 detik jika gagal
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+    
+    if (connectionStatus === 'failed' && projectId && apiUrl && apiKey) {
+      intervalId = setInterval(() => {
+        console.log("Mencoba koneksi ulang...");
+        setReconnectAttempt(prev => prev + 1);
+        verifyConnection(projectId, apiUrl, apiKey);
+      }, 15000); // 15 detik
+    }
+    
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [connectionStatus, projectId, apiUrl, apiKey, verifyConnection]);
+
+  // Efek untuk memuat ulang pengaturan koneksi saat komponen dimuat
+  useEffect(() => {
+    // Muat ulang pengaturan saat halaman dimuat
+    loadConnectionSettings();
+    
+    // Set interval untuk refresh status koneksi setiap 1 menit
+    const checkInterval = setInterval(() => {
+      loadConnectionSettings();
+    }, 60000); // 1 menit
+    
+    return () => clearInterval(checkInterval);
+  }, [loadConnectionSettings]);
 
   const handleActualPublish = async () => {
     if (connectionStatus !== 'connected') {
@@ -67,7 +102,8 @@ const SupabaseConnection = ({ onPublish, onConnectionChange, isConnected: initia
         duration: 2000,
       });
       
-      const now = new Date().toISOString();
+      const now = new Date();
+      const nowISO = now.toISOString();
       
       const { data: existingSettings, error: fetchError } = await supabase
         .from('settings')
@@ -87,7 +123,7 @@ const SupabaseConnection = ({ onPublish, onConnectionChange, isConnected: initia
         supabaseUrl: apiUrl,
         supabaseKey: apiKey,
         projectId: projectId,
-        lastPublished: now,
+        lastPublished: nowISO,
         tables: tablesJson
       };
       
@@ -96,7 +132,7 @@ const SupabaseConnection = ({ onPublish, onConnectionChange, isConnected: initia
           .from('settings')
           .update({
             value: settingsObject as any,
-            updated_at: now
+            updated_at: nowISO
           })
           .eq('key', 'website_settings');
       } else {
@@ -105,14 +141,65 @@ const SupabaseConnection = ({ onPublish, onConnectionChange, isConnected: initia
           .insert({
             key: 'website_settings',
             value: settingsObject as any,
-            created_at: now,
-            updated_at: now
+            created_at: nowISO,
+            updated_at: nowISO
           });
       }
       
       if (saveResult && saveResult.error) {
         throw new Error(saveResult.error.message);
       }
+      
+      // Catat ke riwayat deployment
+      const newDeployment = {
+        id: Date.now(),
+        timestamp: nowISO,
+        status: "success",
+        environment: "production",
+        changes: "Update konten website dan integrasi database"
+      };
+      
+      // Ambil riwayat deployment yang ada
+      const { data: historyData } = await supabase
+        .from('settings')
+        .select('value')
+        .eq('key', 'deployment_history')
+        .maybeSingle();
+      
+      let deploymentHistory = [];
+      if (historyData?.value) {
+        // Pastikan ini array
+        if (Array.isArray(historyData.value)) {
+          deploymentHistory = historyData.value;
+        } else {
+          // Jika bukan array, coba parse atau buat array baru
+          try {
+            deploymentHistory = JSON.parse(historyData.value as any);
+            if (!Array.isArray(deploymentHistory)) {
+              deploymentHistory = [];
+            }
+          } catch (e) {
+            deploymentHistory = [];
+          }
+        }
+      }
+      
+      // Tambahkan deployment baru ke awal array
+      deploymentHistory.unshift(newDeployment);
+      
+      // Batasi jumlah riwayat
+      if (deploymentHistory.length > 10) {
+        deploymentHistory = deploymentHistory.slice(0, 10);
+      }
+      
+      // Simpan riwayat deployment
+      await supabase
+        .from('settings')
+        .upsert({
+          key: 'deployment_history',
+          value: deploymentHistory as any,
+          updated_at: nowISO
+        });
       
       setTimeout(() => {
         setPublicationInProgress(false);
@@ -151,7 +238,14 @@ const SupabaseConnection = ({ onPublish, onConnectionChange, isConnected: initia
           <ConnectionStatus 
             status={connectionStatus === 'failed' ? 'disconnected' : connectionStatus} 
             onTestConnection={handleTestConnection}
-            onRetryConnection={() => setConnectionStatus('pending')}
+            onRetryConnection={() => {
+              // Kondisional: jika ada credential, coba koneksi ulang, jika tidak set ke pending
+              if (projectId && apiUrl && apiKey) {
+                verifyConnection(projectId, apiUrl, apiKey);
+              } else {
+                setConnectionStatus('pending');
+              }
+            }}
           />
 
           {connectionStatus === 'pending' && (
@@ -178,7 +272,7 @@ const SupabaseConnection = ({ onPublish, onConnectionChange, isConnected: initia
                 projectId={projectId}
                 apiUrl={apiUrl}
                 apiKey={apiKey}
-                lastSync={lastSync}
+                lastSync={lastSync || "Belum ada sinkronisasi"}
                 tables={tables}
                 isSyncing={isSyncing}
                 onSync={handleSync}
@@ -204,9 +298,13 @@ const SupabaseConnection = ({ onPublish, onConnectionChange, isConnected: initia
                   </TooltipContent>
                 </Tooltip>
                 
-                <Button variant="default" className="flex items-center gap-2">
-                  <FileText size={16} className="mr-2" />
-                  Dokumentasi
+                <Button 
+                  variant="default" 
+                  className="flex items-center gap-2"
+                  onClick={handleTestConnection}
+                >
+                  <RefreshCw size={16} className="mr-2" />
+                  Uji Koneksi
                 </Button>
               </div>
             </>
