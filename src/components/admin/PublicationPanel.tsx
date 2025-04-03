@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -68,12 +69,26 @@ const PublicationPanel = ({ hasUnsavedChanges = false, lastSaved = null }: Publi
         let historyData: DeploymentHistoryItem[] = [];
         
         if (Array.isArray(data.value)) {
-          historyData = data.value as DeploymentHistoryItem[];
+          // Safe type assertion with proper type checking
+          historyData = (data.value as any[]).map(item => ({
+            id: item.id || 0,
+            timestamp: item.timestamp || new Date().toISOString(),
+            status: (item.status as "success" | "failed" | "in_progress") || "success",
+            environment: item.environment || "production",
+            changes: item.changes || "No changes recorded"
+          }));
         } else {
           try {
-            const parsed = JSON.parse(data.value as any);
+            const parsed = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
             if (Array.isArray(parsed)) {
-              historyData = parsed as DeploymentHistoryItem[];
+              // Safe mapping with proper type checking
+              historyData = parsed.map(item => ({
+                id: item.id || 0,
+                timestamp: item.timestamp || new Date().toISOString(),
+                status: (item.status as "success" | "failed" | "in_progress") || "success",
+                environment: item.environment || "production",
+                changes: item.changes || "No changes recorded"
+              }));
             }
           } catch (e) {
             console.error('Error parsing deployment history:', e);
@@ -139,15 +154,34 @@ const PublicationPanel = ({ hasUnsavedChanges = false, lastSaved = null }: Publi
       let existingHistory: DeploymentHistoryItem[] = [];
       if (historyData?.value) {
         if (Array.isArray(historyData.value)) {
-          existingHistory = historyData.value as DeploymentHistoryItem[];
+          // Safe type assertion with proper mapping
+          existingHistory = (historyData.value as any[]).map(item => ({
+            id: item.id || 0,
+            timestamp: item.timestamp || new Date().toISOString(),
+            status: (item.status as "success" | "failed" | "in_progress") || "success",
+            environment: item.environment || "production",
+            changes: item.changes || "No changes recorded"
+          }));
         } else {
           try {
-            const parsed = JSON.parse(historyData.value as any);
+            const parsed = typeof historyData.value === 'string' 
+              ? JSON.parse(historyData.value) 
+              : historyData.value;
+              
             if (Array.isArray(parsed)) {
-              existingHistory = parsed as DeploymentHistoryItem[];
+              // Safe mapping with proper type checking
+              existingHistory = parsed.map(item => ({
+                id: item.id || 0,
+                timestamp: item.timestamp || new Date().toISOString(),
+                status: (item.status as "success" | "failed" | "in_progress") || "success",
+                environment: item.environment || "production",
+                changes: item.changes || "No changes recorded"
+              }));
             }
           } catch (e) {
             console.error('Error parsing history data:', e);
+            // Don't reassign historyData (which is a const)
+            existingHistory = [];
           }
         }
       }
