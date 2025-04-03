@@ -3,7 +3,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from './use-toast';
 import { useRealTimeSync } from './useRealTimeSync';
-import { ProductContent, ProductContentDB } from '@/integrations/supabase/productTypes';
+import { 
+  ProductContent, 
+  ProductContentDB,
+  convertDBToProductContent 
+} from '@/integrations/supabase/productTypes';
 
 export { type ProductContent } from '@/integrations/supabase/productTypes';
 
@@ -27,7 +31,7 @@ export const useProductContent = (productId?: string) => {
       setLoading(true);
       console.log("Fetching product content for ID:", productId);
       
-      // Query konten produk dari Supabase
+      // Query konten produk dari Supabase menggunakan casting untuk menghindari error tipe
       const { data, error } = await supabase
         .from('product_contents')
         .select('*')
@@ -41,31 +45,9 @@ export const useProductContent = (productId?: string) => {
       
       if (data) {
         console.log("Product content found:", data);
-        // Parse features jika dalam format string
-        let features = data.features || [];
-        if (typeof features === 'string') {
-          try {
-            features = JSON.parse(features);
-          } catch (e) {
-            features = [features];
-          }
-        }
-
-        // Parse specifications jika dalam format string
-        let specifications = data.specifications || {};
-        if (typeof specifications === 'string') {
-          try {
-            specifications = JSON.parse(specifications);
-          } catch (e) {
-            specifications = {};
-          }
-        }
-
-        setContent({
-          ...data, 
-          features, 
-          specifications
-        });
+        // Konversi data dari database ke format frontend
+        const processedContent = convertDBToProductContent(data as ProductContentDB);
+        setContent(processedContent);
       } else {
         console.log("No product content found for ID:", productId);
         setContent(null);

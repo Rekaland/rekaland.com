@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,9 +10,8 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Property } from "@/integrations/supabase/client";
 import { useRealTimeSync } from "@/hooks/useRealTimeSync";
-import { ProductContent } from "@/hooks/useProductContent";
+import { ProductContent, convertDBToProductContent } from "@/integrations/supabase/productTypes";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ProductContentDB } from "@/integrations/supabase/productTypes";
 
 const ProductContentManagement = () => {
   const { toast } = useToast();
@@ -70,14 +68,9 @@ const ProductContentManagement = () => {
       if (error) throw error;
       
       if (data) {
-        // Parse fields jika diperlukan
-        const processedContents = data.map(item => ({
-          ...item,
-          features: Array.isArray(item.features) ? item.features : 
-                    typeof item.features === 'string' ? JSON.parse(item.features) : [],
-          specifications: typeof item.specifications === 'object' ? item.specifications : 
-                          typeof item.specifications === 'string' ? JSON.parse(item.specifications) : {}
-        })) as ProductContent[];
+        const processedContents = data.map(item => 
+          convertDBToProductContent(item)
+        ).filter(Boolean) as ProductContent[];
         
         setContents(processedContents);
       }
@@ -173,7 +166,6 @@ const ProductContentManagement = () => {
   const handleEditContent = (contentId: string) => {
     const content = contents.find(item => item.id === contentId);
     if (content) {
-      // Cari properti terkait
       const property = properties.find(prop => prop.id === content.product_id);
       setSelectedProperty(property || null);
       setSelectedContent(content);
@@ -191,7 +183,6 @@ const ProductContentManagement = () => {
       
       if (error) throw error;
       
-      // Muat ulang konten setelah penghapusan
       await fetchContents();
       
       toast({

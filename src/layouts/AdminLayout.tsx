@@ -2,7 +2,7 @@
 import React, { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { Home, Settings, LogOut } from 'lucide-react';
-import NavLogo from '@/components/layout/NavLogo';
+import { NavLogo } from '@/components/layout/NavLogo';
 import { Button } from '@/components/ui/button';
 
 interface AdminLayoutProps {
