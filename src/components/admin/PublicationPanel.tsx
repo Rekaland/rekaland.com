@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -69,16 +68,12 @@ const PublicationPanel = ({ hasUnsavedChanges = false, lastSaved = null }: Publi
         let historyData: DeploymentHistoryItem[] = [];
         
         if (Array.isArray(data.value)) {
-          // Gunakan as unknown terlebih dahulu untuk menghindari error TS
-          historyData = (data.value as unknown) as DeploymentHistoryItem[];
+          historyData = data.value as DeploymentHistoryItem[];
         } else {
           try {
             const parsed = JSON.parse(data.value as any);
             if (Array.isArray(parsed)) {
-              // Gunakan as unknown terlebih dahulu untuk menghindari error TS
-              historyData = (parsed as unknown) as DeploymentHistoryItem[];
-            } else {
-              historyData = [];
+              historyData = parsed as DeploymentHistoryItem[];
             }
           } catch (e) {
             console.error('Error parsing deployment history:', e);
@@ -144,18 +139,15 @@ const PublicationPanel = ({ hasUnsavedChanges = false, lastSaved = null }: Publi
       let existingHistory: DeploymentHistoryItem[] = [];
       if (historyData?.value) {
         if (Array.isArray(historyData.value)) {
-          // Gunakan as unknown terlebih dahulu untuk menghindari error TS
-          existingHistory = (historyData.value as unknown) as DeploymentHistoryItem[];
+          existingHistory = historyData.value as DeploymentHistoryItem[];
         } else {
           try {
             const parsed = JSON.parse(historyData.value as any);
             if (Array.isArray(parsed)) {
-              // Gunakan as unknown terlebih dahulu untuk menghindari error TS
-              existingHistory = (parsed as unknown) as DeploymentHistoryItem[];
+              existingHistory = parsed as DeploymentHistoryItem[];
             }
           } catch (e) {
-            console.error('Error parsing deployment history:', e);
-            // Buat array kosong sebagai fallback jika parsing gagal
+            console.error('Error parsing history data:', e);
           }
         }
       }

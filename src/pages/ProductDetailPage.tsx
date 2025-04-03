@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
@@ -8,10 +8,22 @@ import Layout from '@/components/layout/Layout';
 import { ProductBreadcrumb } from '@/components/products/ProductBreadcrumb';
 import { PropertyInfoSection } from '@/components/products/PropertyInfoSection';
 import { usePropertyDetail } from '@/hooks/useProperties';
+import { useRealTimeSync } from '@/hooks/useRealTimeSync';
 
 const ProductDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const { property, loading, error } = usePropertyDetail(id);
+  const navigate = useNavigate();
+  
+  // Menggunakan real-time sync untuk mendapatkan pembaruan otomatis
+  const { isSubscribed } = useRealTimeSync('properties', () => {
+    console.log('Real-time update received for properties table');
+  });
+
+  useEffect(() => {
+    console.log('Product detail page loaded with ID:', id);
+    console.log('Real-time sync status:', isSubscribed ? 'Connected' : 'Not connected');
+  }, [id, isSubscribed]);
 
   // Tampilkan loading state
   if (loading) {
@@ -60,6 +72,7 @@ const ProductDetailPage = () => {
               <AlertTitle>Error</AlertTitle>
               <AlertDescription>
                 Gagal memuat detail properti. Silakan coba lagi nanti.
+                {error && <p className="mt-2 text-sm text-red-400">Detail: {error}</p>}
               </AlertDescription>
             </Alert>
           </div>

@@ -65,15 +65,15 @@ export const useProperties = (featured?: boolean, category?: string, limit?: num
   return { properties, loading, error };
 };
 
-// Hook untuk mengambil detail properti berdasarkan ID
-export const usePropertyDetail = (id?: string) => {
+// Hook untuk mengambil detail properti berdasarkan ID atau slug/path
+export const usePropertyDetail = (idOrSlug?: string) => {
   const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   
   useEffect(() => {
-    if (!id) {
+    if (!idOrSlug) {
       setLoading(false);
       return;
     }
@@ -82,13 +82,53 @@ export const usePropertyDetail = (id?: string) => {
       setLoading(true);
       
       try {
-        console.log('Fetching property detail for ID:', id);
+        console.log('Fetching property detail for identifier:', idOrSlug);
         
-        const { data, error } = await supabase
-          .from('properties')
-          .select('*')
-          .eq('id', id)
-          .maybeSingle();
+        // Cek apakah identifier adalah UUID (format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSlug);
+        
+        let query;
+        
+        if (isUuid) {
+          // Jika UUID, cari berdasarkan ID
+          query = supabase
+            .from('properties')
+            .select('*')
+            .eq('id', idOrSlug)
+            .maybeSingle();
+        } else {
+          // Jika bukan UUID, coba cari berdasarkan kategori
+          // Asumsi kategori produk mengikuti format seperti: "empty_lot", "semi_finished", "ready_to_occupy"
+          let category = null;
+          
+          if (idOrSlug === 'kavling-kosong') {
+            category = 'empty_lot';
+          } else if (idOrSlug === 'kavling-setengah-jadi' || idOrSlug === 'semi-finished') {
+            category = 'semi_finished';
+          } else if (idOrSlug === 'siap-huni' || idOrSlug === 'ready-to-occupy') {
+            category = 'ready_to_occupy';
+          }
+          
+          if (category) {
+            query = supabase
+              .from('properties')
+              .select('*')
+              .eq('category', category)
+              .limit(1)
+              .maybeSingle();
+          } else {
+            // Coba cari berdasarkan title yang mirip dengan slug
+            const searchTerm = idOrSlug.replace(/-/g, ' ');
+            query = supabase
+              .from('properties')
+              .select('*')
+              .ilike('title', `%${searchTerm}%`)
+              .limit(1)
+              .maybeSingle();
+          }
+        }
+        
+        const { data, error } = await query;
         
         if (error) {
           throw error;
@@ -111,7 +151,7 @@ export const usePropertyDetail = (id?: string) => {
     };
     
     fetchPropertyDetail();
-  }, [id, toast]);
+  }, [idOrSlug, toast]);
   
   return { property, loading, error };
 };
