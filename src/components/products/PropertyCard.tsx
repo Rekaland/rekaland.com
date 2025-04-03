@@ -6,16 +6,20 @@ import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, ArrowRight, Check, Bookmark, Heart, Eye, Share2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 interface PropertyProps {
-  id: number;
+  id: number | string;
   title: string;
   location: string;
   type: string;
-  price: string;
+  price: string | number;
+  priceNumeric?: number;
+  dpPrice?: string | number;
   area: string;
   image: string;
   features: string[];
+  category?: string;
 }
 
 interface PropertyCardProps {
@@ -29,6 +33,31 @@ export const PropertyCard: FC<PropertyCardProps> = ({ property }) => {
   const [isSaved, setIsSaved] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   
+  // Format price untuk tampilan
+  const formatPrice = (price: string | number) => {
+    if (typeof price === 'number') {
+      return `Rp ${(price / 1000000).toFixed(0)}jt`;
+    }
+    return price;
+  };
+
+  // Mendapatkan URL kategori berdasarkan tipe properti
+  const getCategoryUrl = () => {
+    if (property.category) {
+      return `/produk/${property.category}`;
+    }
+    
+    if (property.type.toLowerCase().includes('kosongan')) {
+      return '/produk/kavling-kosongan';
+    } else if (property.type.toLowerCase().includes('bangunan')) {
+      return '/produk/kavling-setengah-jadi';
+    } else if (property.type.toLowerCase().includes('siap huni')) {
+      return '/produk/kavling-siap-huni';
+    }
+    
+    return '/produk';
+  };
+  
   // Cek apakah properti sudah tersimpan oleh user
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -40,7 +69,7 @@ export const PropertyCard: FC<PropertyCardProps> = ({ property }) => {
 
   const openWhatsApp = () => {
     const text = encodeURIComponent(
-      `Halo, saya tertarik dan ingin tahu lebih lanjut tentang properti "${property.title}" yang berlokasi di ${property.location} dengan harga ${property.price}.`
+      `Halo, saya tertarik dan ingin tahu lebih lanjut tentang properti "${property.title}" yang berlokasi di ${property.location} dengan harga ${formatPrice(property.price)}.`
     );
     window.open(`https://wa.me/6282177968062?text=${text}`, '_blank');
   };
@@ -49,7 +78,7 @@ export const PropertyCard: FC<PropertyCardProps> = ({ property }) => {
     if (!isAuthenticated) {
       toast({
         title: "Anda belum masuk",
-        description: "Silakan masuk atau daftar untuk menyimpan properti",
+        description: "Silakan masuk atau daftar untuk m`enyimpan properti",
         className: "bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0",
       });
       
@@ -131,9 +160,11 @@ export const PropertyCard: FC<PropertyCardProps> = ({ property }) => {
         <div className={`absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-${isHovered ? '100' : '70'} transition-opacity duration-300`}></div>
         
         {/* Label properti */}
-        <span className="absolute top-3 left-3 bg-rekaland-orange text-white px-3 py-1 text-sm font-medium rounded-full shadow-md">
-          {property.type}
-        </span>
+        <Link to={getCategoryUrl()}>
+          <span className="absolute top-3 left-3 bg-rekaland-orange text-white px-3 py-1 text-sm font-medium rounded-full shadow-md hover:bg-orange-600 cursor-pointer">
+            {property.type}
+          </span>
+        </Link>
         
         {/* Tombol simpan */}
         <Button 
@@ -175,9 +206,27 @@ export const PropertyCard: FC<PropertyCardProps> = ({ property }) => {
           <span className="text-sm line-clamp-1">{property.location}</span>
         </div>
         
-        <div className="flex justify-between mb-4">
-          <span className="font-bold text-rekaland-orange text-lg">{property.price}</span>
-          <span className="text-gray-700 font-medium">{property.area}</span>
+        <div className="flex justify-between items-center mb-2">
+          <div>
+            <div className="font-bold text-rekaland-orange text-lg">{formatPrice(property.price)}</div>
+            <div className="text-xs text-gray-500">Cash</div>
+          </div>
+          <div className="text-right">
+            <div className="font-medium text-gray-700">{formatPrice(property.dpPrice || (typeof property.priceNumeric === 'number' ? property.priceNumeric * 0.3 : property.price))}</div>
+            <div className="text-xs text-gray-500">DP Kredit</div>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-1 mb-3">
+          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+            Cash
+          </Badge>
+          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+            Kredit
+          </Badge>
+          <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
+            {property.area}
+          </Badge>
         </div>
         
         <div className="border-t border-gray-100 pt-3 mt-2">

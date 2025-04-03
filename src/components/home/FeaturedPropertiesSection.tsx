@@ -1,15 +1,19 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PropertyCard } from '@/components/products/PropertyCard';
 import { useProperties } from '@/hooks/useProperties';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useRealTimeSync } from '@/hooks/useRealTimeSync';
 
 const FeaturedPropertiesSection = () => {
   const navigate = useNavigate();
-  const { properties, loading, error } = useProperties(true, undefined, 3);
+  const { properties, loading, error, refetchProperties } = useProperties(true, undefined, 3);
+  
+  // Setup real-time listening untuk update properti
+  const { isSubscribed } = useRealTimeSync('properties', refetchProperties);
   
   // Tampilkan skeleton loader selama data dimuat
   if (loading) {
@@ -51,6 +55,20 @@ const FeaturedPropertiesSection = () => {
     );
   }
   
+  // Mendapatkan kategori URL dari kategori properti
+  const getCategoryFromType = (category: string) => {
+    switch(category) {
+      case 'empty_lot':
+        return 'kavling-kosongan';
+      case 'semi_finished':
+        return 'kavling-setengah-jadi';
+      case 'ready_to_occupy':
+        return 'kavling-siap-huni';
+      default:
+        return category;
+    }
+  };
+  
   // Tampilkan data dari API atau fallback ke data mock jika kosong
   const displayProperties = properties.length > 0 ? properties : [
     {
@@ -58,6 +76,8 @@ const FeaturedPropertiesSection = () => {
       title: "Hunian Premium Jakarta",
       location: "Jakarta Selatan",
       price: 350000000,
+      priceNumeric: 350000000,
+      dpPrice: 105000000,
       description: "Hunian premium dengan desain modern dan fasilitas lengkap.",
       category: "ready_to_occupy",
       status: "available",
@@ -70,6 +90,8 @@ const FeaturedPropertiesSection = () => {
       title: "Kavling Strategis BSD",
       location: "Tangerang Selatan",
       price: 400000000,
+      priceNumeric: 400000000,
+      dpPrice: 120000000,
       description: "Kavling strategis di area berkembang dengan ROI tinggi.",
       category: "empty_lot",
       status: "available",
@@ -82,6 +104,8 @@ const FeaturedPropertiesSection = () => {
       title: "Rumah Setengah Jadi Bekasi",
       location: "Bekasi",
       price: 550000000,
+      priceNumeric: 550000000,
+      dpPrice: 165000000,
       description: "Rumah setengah jadi dengan struktur kokoh dan desain modern.",
       category: "semi_finished",
       status: "available",
@@ -99,6 +123,12 @@ const FeaturedPropertiesSection = () => {
           <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
             Temukan properti premium kami dengan lokasi strategis dan harga terbaik
           </p>
+          {isSubscribed && (
+            <div className="text-xs text-green-600 mt-2 flex items-center justify-center">
+              <span className="h-2 w-2 rounded-full bg-green-500 mr-1 animate-pulse"></span>
+              Update real-time aktif
+            </div>
+          )}
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -114,9 +144,12 @@ const FeaturedPropertiesSection = () => {
                   : property.category === 'semi_finished' 
                     ? 'Kavling Bangunan' 
                     : 'Kavling Siap Huni',
-                price: `Rp ${(property.price / 1000000).toFixed(0)}jt`,
+                price: property.price,
+                priceNumeric: property.priceNumeric || property.price,
+                dpPrice: property.dpPrice || (property.price * 0.3),
                 area: property.land_size ? `${property.land_size} m²` : "120 m²",
                 image: property.images?.length ? property.images[0] : "https://source.unsplash.com/random/300x200?property&sig=" + property.id,
+                category: getCategoryFromType(property.category),
                 features: [
                   property.bedrooms ? `${property.bedrooms} kamar tidur` : "Akses mudah",
                   property.bathrooms ? `${property.bathrooms} kamar mandi` : "Lokasi strategis",

@@ -1,80 +1,53 @@
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 
-export const useRealTimeSync = (tableName: string, onChange?: () => void) => {
+export const useRealTimeSync = (
+  table: string,
+  onUpdate?: () => void,
+  specificFilters?: { column: string, value: any }[]
+) => {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [lastEvent, setLastEvent] = useState<any>(null);
-  const { toast } = useToast();
 
   useEffect(() => {
-    // Aktifkan real-time updates untuk tabel yang ditentukan
-    const setupRealtime = async () => {
-      try {
-        // Aktifkan fitur real-time untuk tabel
-        const channel = supabase
-          .channel(`public:${tableName}`)
-          .on('postgres_changes', 
-              { event: '*', schema: 'public', table: tableName }, 
-              (payload) => {
-                console.log('Real-time update received:', payload);
-                setLastEvent({
-                  type: payload.eventType,
-                  timestamp: new Date().toISOString(),
-                  data: payload.new || payload.old
-                });
-                
-                // Panggil callback onChange jika disediakan
-                if (onChange) {
-                  onChange();
-                }
-                
-                // Tampilkan notifikasi perubahan
-                const eventType = payload.eventType;
-                
-                let title = '';
-                let description = '';
-                
-                switch (eventType) {
-                  case 'INSERT':
-                    title = 'Data baru ditambahkan';
-                    description = `Data baru telah ditambahkan ke ${tableName}`;
-                    break;
-                  case 'UPDATE':
-                    title = 'Data diperbarui';
-                    description = `Data di ${tableName} telah diperbarui`;
-                    break;
-                  case 'DELETE':
-                    title = 'Data dihapus';
-                    description = `Data dari ${tableName} telah dihapus`;
-                    break;
-                }
-                
-                toast({
-                  title,
-                  description,
-                  className: "bg-gradient-to-r from-blue-500 to-blue-600 text-white",
-                });
-              })
-          .subscribe(status => {
-            if (status === 'SUBSCRIBED') {
-              console.log(`Real-time updates aktif untuk tabel ${tableName}`);
-              setIsSubscribed(true);
-            }
-          });
+    console.log(`Real-time updates aktif untuk tabel ${table}`);
+
+    // Setup real-time subscription ke perubahan tabel
+    const filters = specificFilters 
+      ? { filter: `${specificFilters.map(f => `${f.column}=eq.${f.value}`).join(',')}` } 
+      : {};
+
+    const channel = supabase
+      .channel(`${table}-changes`)
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table 
+        }, 
+        (payload) => {
+          console.log(`Real-time update received for ${table}:`, payload);
+          setLastEvent(payload);
           
-        return () => {
-          supabase.removeChannel(channel);
+          // Panggil callback jika disediakan
+          if (onUpdate) {
+            onUpdate();
+          }
+        })
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          setIsSubscribed(true);
+        } else {
           setIsSubscribed(false);
-        };
-      } catch (error) {
-        console.error(`Error setting up real-time for ${tableName}:`, error);
-      }
+        }
+      });
+
+    // Cleanup subscription saat komponen unmount
+    return () => {
+      supabase.removeChannel(channel);
     };
-    
-    setupRealtime();
-  }, [tableName, onChange, toast]);
-  
+  }, [table, onUpdate, specificFilters]);
+
   return { isSubscribed, lastEvent };
 };
