@@ -27,8 +27,20 @@ export const useProperties = (featured?: boolean, category?: string, limit?: num
       
       // Filter berdasarkan kategori jika parameter diberikan
       if (category && category !== 'all') {
-        // Cast string ke tipe yang sesuai dengan kolom category di database
-        query = query.eq('category', category as any);
+        // Mapping untuk konversi kategori URL ke kategori database
+        let dbCategory: string | null = null;
+        
+        if (category === 'kavling-kosongan' || category === 'empty_lot') {
+          dbCategory = 'empty_lot';
+        } else if (category === 'kavling-setengah-jadi' || category === 'semi_finished') {
+          dbCategory = 'semi_finished';
+        } else if (category === 'kavling-siap-huni' || category === 'ready_to_occupy') {
+          dbCategory = 'ready_to_occupy';
+        }
+        
+        if (dbCategory) {
+          query = query.eq('category', dbCategory);
+        }
       }
       
       // Batasi hasil jika parameter limit diberikan
@@ -100,15 +112,14 @@ export const usePropertyDetail = (idOrSlug?: string) => {
           .eq('id', idOrSlug)
           .maybeSingle();
       } else {
-        // Jika bukan UUID, coba cari berdasarkan kategori
-        // Asumsi kategori produk mengikuti format seperti: "empty_lot", "semi_finished", "ready_to_occupy"
+        // Konversi slug ke kategori database
         let category = null;
         
-        if (idOrSlug === 'kavling-kosong' || idOrSlug === 'kavling-kosongan') {
+        if (idOrSlug === 'kavling-kosongan' || idOrSlug === 'empty_lot') {
           category = 'empty_lot';
-        } else if (idOrSlug === 'kavling-setengah-jadi' || idOrSlug === 'semi-finished') {
+        } else if (idOrSlug === 'kavling-setengah-jadi' || idOrSlug === 'semi_finished') {
           category = 'semi_finished';
-        } else if (idOrSlug === 'siap-huni' || idOrSlug === 'kavling-siap-huni' || idOrSlug === 'ready-to-occupy') {
+        } else if (idOrSlug === 'kavling-siap-huni' || idOrSlug === 'ready_to_occupy') {
           category = 'ready_to_occupy';
         }
         

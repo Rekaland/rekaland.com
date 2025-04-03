@@ -14,10 +14,6 @@ export const useRealTimeSync = (
     console.log(`Real-time updates aktif untuk tabel ${table}`);
 
     // Setup real-time subscription ke perubahan tabel
-    const filters = specificFilters 
-      ? { filter: `${specificFilters.map(f => `${f.column}=eq.${f.value}`).join(',')}` } 
-      : {};
-
     const channel = supabase
       .channel(`${table}-changes`)
       .on('postgres_changes', 
@@ -36,6 +32,7 @@ export const useRealTimeSync = (
           }
         })
       .subscribe((status) => {
+        console.log(`Real-time sync status for ${table}:`, status);
         if (status === 'SUBSCRIBED') {
           setIsSubscribed(true);
         } else {
@@ -45,9 +42,10 @@ export const useRealTimeSync = (
 
     // Cleanup subscription saat komponen unmount
     return () => {
+      console.log(`Cleaning up real-time subscription for ${table}`);
       supabase.removeChannel(channel);
     };
-  }, [table, onUpdate, specificFilters]);
+  }, [table, onUpdate]);
 
   return { isSubscribed, lastEvent };
 };

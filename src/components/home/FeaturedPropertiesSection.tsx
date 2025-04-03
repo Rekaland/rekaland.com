@@ -7,6 +7,7 @@ import { PropertyCard } from '@/components/products/PropertyCard';
 import { useProperties } from '@/hooks/useProperties';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRealTimeSync } from '@/hooks/useRealTimeSync';
+import { getCategoryPath, formatCurrency } from '@/lib/utils';
 
 const FeaturedPropertiesSection = () => {
   const navigate = useNavigate();
@@ -57,63 +58,78 @@ const FeaturedPropertiesSection = () => {
   
   // Mendapatkan kategori URL dari kategori properti
   const getCategoryFromType = (category: string) => {
-    switch(category) {
-      case 'empty_lot':
-        return 'kavling-kosongan';
-      case 'semi_finished':
-        return 'kavling-setengah-jadi';
-      case 'ready_to_occupy':
-        return 'kavling-siap-huni';
-      default:
-        return category;
-    }
+    return getCategoryPath(category);
+  };
+  
+  // Format properti untuk ditampilkan
+  const formatPropertiesForDisplay = () => {
+    return properties.map(property => ({
+      id: property.id,
+      title: property.title,
+      location: property.location,
+      type: property.category === 'empty_lot' 
+        ? 'Kavling Kosongan' 
+        : property.category === 'semi_finished' 
+          ? 'Kavling Bangunan' 
+          : 'Kavling Siap Huni',
+      price: `Rp ${formatCurrency(property.price)}`,
+      priceNumeric: property.price,
+      dpPrice: property.price * 0.3,
+      area: property.land_size ? `${property.land_size} m²` : "120 m²",
+      image: property.images?.length ? property.images[0] : `https://source.unsplash.com/random/300x200?property&sig=${property.id}`,
+      category: getCategoryFromType(property.category),
+      features: [
+        property.bedrooms ? `${property.bedrooms} kamar tidur` : "Akses mudah",
+        property.bathrooms ? `${property.bathrooms} kamar mandi` : "Lokasi strategis",
+        "Sertifikat SHM"
+      ]
+    }));
   };
   
   // Tampilkan data dari API atau fallback ke data mock jika kosong
-  const displayProperties = properties.length > 0 ? properties : [
-    {
-      id: "1",
-      title: "Hunian Premium Jakarta",
-      location: "Jakarta Selatan",
-      price: 350000000,
-      priceNumeric: 350000000,
-      dpPrice: 105000000,
-      description: "Hunian premium dengan desain modern dan fasilitas lengkap.",
-      category: "ready_to_occupy",
-      status: "available",
-      featured: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-    {
-      id: "2",
-      title: "Kavling Strategis BSD",
-      location: "Tangerang Selatan",
-      price: 400000000,
-      priceNumeric: 400000000,
-      dpPrice: 120000000,
-      description: "Kavling strategis di area berkembang dengan ROI tinggi.",
-      category: "empty_lot",
-      status: "available",
-      featured: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-    {
-      id: "3",
-      title: "Rumah Setengah Jadi Bekasi",
-      location: "Bekasi",
-      price: 550000000,
-      priceNumeric: 550000000,
-      dpPrice: 165000000,
-      description: "Rumah setengah jadi dengan struktur kokoh dan desain modern.",
-      category: "semi_finished",
-      status: "available",
-      featured: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }
-  ];
+  const displayProperties = properties.length > 0 
+    ? formatPropertiesForDisplay() 
+    : [
+        {
+          id: "1",
+          title: "Hunian Premium Jakarta",
+          location: "Jakarta Selatan",
+          type: "Kavling Siap Huni",
+          price: "Rp 350jt",
+          priceNumeric: 350000000,
+          dpPrice: 105000000,
+          area: "120 m²",
+          image: "https://source.unsplash.com/random/300x200?property&sig=1",
+          category: "kavling-siap-huni",
+          features: ["Akses mudah", "Lokasi strategis", "Sertifikat SHM"]
+        },
+        {
+          id: "2",
+          title: "Kavling Strategis BSD",
+          location: "Tangerang Selatan",
+          type: "Kavling Kosongan",
+          price: "Rp 400jt",
+          priceNumeric: 400000000,
+          dpPrice: 120000000,
+          area: "150 m²",
+          image: "https://source.unsplash.com/random/300x200?property&sig=2",
+          category: "kavling-kosongan",
+          features: ["Bebas banjir", "Lokasi premium", "ROI tinggi"]
+        },
+        {
+          id: "3",
+          title: "Rumah Setengah Jadi Bekasi",
+          location: "Bekasi",
+          type: "Kavling Bangunan",
+          price: "Rp 550jt",
+          priceNumeric: 550000000,
+          dpPrice: 165000000,
+          area: "180 m²",
+          image: "https://source.unsplash.com/random/300x200?property&sig=3",
+          category: "kavling-setengah-jadi",
+          features: ["Struktur kokoh", "Desain modern", "Lingkungan asri"]
+        }
+      ];
   
   return (
     <section className="py-16 bg-gray-50 dark:bg-gray-900">
@@ -135,27 +151,7 @@ const FeaturedPropertiesSection = () => {
           {displayProperties.map((property) => (
             <PropertyCard
               key={property.id}
-              property={{
-                id: property.id,
-                title: property.title,
-                location: property.location,
-                type: property.category === 'empty_lot' 
-                  ? 'Kavling Kosongan' 
-                  : property.category === 'semi_finished' 
-                    ? 'Kavling Bangunan' 
-                    : 'Kavling Siap Huni',
-                price: property.price,
-                priceNumeric: property.priceNumeric || property.price,
-                dpPrice: property.dpPrice || (property.price * 0.3),
-                area: property.land_size ? `${property.land_size} m²` : "120 m²",
-                image: property.images?.length ? property.images[0] : "https://source.unsplash.com/random/300x200?property&sig=" + property.id,
-                category: getCategoryFromType(property.category),
-                features: [
-                  property.bedrooms ? `${property.bedrooms} kamar tidur` : "Akses mudah",
-                  property.bathrooms ? `${property.bathrooms} kamar mandi` : "Lokasi strategis",
-                  "Sertifikat SHM"
-                ]
-              }}
+              property={property}
             />
           ))}
         </div>

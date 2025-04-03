@@ -39,7 +39,7 @@ const PropertyCategoriesSection = () => {
     }
   ];
 
-  const handleCategoryClick = (category) => {
+  const handleCategoryClick = (category: any) => {
     setActiveCategory(category.id);
     navigate(category.path);
     window.scrollTo(0, 0);

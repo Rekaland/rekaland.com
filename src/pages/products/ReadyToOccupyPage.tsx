@@ -1,5 +1,5 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,9 +7,19 @@ import MainLayout from "@/layouts/MainLayout";
 import { MapPin, ArrowRight, Info, Check, Grid3X3, Home, Building, Map } from "lucide-react";
 import { PropertyCategoryCard } from "@/components/products/PropertyCategoryCard";
 import { PropertyCard } from "@/components/products/PropertyCard";
+import { useProperties } from "@/hooks/useProperties";
+import { PropertyGridView } from "@/components/products/PropertyGridView";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useRealTimeSync } from "@/hooks/useRealTimeSync";
 
 const ReadyToOccupyPage = () => {
   const navigate = useNavigate();
+  
+  // Menggunakan hook useProperties untuk mengambil data properti kavling siap huni
+  const { properties, loading, error, refetchProperties } = useProperties(undefined, "kavling-siap-huni");
+  
+  // Setup real-time sync
+  const { isSubscribed } = useRealTimeSync('properties', refetchProperties);
   
   const productCategories = [
     {
@@ -47,59 +57,83 @@ const ReadyToOccupyPage = () => {
     window.scrollTo(0, 0);
   }, []);
 
-  // Sample data for kavling siap huni
-  const readyToOccupyLots = [
-    {
-      id: 1,
-      title: "Villa Asri Lampung",
-      location: "Cisarua, Lampung Selatan",
-      price: "Rp1.2 milyar",
-      area: "250 m²",
+  // Function to format data for display
+  const formatPropertiesForDisplay = () => {
+    return properties.map(property => ({
+      id: property.id,
+      title: property.title,
+      location: property.location,
       type: "Kavling Siap Huni",
-      image: "https://images.unsplash.com/photo-1721322800607-8c38375eef04?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxfDB8MXxyYW5kb218MHx8fHx8fHx8MTYzMjg1MTUzMQ&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=700",
-      features: ["Fully furnished", "View pegunungan", "Keamanan 24 jam"]
-    },
-    {
-      id: 2,
-      title: "Rumah Mewah Jakarta Selatan",
-      location: "Kebayoran Baru, Jakarta Selatan",
-      price: "Rp3.5 milyar",
-      area: "350 m²",
-      type: "Kavling Siap Huni",
-      image: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxfDB8MXxyYW5kb218MHx8fHx8fHx8MTYzMjg1MTUyNg&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=700",
-      features: ["5 kamar tidur", "Smart home", "Kolam renang"]
-    },
-    {
-      id: 3,
-      title: "Apartemen Mewah Surabaya",
-      location: "Surabaya, Jawa Timur",
-      price: "Rp900 juta",
-      area: "90 m²",
-      type: "Kavling Siap Huni",
-      image: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxfDB8MXxyYW5kb218MHx8fHx8fHx8MTYzMjg1MTUyNw&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=700",
-      features: ["2 kamar tidur", "Fasilitas lengkap", "View kota"]
-    },
-    {
-      id: 4,
-      title: "Cluster Modern BSD",
-      location: "BSD City, Tangerang Selatan",
-      price: "Rp1.5 milyar",
-      area: "180 m²",
-      type: "Kavling Siap Huni",
-      image: "https://images.unsplash.com/photo-1721322800607-8c38375eef04?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxfDB8MXxyYW5kb218MHx8fHx8fHx8MTYzMjg1MTUzMQ&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=700",
-      features: ["One gate system", "Taman bermain", "Clubhouse"]
-    },
-    {
-      id: 5,
-      title: "Rumah Premium Lampung",
-      location: "Cisarua, Lampung Selatan",
-      price: "Rp1.8 milyar",
-      area: "300 m²",
-      type: "Kavling Siap Huni",
-      image: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxfDB8MXxyYW5kb218MHx8fHx8fHx8MTYzMjg1MTUyNg&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=700",
-      features: ["4 kamar tidur", "Udara sejuk", "View pegunungan"]
-    }
-  ];
+      price: `Rp ${Math.floor(property.price / 1000000)} juta`,
+      priceNumeric: property.price,
+      dpPrice: property.price * 0.3,
+      area: property.land_size ? `${property.land_size} m²` : "200 m²",
+      image: property.images?.[0] || `https://source.unsplash.com/random/300x200?property&sig=${property.id}`,
+      features: [
+        property.bedrooms ? `${property.bedrooms} kamar tidur` : "Fully furnished",
+        property.bathrooms ? `${property.bathrooms} kamar mandi` : "Desain modern",
+        "Keamanan 24 jam"
+      ],
+      category: "kavling-siap-huni"
+    }));
+  };
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="container mx-auto px-4 py-8">
+          <div className="mb-8">
+            <Skeleton className="h-8 w-1/3 mb-2" />
+            <Skeleton className="h-4 w-2/3" />
+          </div>
+          
+          <div className="mb-8">
+            <Skeleton className="h-32 w-full mb-4" />
+          </div>
+          
+          <div className="mb-8">
+            <Skeleton className="h-32 w-full" />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-md">
+                <Skeleton className="h-48 w-full" />
+                <div className="p-4">
+                  <Skeleton className="h-6 w-3/4 mb-2" />
+                  <Skeleton className="h-4 w-1/2 mb-4" />
+                  <Skeleton className="h-4 w-full mb-2" />
+                  <Skeleton className="h-4 w-full mb-4" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <MainLayout>
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center p-8 bg-red-50 dark:bg-red-900/20 rounded-lg">
+            <h2 className="text-2xl font-bold text-red-600 dark:text-red-400 mb-2">Error Loading Properties</h2>
+            <p className="text-gray-600 dark:text-gray-300 mb-4">{error}</p>
+            <button 
+              onClick={refetchProperties}
+              className="px-4 py-2 bg-rekaland-orange text-white rounded hover:bg-orange-600"
+            >
+              Coba Lagi
+            </button>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  const formattedProperties = formatPropertiesForDisplay();
 
   return (
     <MainLayout>
@@ -117,6 +151,12 @@ const ReadyToOccupyPage = () => {
             <p className="text-gray-600 dark:text-gray-300 max-w-2xl">
               Properti yang sudah selesai dibangun dan siap untuk dihuni, dengan desain modern dan fasilitas lengkap.
             </p>
+            {isSubscribed && (
+              <div className="text-xs text-green-600 mt-2 flex items-center">
+                <span className="h-2 w-2 rounded-full bg-green-500 mr-1 animate-pulse"></span>
+                Update real-time aktif
+              </div>
+            )}
           </div>
         </div>
         
@@ -151,11 +191,31 @@ const ReadyToOccupyPage = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          {readyToOccupyLots.map((property) => (
-            <PropertyCard key={property.id} property={property} />
-          ))}
+        <div className="mb-4">
+          <p className="text-gray-600 dark:text-gray-400">
+            Menampilkan {formattedProperties.length} properti kavling siap huni
+          </p>
         </div>
+
+        {formattedProperties.length > 0 ? (
+          <PropertyGridView properties={formattedProperties} />
+        ) : (
+          <div className="text-center py-12 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+            <div className="mx-auto mb-4 bg-gray-100 dark:bg-gray-700 rounded-full p-3 w-16 h-16 flex items-center justify-center">
+              <Home className="h-8 w-8 text-gray-400" />
+            </div>
+            <h3 className="text-xl font-semibold mb-2">Tidak Ada Properti Ditemukan</h3>
+            <p className="text-gray-500 mb-4">
+              Tidak ada properti kavling siap huni yang tersedia saat ini.
+            </p>
+            <Button 
+              variant="outline" 
+              onClick={() => navigate("/produk")}
+            >
+              Lihat Semua Properti
+            </Button>
+          </div>
+        )}
       </div>
     </MainLayout>
   );

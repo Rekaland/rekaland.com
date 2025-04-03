@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import MainLayout from "@/layouts/MainLayout";
 import { Grid3X3, Home, Building, Map } from "lucide-react";
 
-// Import our new components
+// Import our components
 import { ProductBreadcrumb } from "@/components/products/ProductBreadcrumb";
 import { PropertyFilters } from "@/components/products/PropertyFilters";
 import { ProductCategorySection } from "@/components/products/ProductCategorySection";
@@ -13,7 +13,10 @@ import { PropertyGridView } from "@/components/products/PropertyGridView";
 import { PropertyListView } from "@/components/products/PropertyListView";
 import { PropertyPagination } from "@/components/products/PropertyPagination";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { CategoryProps, PropertyProps } from "@/types/product";
+import { CategoryProps } from "@/types/product";
+import { useProperties } from "@/hooks/useProperties";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useRealTimeSync } from "@/hooks/useRealTimeSync";
 
 const EmptyLotPage = () => {
   const navigate = useNavigate();
@@ -21,6 +24,12 @@ const EmptyLotPage = () => {
   const [sortOption, setSortOption] = useState("default");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [currentPage, setCurrentPage] = useState(1);
+  
+  // Menggunakan hook useProperties untuk mengambil data properti kavling kosongan
+  const { properties, loading, error, refetchProperties } = useProperties(undefined, "kavling-kosongan");
+  
+  // Setup real-time sync
+  const { isSubscribed } = useRealTimeSync('properties', refetchProperties);
   
   const productCategories: CategoryProps[] = [
     {
@@ -53,77 +62,13 @@ const EmptyLotPage = () => {
     }
   ];
 
-  // Sample data for kavling kosongan
-  const emptyLots: PropertyProps[] = [
-    {
-      id: 1,
-      title: "Kavling Premium Cisauk",
-      location: "Cisauk, Tangerang",
-      price: "Rp350 juta",
-      area: "120 m²",
-      type: "Kavling Kosongan",
-      image: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxfDB8MXxyYW5kb218MHx8fHx8fHx8MTYzMjg1MTUyNg&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=700",
-      features: ["Akses tol", "Dekat stasiun KRL", "SHM"]
-    },
-    {
-      id: 2,
-      title: "Kavling Strategis Serpong",
-      location: "Serpong, Tangerang Selatan",
-      price: "Rp425 juta",
-      area: "150 m²",
-      type: "Kavling Kosongan",
-      image: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxfDB8MXxyYW5kb218MHx8fHx8fHx8MTYzMjg1MTUyNg&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=700",
-      features: ["Dekat kampus", "Area komersial", "Bebas banjir"]
-    },
-    {
-      id: 3,
-      title: "Kavling Prima Cibubur",
-      location: "Cibubur, Jakarta Timur",
-      price: "Rp500 juta",
-      area: "180 m²",
-      type: "Kavling Kosongan",
-      image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxfDB8MXxyYW5kb218MHx8fHx8fHx8MTYzMjg1MTUyOQ&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=700",
-      features: ["Lingkungan asri", "Dekat tol", "Area berkembang"]
-    },
-    {
-      id: 4,
-      title: "Kavling Ekslusif BSD",
-      location: "BSD City, Tangerang Selatan",
-      price: "Rp600 juta",
-      area: "200 m²",
-      type: "Kavling Kosongan",
-      image: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxfDB8MXxyYW5kb218MHx8fHx8fHx8MTYzMjg1MTUyNg&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=700",
-      features: ["Kawasan elit", "Dekat mall", "Infrastruktur lengkap"]
-    },
-    {
-      id: 5,
-      title: "Kavling Investasi Lampung",
-      location: "Cisarua, Lampung Selatan",
-      price: "Rp300 juta",
-      area: "150 m²",
-      type: "Kavling Kosongan",
-      image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxfDB8MXxyYW5kb218MHx8fHx8fHx8MTYzMjg1MTUyOQ&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=700",
-      features: ["Prospek berkembang", "View pegunungan", "Udara sejuk"]
-    },
-    {
-      id: 6,
-      title: "Kavling Premium Bekasi",
-      location: "Bekasi Timur",
-      price: "Rp275 juta",
-      area: "120 m²",
-      type: "Kavling Kosongan",
-      image: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxfDB8MXxyYW5kb218MHx8fHx8fHx8MTYzMjg1MTUyNg&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=700",
-      features: ["Akses tol", "Dekat stasiun LRT", "Area berkembang"]
-    }
-  ];
-
   useEffect(() => {
     // Scroll to top when page loads
     window.scrollTo(0, 0);
   }, []);
 
   // Search and sort functionality
-  const filteredEmptyLots = emptyLots
+  const filteredEmptyLots = properties
     .filter(property => {
       if (!searchTerm) return true;
       
@@ -131,19 +76,26 @@ const EmptyLotPage = () => {
       
       if (property.title.toLowerCase().includes(searchLower)) return true;
       if (property.location.toLowerCase().includes(searchLower)) return true;
-      if (property.features.some(feature => feature.toLowerCase().includes(searchLower))) return true;
       
       return false;
     })
     .sort((a, b) => {
       if (sortOption === "priceAsc") {
-        return parseInt(a.price.replace(/\D/g, '')) - parseInt(b.price.replace(/\D/g, ''));
+        const aPrice = a.price;
+        const bPrice = b.price;
+        return aPrice - bPrice;
       } else if (sortOption === "priceDesc") {
-        return parseInt(b.price.replace(/\D/g, '')) - parseInt(a.price.replace(/\D/g, ''));
+        const aPrice = a.price;
+        const bPrice = b.price;
+        return bPrice - aPrice;
       } else if (sortOption === "areaAsc") {
-        return parseInt(a.area) - parseInt(b.area);
+        const aArea = a.land_size || 0;
+        const bArea = b.land_size || 0;
+        return aArea - bArea;
       } else if (sortOption === "areaDesc") {
-        return parseInt(b.area) - parseInt(a.area);
+        const aArea = a.land_size || 0;
+        const bArea = b.land_size || 0;
+        return bArea - aArea;
       }
       return 0;
     });
@@ -170,6 +122,84 @@ const EmptyLotPage = () => {
     ]
   };
 
+  // Function to format data for PropertyGridView
+  const formatPropertiesForDisplay = () => {
+    return properties.map(property => ({
+      id: property.id,
+      title: property.title,
+      location: property.location,
+      type: "Kavling Kosongan",
+      price: `Rp ${Math.floor(property.price / 1000000)} juta`,
+      priceNumeric: property.price,
+      dpPrice: property.price * 0.3,
+      area: property.land_size ? `${property.land_size} m²` : "120 m²",
+      image: property.images?.[0] || `https://source.unsplash.com/random/300x200?property&sig=${property.id}`,
+      features: [
+        "Akses mudah", 
+        "Lokasi strategis", 
+        "Sertifikat SHM"
+      ],
+      category: "kavling-kosongan"
+    }));
+  };
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="container mx-auto px-4 py-8">
+          <div className="mb-8">
+            <Skeleton className="h-8 w-1/3 mb-2" />
+            <Skeleton className="h-4 w-2/3" />
+          </div>
+          
+          <div className="mb-8">
+            <Skeleton className="h-32 w-full mb-4" />
+          </div>
+          
+          <div className="mb-8">
+            <Skeleton className="h-32 w-full" />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-md">
+                <Skeleton className="h-48 w-full" />
+                <div className="p-4">
+                  <Skeleton className="h-6 w-3/4 mb-2" />
+                  <Skeleton className="h-4 w-1/2 mb-4" />
+                  <Skeleton className="h-4 w-full mb-2" />
+                  <Skeleton className="h-4 w-full mb-4" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <MainLayout>
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center p-8 bg-red-50 dark:bg-red-900/20 rounded-lg">
+            <h2 className="text-2xl font-bold text-red-600 dark:text-red-400 mb-2">Error Loading Properties</h2>
+            <p className="text-gray-600 dark:text-gray-300 mb-4">{error}</p>
+            <button 
+              onClick={refetchProperties}
+              className="px-4 py-2 bg-rekaland-orange text-white rounded hover:bg-orange-600"
+            >
+              Coba Lagi
+            </button>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  const formattedProperties = formatPropertiesForDisplay();
+
   return (
     <MainLayout>
       <div className="container mx-auto px-4 py-8">
@@ -180,6 +210,12 @@ const EmptyLotPage = () => {
             <p className="text-gray-600 dark:text-gray-300 max-w-2xl">
               Investasi tanah kavling dengan lokasi strategis dan sertifikat legal yang dapat Anda kembangkan sesuai kebutuhan dan keinginan.
             </p>
+            {isSubscribed && (
+              <div className="text-xs text-green-600 mt-2 flex items-center">
+                <span className="h-2 w-2 rounded-full bg-green-500 mr-1 animate-pulse"></span>
+                Update real-time aktif
+              </div>
+            )}
           </div>
         </div>
         
@@ -207,25 +243,27 @@ const EmptyLotPage = () => {
 
         <div className="mb-4">
           <p className="text-gray-600 dark:text-gray-400">
-            Menampilkan {filteredEmptyLots.length} properti kavling kosongan
+            Menampilkan {formattedProperties.length} properti kavling kosongan
           </p>
         </div>
 
         <Tabs value={viewMode} className="w-full">
           <TabsContent value="grid">
-            <PropertyGridView properties={filteredEmptyLots} />
+            <PropertyGridView properties={formattedProperties} />
           </TabsContent>
 
           <TabsContent value="list">
-            <PropertyListView properties={filteredEmptyLots} />
+            <PropertyListView properties={formattedProperties} />
           </TabsContent>
         </Tabs>
         
-        <PropertyPagination 
-          currentPage={currentPage}
-          totalPages={1}
-          onPageChange={setCurrentPage}
-        />
+        {formattedProperties.length > 0 && (
+          <PropertyPagination 
+            currentPage={currentPage}
+            totalPages={1}
+            onPageChange={setCurrentPage}
+          />
+        )}
       </div>
     </MainLayout>
   );
