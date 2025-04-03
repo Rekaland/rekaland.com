@@ -13,6 +13,7 @@ import { Property } from "@/integrations/supabase/client";
 import { useRealTimeSync } from "@/hooks/useRealTimeSync";
 import { ProductContent } from "@/hooks/useProductContent";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ProductContentDB } from "@/integrations/supabase/productTypes";
 
 const ProductContentManagement = () => {
   const { toast } = useToast();
@@ -76,7 +77,7 @@ const ProductContentManagement = () => {
                     typeof item.features === 'string' ? JSON.parse(item.features) : [],
           specifications: typeof item.specifications === 'object' ? item.specifications : 
                           typeof item.specifications === 'string' ? JSON.parse(item.specifications) : {}
-        }));
+        })) as ProductContent[];
         
         setContents(processedContents);
       }

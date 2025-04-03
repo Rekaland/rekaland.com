@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import AdminLayout from "@/layouts/AdminLayout";
 import AnalyticsDashboard from "@/components/admin/AnalyticsDashboard";
 import PropertyManagement from "@/components/admin/PropertyManagement";
 import ContentManagement from "@/components/admin/ContentManagement";
@@ -33,12 +32,13 @@ import {
   Package,
   Code
 } from "lucide-react";
+import MainLayout from "@/layouts/MainLayout";
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
 
   return (
-    <AdminLayout>
+    <MainLayout>
       <div className="container mx-auto p-4 sm:p-6">
         <div>
           <h1 className="text-2xl font-bold mb-2">Admin Dashboard</h1>
@@ -129,7 +129,7 @@ const AdminDashboard = () => {
           </Tabs>
         </div>
       </div>
-    </AdminLayout>
+    </MainLayout>
   );
 };
 

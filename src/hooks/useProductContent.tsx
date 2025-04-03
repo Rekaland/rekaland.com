@@ -3,18 +3,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from './use-toast';
 import { useRealTimeSync } from './useRealTimeSync';
+import { ProductContent, ProductContentDB } from '@/integrations/supabase/productTypes';
 
-export interface ProductContent {
-  id: string;
-  product_id?: string;
-  title: string;
-  description: string;
-  features: string[];
-  specifications?: Record<string, string>;
-  meta_description?: string;
-  created_at?: string;
-  updated_at?: string;
-}
+export { type ProductContent } from '@/integrations/supabase/productTypes';
 
 export const useProductContent = (productId?: string) => {
   const [content, setContent] = useState<ProductContent | null>(null);

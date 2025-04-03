@@ -86,6 +86,50 @@ export type Database = {
           },
         ]
       }
+      product_contents: {
+        Row: {
+          created_at: string | null
+          description: string
+          features: Json | null
+          id: string
+          meta_description: string | null
+          product_id: string | null
+          specifications: Json | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          features?: Json | null
+          id?: string
+          meta_description?: string | null
+          product_id?: string | null
+          specifications?: Json | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          features?: Json | null
+          id?: string
+          meta_description?: string | null
+          product_id?: string | null
+          specifications?: Json | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_contents_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
