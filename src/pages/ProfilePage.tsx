@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -9,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { LayoutDashboard, LogOut, Bookmark, History, Trash2 } from "lucide-react";
 import { PropertyCard } from "@/components/products/PropertyCard";
 import { useToast } from "@/hooks/use-toast";
+import { PropertyProps } from "@/types/product";
 
 interface SavedProperty {
   id: number;
@@ -16,9 +16,11 @@ interface SavedProperty {
   location: string;
   type: string;
   price: string;
+  priceNumeric: number;
   area: string;
   image: string;
   features: string[];
+  category: string;
 }
 
 interface SearchHistoryItem {
@@ -47,20 +49,26 @@ const ProfilePage = () => {
   const loadUserData = () => {
     if (!user) return;
     
-    // Muat properti yang disimpan
     const savedPropertyIds = JSON.parse(localStorage.getItem(`savedProperties_${user.email}`) || '[]');
     const allProperties = JSON.parse(localStorage.getItem('allProperties') || '[]');
     
-    const userSavedProperties = savedPropertyIds.map((id: number) => 
-      allProperties.find((prop: SavedProperty) => prop.id === id)
-    ).filter(Boolean);
+    const userSavedProperties = savedPropertyIds.map((id: number) => {
+      const prop = allProperties.find((prop: any) => prop.id === id);
+      if (prop) {
+        return {
+          ...prop,
+          priceNumeric: typeof prop.priceNumeric === 'number' ? prop.priceNumeric : 
+                      parseInt(prop.price.replace(/\D/g, ''), 10) || 0,
+          category: prop.category || 'uncategorized'
+        };
+      }
+      return null;
+    }).filter(Boolean);
     
     setSavedProperties(userSavedProperties);
     
-    // Muat riwayat pencarian
     const history = JSON.parse(localStorage.getItem(`searchHistory_${user.email}`) || '[]');
     
-    // Tambahkan judul properti ke item riwayat
     const enrichedHistory = history.map((item: SearchHistoryItem) => {
       const property = allProperties.find((p: SavedProperty) => p.id === item.propertyId);
       return {

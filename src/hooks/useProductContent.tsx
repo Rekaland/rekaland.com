@@ -45,8 +45,17 @@ export const useProductContent = (productId?: string) => {
       
       if (data) {
         console.log("Product content found:", data);
+        
+        // Ensure features is properly handled if it's a JSON string
+        const processedData: ProductContentDB = {
+          ...data,
+          features: Array.isArray(data.features) 
+            ? data.features 
+            : (data.features ? JSON.parse(String(data.features)) : [])
+        };
+        
         // Konversi data dari database ke format frontend
-        const processedContent = convertDBToProductContent(data as ProductContentDB);
+        const processedContent = convertDBToProductContent(processedData);
         setContent(processedContent);
       } else {
         console.log("No product content found for ID:", productId);

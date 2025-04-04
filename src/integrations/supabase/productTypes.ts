@@ -1,6 +1,5 @@
 
 // Type definitions for product content management
-import { content } from "i18next";
 
 export interface ProductContentDB {
   id: string;
@@ -35,7 +34,7 @@ export const convertDBToProductContent = (data: ProductContentDB | null): Produc
     product_id: data.product_id,
     title: data.title,
     description: data.description,
-    features: Array.isArray(data.features) ? data.features : [],
+    features: Array.isArray(data.features) ? data.features : (data.features ? JSON.parse(String(data.features)) : []),
     specifications: data.specifications || {},
     meta_description: data.meta_description,
     created_at: data.created_at,

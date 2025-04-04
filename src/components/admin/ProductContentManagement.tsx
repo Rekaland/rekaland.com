@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Property } from "@/integrations/supabase/client";
 import { useRealTimeSync } from "@/hooks/useRealTimeSync";
-import { ProductContent, convertDBToProductContent } from "@/integrations/supabase/productTypes";
+import { ProductContent, ProductContentDB, convertDBToProductContent } from "@/integrations/supabase/productTypes";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const ProductContentManagement = () => {
@@ -68,9 +69,17 @@ const ProductContentManagement = () => {
       if (error) throw error;
       
       if (data) {
-        const processedContents = data.map(item => 
-          convertDBToProductContent(item)
-        ).filter(Boolean) as ProductContent[];
+        const processedContents = data.map(item => {
+          // Ensure features is parsed as an array if it's a string or JSON
+          const itemWithParsedFeatures: ProductContentDB = {
+            ...item,
+            features: Array.isArray(item.features) 
+              ? item.features 
+              : (item.features ? JSON.parse(String(item.features)) : [])
+          };
+          
+          return convertDBToProductContent(itemWithParsedFeatures);
+        }).filter(Boolean) as ProductContent[];
         
         setContents(processedContents);
       }
