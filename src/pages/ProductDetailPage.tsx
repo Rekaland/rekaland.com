@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import MainLayout from "@/layouts/MainLayout";
@@ -51,29 +50,36 @@ const ProductDetailPage = () => {
 
   // Format features dari konten
   const getFormattedFeatures = () => {
-    if (content?.features && Array.isArray(content.features) && content.features.length > 0) {
-      return content.features;
-    }
-    
-    // Fallback ke default features jika tidak ada konten
-    return [
-      "Akses mudah",
-      "Lokasi strategis",
-      "Sertifikat SHM",
-      "Bebas banjir",
-      "ROI tinggi",
-    ];
-  };
-
-  // Spesifikasi properti
-  const propertySpecs = [
-    { label: "Luas Tanah", value: property?.land_size ? `${property.land_size} m²` : "N/A" },
-    { label: "Luas Bangunan", value: property?.building_size ? `${property.building_size} m²` : "N/A" },
-    { label: "Kamar Tidur", value: property?.bedrooms || "N/A" },
-    { label: "Kamar Mandi", value: property?.bathrooms || "N/A" },
-    { label: "Status", value: property?.status === "available" ? "Tersedia" : 
-      property?.status === "sold" ? "Terjual" : "Pending" },
+  if (content?.features && Array.isArray(content.features) && content.features.length > 0) {
+    return content.features;
+  }
+  
+  // Fallback to default features if no content
+  return property?.features || [
+    "Akses mudah",
+    "Lokasi strategis",
+    "Sertifikat SHM",
+    "Bebas banjir",
+    "ROI tinggi",
   ];
+};
+
+// Add a function to get specifications
+const getPropertySpecifications = () => {
+  if (content?.specifications && Object.keys(content.specifications).length > 0) {
+    return content.specifications;
+  }
+  
+  // Fallback to basic specs from property data
+  return {
+    "Luas Tanah": property?.land_size ? `${property.land_size} m²` : "N/A",
+    "Luas Bangunan": property?.building_size ? `${property.building_size} m²` : "N/A",
+    "Kamar Tidur": property?.bedrooms || "N/A",
+    "Kamar Mandi": property?.bathrooms || "N/A",
+    "Status": property?.status === "available" ? "Tersedia" : 
+              property?.status === "sold" ? "Terjual" : "Pending",
+  };
+};
 
   // Format kategori untuk label
   const getCategoryLabel = () => {
@@ -239,14 +245,7 @@ const ProductDetailPage = () => {
                 </div>
                 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-                  {propertySpecs.map((spec, index) => (
-                    <div key={index} className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                        {spec.label}
-                      </p>
-                      <p className="font-semibold">{spec.value}</p>
-                    </div>
-                  ))}
+                  
                 </div>
                 
                 {/* Tabs for different content sections */}
@@ -254,30 +253,45 @@ const ProductDetailPage = () => {
                   <TabsList className="mb-4">
                     <TabsTrigger value="deskripsi">Deskripsi</TabsTrigger>
                     <TabsTrigger value="fitur">Fitur</TabsTrigger>
+                    <TabsTrigger value="spesifikasi">Spesifikasi</TabsTrigger>
                     <TabsTrigger value="lokasi">Lokasi</TabsTrigger>
                   </TabsList>
                   
-                  <TabsContent value="deskripsi" className="space-y-4">
-                    <div className="prose dark:prose-invert max-w-none">
-                      {content?.description ? (
-                        <div dangerouslySetInnerHTML={{ __html: content.description }} />
-                      ) : (
-                        <p className="text-gray-600 dark:text-gray-300">{property.description || 
-                          "Properti premium dengan lokasi strategis dan akses mudah. Investasi properti dengan potensi nilai yang terus meningkat. Hubungi kami untuk informasi lebih lanjut."}</p>
-                      )}
-                    </div>
-                  </TabsContent>
                   
-                  <TabsContent value="fitur">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {getFormattedFeatures().map((feature, index) => (
-                        <div key={index} className="flex items-start">
-                          <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5 mr-2 flex-shrink-0" />
-                          <span className="text-gray-700 dark:text-gray-300">{feature}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </TabsContent>
+<TabsContent value="deskripsi" className="space-y-4">
+  <div className="prose dark:prose-invert max-w-none">
+    {content?.description ? (
+      <div dangerouslySetInnerHTML={{ __html: content.description }} />
+    ) : (
+      <p className="text-gray-600 dark:text-gray-300">{property.description || 
+        "Properti premium dengan lokasi strategis dan akses mudah. Investasi properti dengan potensi nilai yang terus meningkat. Hubungi kami untuk informasi lebih lanjut."}</p>
+    )}
+  </div>
+</TabsContent>
+
+// Update the TabsContent for 'fitur' to show content from admin dashboard
+<TabsContent value="fitur">
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    {getFormattedFeatures().map((feature, index) => (
+      <div key={index} className="flex items-start">
+        <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5 mr-2 flex-shrink-0" />
+        <span className="text-gray-700 dark:text-gray-300">{feature}</span>
+      </div>
+    ))}
+  </div>
+</TabsContent>
+
+// Update the TabsContent for 'specifications' to show content from admin dashboard
+<TabsContent value="spesifikasi">
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    {Object.entries(getPropertySpecifications()).map(([key, value], index) => (
+      <div key={index} className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{key}</p>
+        <p className="font-semibold">{value}</p>
+      </div>
+    ))}
+  </div>
+</TabsContent>
                   
                   <TabsContent value="lokasi">
                     <div className="aspect-video bg-gray-100 dark:bg-gray-700 flex items-center justify-center rounded-lg mb-4">

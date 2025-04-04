@@ -1,13 +1,15 @@
 
 // Type definitions for product content management
 
+import { Json } from "@/integrations/supabase/client";
+
 export interface ProductContentDB {
   id: string;
   product_id?: string | null;
   title: string;
   description: string;
-  features?: string[] | any; // Support for various feature formats
-  specifications?: Record<string, any> | any; // Support for different specification formats
+  features?: string[] | Json | any; // Support for various feature formats
+  specifications?: Record<string, any> | Json | any; // Support for different specification formats
   meta_description?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
@@ -37,7 +39,7 @@ export const convertDBToProductContent = (data: ProductContentDB | null): Produc
         parsedFeatures = data.features;
       } else if (typeof data.features === 'string') {
         parsedFeatures = JSON.parse(data.features);
-      } else {
+      } else if (data.features && typeof data.features === 'object') {
         // Handle case where features is a JSON object from Supabase
         parsedFeatures = Array.isArray(data.features) ? data.features : [];
       }
@@ -55,6 +57,9 @@ export const convertDBToProductContent = (data: ProductContentDB | null): Produc
         parsedSpecifications = data.specifications;
       } else if (typeof data.specifications === 'string') {
         parsedSpecifications = JSON.parse(data.specifications);
+      } else if (data.specifications && typeof data.specifications === 'object') {
+        // Handle JSON object from Supabase
+        parsedSpecifications = data.specifications;
       }
     } catch (e) {
       console.error("Error parsing specifications:", e);

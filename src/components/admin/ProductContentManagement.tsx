@@ -66,7 +66,7 @@ const ProductContentManagement = () => {
       
       if (data) {
         const processedContents = data.map(item => {
-          return convertDBToProductContent(item);
+          return convertDBToProductContent(item as ProductContentDB);
         }).filter(Boolean) as ProductContent[];
         
         setContents(processedContents);

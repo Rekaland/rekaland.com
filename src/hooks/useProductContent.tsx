@@ -47,7 +47,7 @@ export const useProductContent = (productId?: string) => {
         console.log("Product content found:", data);
         
         // Konversi data dari database ke format frontend
-        const processedContent = convertDBToProductContent(data);
+        const processedContent = convertDBToProductContent(data as ProductContentDB);
         setContent(processedContent);
       } else {
         console.log("No product content found for ID:", productId);

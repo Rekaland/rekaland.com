@@ -1,262 +1,160 @@
-
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
-import Layout from "@/components/layout/Layout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, LogOut, Bookmark, History, Trash2 } from "lucide-react";
-import { PropertyCard } from "@/components/products/PropertyCard";
-import { useToast } from "@/hooks/use-toast";
-import { PropertyProps } from "@/types/product";
-
-interface SavedProperty {
-  id: string; // Diubah dari number menjadi string
-  title: string;
-  location: string;
-  type: string;
-  price: string;
-  priceNumeric: number;
-  area: string;
-  image: string;
-  features: string[];
-  category: string;
-}
-
-interface SearchHistoryItem {
-  id: number;
-  type: string;
-  propertyId: number;
-  timestamp: string;
-  propertyTitle?: string;
-}
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Heart, MapPin, CheckCircle2 } from "lucide-react";
+import MainLayout from '@/layouts/MainLayout';
+import { useToast } from '@/hooks/use-toast';
+import { formatCurrency } from '@/lib/utils';
 
 const ProfilePage = () => {
-  const { isAuthenticated, isAdmin, user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [savedProperties, setSavedProperties] = useState<SavedProperty[]>([]);
-  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
+  const [savedProperties, setSavedProperties] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate("/login");
-    } else {
-      loadUserData();
-    }
-  }, [isAuthenticated, navigate, user]);
+    const fetchSavedProperties = async () => {
+      setLoading(true);
+      try {
+        if (user) {
+          const { data, error } = await supabase
+            .from('saved_properties')
+            .select('property_id')
+            .eq('user_id', user.id);
 
-  const loadUserData = () => {
-    if (!user) return;
-    
-    const savedPropertyIds = JSON.parse(localStorage.getItem(`savedProperties_${user.email}`) || '[]');
-    const allProperties = JSON.parse(localStorage.getItem('allProperties') || '[]');
-    
-    const userSavedProperties = savedPropertyIds.map((id: number) => {
-      const prop = allProperties.find((prop: any) => prop.id === id);
-      if (prop) {
-        return {
-          ...prop,
-          priceNumeric: typeof prop.priceNumeric === 'number' ? prop.priceNumeric : 
-                      parseInt(prop.price.replace(/\D/g, ''), 10) || 0,
-          category: prop.category || 'uncategorized'
-        };
+          if (error) {
+            throw error;
+          }
+
+          if (data) {
+            const propertyIds = data.map(item => item.property_id);
+            if (propertyIds.length > 0) {
+              const { data: properties, error: propertiesError } = await supabase
+                .from('properties')
+                .select('*')
+                .in('id', propertyIds);
+
+              if (propertiesError) {
+                throw propertiesError;
+              }
+
+              setSavedProperties(properties || []);
+            } else {
+              setSavedProperties([]);
+            }
+          }
+        }
+      } catch (error: any) {
+        console.error("Error fetching saved properties:", error);
+        toast({
+          title: "Gagal memuat properti yang disimpan",
+          description: "Terjadi kesalahan saat mengambil data dari server.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
       }
-      return null;
-    }).filter(Boolean);
-    
-    setSavedProperties(userSavedProperties);
-    
-    const history = JSON.parse(localStorage.getItem(`searchHistory_${user.email}`) || '[]');
-    
-    const enrichedHistory = history.map((item: SearchHistoryItem) => {
-      const property = allProperties.find((p: SavedProperty) => p.id === item.propertyId);
-      return {
-        ...item,
-        propertyTitle: property?.title || "Properti tidak ditemukan"
-      };
-    });
-    
-    setSearchHistory(enrichedHistory);
-  };
+    };
 
-  const handleLogout = () => {
-    logout();
-    navigate("/");
-    toast({
-      title: "Berhasil Keluar",
-      description: "Anda telah keluar dari akun Anda",
-      duration: 1000,
-      className: "bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0",
-    });
-  };
+    fetchSavedProperties();
+  }, [user, toast]);
 
-  const goToAdmin = () => {
-    navigate("/admin");
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/login');
   };
-
-  const clearSavedProperties = () => {
-    if (!user) return;
-    
-    localStorage.setItem(`savedProperties_${user.email}`, JSON.stringify([]));
-    setSavedProperties([]);
-    
-    toast({
-      title: "Daftar Properti Dibersihkan",
-      description: "Semua properti yang diminati telah dihapus",
-      className: "bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0",
-    });
-  };
-
-  const clearSearchHistory = () => {
-    if (!user) return;
-    
-    localStorage.setItem(`searchHistory_${user.email}`, JSON.stringify([]));
-    setSearchHistory([]);
-    
-    toast({
-      title: "Riwayat Pencarian Dibersihkan",
-      description: "Semua riwayat pencarian telah dihapus",
-      className: "bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0",
-    });
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('id-ID', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(date);
-  };
-
-  if (!isAuthenticated || !user) {
-    return null;
-  }
 
   return (
-    <Layout>
-      <div className="container mx-auto px-4 py-16">
-        <div className="max-w-5xl mx-auto">
-          <h1 className="text-3xl font-bold mb-6">Profil Pengguna</h1>
-          
-          <Card className="mb-8 overflow-hidden shadow-lg border-0 animate-in fade-in-70 duration-300">
-            <CardHeader className="flex flex-row items-center gap-4 bg-gradient-to-r from-orange-50 to-amber-50 p-6">
-              <Avatar className="h-20 w-20 ring-2 ring-orange-200">
-                <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="bg-orange-100 text-rekaland-orange">{user.name?.charAt(0)}</AvatarFallback>
+    <MainLayout>
+      <div className="container mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Profil Anda</h1>
+          <p className="text-gray-500 dark:text-gray-400">Informasi akun dan properti yang Anda simpan.</p>
+        </div>
+
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Detail Akun</CardTitle>
+            <CardDescription>Informasi pribadi Anda.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4">
+            <div className="flex items-center space-x-4">
+              <Avatar>
+                <AvatarImage src={user?.avatar_url || `https://api.dicebear.com/7.x/ лица/svg?seed=${user?.email}`} />
+                <AvatarFallback>
+                  {user?.name ? user.name[0] : user?.email ? user.email[0] : 'U'}
+                </AvatarFallback>
               </Avatar>
               <div>
-                <CardTitle className="text-2xl">{user.name}</CardTitle>
-                <p className="text-gray-500">{user.email}</p>
-                <span className="inline-block px-3 py-1 mt-2 bg-gradient-to-r from-orange-100 to-amber-100 rounded-full text-sm font-medium capitalize">
-                  {user.role}
-                </span>
+                <p className="text-lg font-semibold">{user?.name || 'Pengguna'}</p>
+                <p className="text-sm text-gray-500">{user?.email}</p>
               </div>
-            </CardHeader>
-            
-            <CardContent className="p-6">
-              <div className="space-y-6">
-                <div className="p-4 bg-orange-50 rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-medium flex items-center">
-                      <Bookmark size={16} className="mr-2 text-orange-500" />
-                      Properti yang Diminati
-                    </h3>
-                    {savedProperties.length > 0 && (
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        className="text-xs border-red-300 text-red-500 hover:bg-red-50"
-                        onClick={clearSavedProperties}
-                      >
-                        <Trash2 size={14} className="mr-1" /> Hapus Semua
+            </div>
+            <div>
+              <Button onClick={handleSignOut} variant="secondary">
+                Keluar
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <section>
+          <h2 className="text-2xl font-semibold text-gray-800 dark:text-white mb-4">
+            Properti yang Disimpan
+          </h2>
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(3)].map((_, i) => (
+                <Card key={i}>
+                  <CardContent>
+                    <Skeleton className="w-full h-40 rounded-md mb-4" />
+                    <Skeleton className="w-3/4 h-6 mb-2" />
+                    <Skeleton className="w-1/2 h-4" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : savedProperties.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {savedProperties.map((property: any) => (
+                <Card key={property.id}>
+                  <CardContent className="p-4">
+                    <div className="relative">
+                      <img
+                        src={property.images?.[0] || `https://source.unsplash.com/random/400x300?property&${property.id}`}
+                        alt={property.title}
+                        className="object-cover rounded-md mb-3 w-full h-40"
+                      />
+                      <Button variant="secondary" size="icon" className="absolute top-2 right-2 bg-white/80 hover:bg-white">
+                        <Heart className="h-4 w-4 text-red-500" />
                       </Button>
-                    )}
-                  </div>
-                  
-                  {savedProperties.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                      {savedProperties.map((property) => (
-                        <PropertyCard key={property.id} property={property} />
-                      ))}
                     </div>
-                  ) : (
-                    <p className="text-gray-500">Belum ada properti yang disimpan.</p>
-                  )}
-                </div>
-                
-                <div className="p-4 bg-orange-50 rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-medium flex items-center">
-                      <History size={16} className="mr-2 text-orange-500" />
-                      Riwayat Pencarian
-                    </h3>
-                    {searchHistory.length > 0 && (
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        className="text-xs border-red-300 text-red-500 hover:bg-red-50"
-                        onClick={clearSearchHistory}
-                      >
-                        <Trash2 size={14} className="mr-1" /> Hapus Semua
-                      </Button>
-                    )}
-                  </div>
-                  
-                  {searchHistory.length > 0 ? (
-                    <div className="mt-2 space-y-2">
-                      {searchHistory.map((item) => (
-                        <div key={item.id} className="bg-white p-3 rounded-md shadow-sm border border-gray-100 flex justify-between items-center">
-                          <div>
-                            <p className="font-medium">{item.propertyTitle}</p>
-                            <p className="text-xs text-gray-500">{formatDate(item.timestamp)}</p>
-                          </div>
-                          <Button 
-                            size="sm" 
-                            variant="ghost"
-                            className="text-xs hover:bg-orange-50"
-                            onClick={() => navigate(`/produk?search=${encodeURIComponent(item.propertyTitle || '')}`)}
-                          >
-                            Lihat Lagi
-                          </Button>
-                        </div>
-                      ))}
+                    <h3 className="font-semibold text-lg mb-1">{property.title}</h3>
+                    <div className="flex items-center text-gray-500 dark:text-gray-400 text-sm mb-2">
+                      <MapPin className="h-4 w-4 mr-1" />
+                      <span>{property.location}</span>
                     </div>
-                  ) : (
-                    <p className="text-gray-500">Belum ada riwayat pencarian.</p>
-                  )}
-                </div>
-                
-                <div className="flex flex-col sm:flex-row gap-3 mt-6">
-                  {isAdmin && (
-                    <Button 
-                      onClick={goToAdmin}
-                      className="flex gap-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white border-0"
-                    >
-                      <LayoutDashboard className="h-4 w-4" />
-                      Dashboard Admin
-                    </Button>
-                  )}
-                  
-                  <Button 
-                    variant="outline" 
-                    onClick={handleLogout} 
-                    className="flex gap-2 border-red-300 text-red-500 hover:bg-red-50"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    Keluar
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                    <p className="text-orange-500 font-semibold">Rp {formatCurrency(property.price)}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <CardContent>
+                <p className="text-gray-500">Belum ada properti yang disimpan.</p>
+              </CardContent>
+            </Card>
+          )}
+        </section>
       </div>
-    </Layout>
+    </MainLayout>
   );
 };
 
