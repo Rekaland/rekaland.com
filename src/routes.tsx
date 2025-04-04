@@ -5,9 +5,6 @@ import MainLayout from "./layouts/MainLayout";
 import Index from './pages/Index';
 import AboutPage from './pages/AboutPage';
 import ProductsPage from './pages/ProductsPage';
-import EmptyLotPage from './pages/products/EmptyLotPage';
-import SemiFinishedLotPage from './pages/products/SemiFinishedLotPage';
-import ReadyToOccupyPage from './pages/products/ReadyToOccupyPage';
 import InformationPage from './pages/InformationPage';
 import HelpPage from './pages/HelpPage';
 import LoginPage from './pages/LoginPage';
@@ -48,30 +45,6 @@ const router = createBrowserRouter([
       {
         path: "produk/:id",
         element: <ProductDetailPage />,
-      },
-      {
-        path: "products/empty-lot",
-        element: <EmptyLotPage />,
-      },
-      {
-        path: "produk/kavling-kosong",
-        element: <EmptyLotPage />,
-      },
-      {
-        path: "products/semi-finished",
-        element: <SemiFinishedLotPage />,
-      },
-      {
-        path: "produk/semi-finished",
-        element: <SemiFinishedLotPage />,
-      },
-      {
-        path: "products/ready-to-occupy",
-        element: <ReadyToOccupyPage />,
-      },
-      {
-        path: "produk/siap-huni",
-        element: <ReadyToOccupyPage />,
       },
       {
         path: "information",

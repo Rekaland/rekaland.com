@@ -43,6 +43,7 @@ export const useProperties = (featured?: boolean, category?: string, limit?: num
       // Filter berdasarkan kategori jika parameter diberikan
       const dbCategory = mapUrlCategoryToDbCategory(category);
       if (dbCategory) {
+        console.log('Filtering by category:', dbCategory);
         query = query.eq('category', dbCategory);
       }
       
