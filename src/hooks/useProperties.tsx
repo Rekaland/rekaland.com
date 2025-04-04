@@ -44,7 +44,8 @@ export const useProperties = (featured?: boolean, category?: string, limit?: num
       const dbCategory = mapUrlCategoryToDbCategory(category);
       if (dbCategory) {
         console.log('Filtering by category:', dbCategory);
-        query = query.eq('category', dbCategory);
+        // Use type assertion to fix the TypeScript error
+        query = query.eq('category', dbCategory as "empty_lot" | "semi_finished" | "ready_to_occupy");
       }
       
       // Batasi hasil jika parameter limit diberikan

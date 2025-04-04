@@ -49,15 +49,7 @@ const Navbar = () => {
   const navLinks = [
     { name: "Beranda", path: "/" },
     { name: "Tentang", path: "/tentang" },
-    { 
-      name: "Produk",
-      path: "/produk",
-      dropdown: [
-        { name: "Kavling Kosongan", path: "/produk/kavling-kosongan" },
-        { name: "Kavling Setengah Jadi", path: "/produk/kavling-setengah-jadi" },
-        { name: "Kavling Siap Huni", path: "/produk/kavling-siap-huni" }
-      ]
-    },
+    { name: "Produk", path: "/produk" }, // Removed dropdown items
     { name: "Informasi", path: "/informasi" }
   ];
 

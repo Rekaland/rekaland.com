@@ -46,6 +46,19 @@ const router = createBrowserRouter([
         path: "produk/:id",
         element: <ProductDetailPage />,
       },
+      // Redirect old category paths to the main products page with a query parameter
+      {
+        path: "produk/kavling-kosongan",
+        element: <ProductsPage />,
+      },
+      {
+        path: "produk/kavling-setengah-jadi",
+        element: <ProductsPage />,
+      },
+      {
+        path: "produk/kavling-siap-huni",
+        element: <ProductsPage />,
+      },
       {
         path: "information",
         element: <InformationPage />,
