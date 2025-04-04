@@ -1,314 +1,398 @@
 
-import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { Skeleton } from "@/components/ui/skeleton";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import MainLayout from "@/layouts/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { AlertCircle, ArrowLeft, Home, MapPin, Phone, MessageSquare } from "lucide-react";
-import Layout from '@/components/layout/Layout';
-import { ProductBreadcrumb } from '@/components/products/ProductBreadcrumb';
-import { PropertyInfoSection } from '@/components/products/PropertyInfoSection';
-import { usePropertyDetail } from '@/hooks/useProperties';
-import { useRealTimeSync } from '@/hooks/useRealTimeSync';
-import { ProductContentDisplay } from '@/components/products/ProductContentDisplay';
-import { useProductContent } from '@/hooks/useProductContent';
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CheckCircle2, Heart, MapPin, Home, Phone, Calendar, Check, ArrowRight, ChevronLeft, Share2, Loader2 } from "lucide-react";
+import { usePropertyDetail } from "@/hooks/useProperties";
+import { useProductContent } from "@/hooks/useProductContent";
+import { useRealTimeSync } from "@/hooks/useRealTimeSync";
+import { formatCurrency } from "@/lib/utils";
 
 const ProductDetailPage = () => {
   const { id } = useParams<{ id: string }>();
-  const { property, loading: loadingProperty, error: propertyError } = usePropertyDetail(id);
+  const navigate = useNavigate();
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [activeTab, setActiveTab] = useState("deskripsi");
   
-  // Gunakan hook untuk mengambil konten produk dengan real-time sync
-  const { 
-    content, 
-    loading: loadingContent, 
-    error: contentError, 
-    isRealTimeConnected 
-  } = useProductContent(property?.id);
+  // Mengambil detail properti dari Supabase
+  const { property, loading: propertyLoading, error: propertyError, refetchPropertyDetail } = usePropertyDetail(id);
+  
+  // Mengambil konten detail properti dari Supabase (jika ada)
+  const { content, loading: contentLoading, error: contentError } = useProductContent(id);
+  
+  // Setup real-time sync untuk pembaruan
+  const { isSubscribed: isPropertySynced } = useRealTimeSync('properties', refetchPropertyDetail);
+  const { isSubscribed: isContentSynced } = useRealTimeSync('product_contents');
+  
+  // Menggabungkan status loading
+  const isLoading = propertyLoading || contentLoading;
+  
+  // Menggabungkan error
+  const error = propertyError || contentError;
 
-  useEffect(() => {
-    // Scroll to top when page loads
-    window.scrollTo(0, 0);
-    console.log('Product detail page loaded with ID:', id);
-    console.log('Real-time sync status:', isRealTimeConnected ? 'Connected' : 'Not connected');
-  }, [id, isRealTimeConnected]);
+  // Kembali ke halaman sebelumnya
+  const handleGoBack = () => {
+    navigate(-1);
+  };
 
-  // Tampilkan loading state
-  if (loadingProperty) {
-    return (
-      <Layout>
-        <div className="container mx-auto px-4 py-8">
-          <ProductBreadcrumb 
-            paths={[
-              { name: 'Beranda', path: '/', active: false },
-              { name: 'Produk', path: '/produk', active: false },
-              { name: 'Memuat...', path: '', active: true }
-            ]} 
-          />
-          
-          <div className="mt-8">
-            <Skeleton className="h-12 w-3/4 mb-4" />
-            <Skeleton className="h-24 w-full mb-6" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Skeleton className="h-8 w-full" />
-              <Skeleton className="h-8 w-full" />
-              <Skeleton className="h-8 w-full" />
-              <Skeleton className="h-8 w-full" />
-            </div>
-          </div>
-        </div>
-      </Layout>
+  // Menampilkan pesan WhatsApp
+  const handleContactAgent = () => {
+    if (!property) return;
+    
+    const text = encodeURIComponent(
+      `Halo, saya tertarik dan ingin tahu lebih lanjut tentang properti "${property.title}" yang berlokasi di ${property.location} dengan harga Rp ${formatCurrency(property.price)}.`
     );
-  }
+    window.open(`https://wa.me/6282177968062?text=${text}`, '_blank');
+  };
 
-  // Tampilkan error jika gagal memuat data properti
-  if (propertyError) {
-    return (
-      <Layout>
-        <div className="container mx-auto px-4 py-8">
-          <ProductBreadcrumb 
-            paths={[
-              { name: 'Beranda', path: '/', active: false },
-              { name: 'Produk', path: '/produk', active: false },
-              { name: 'Error', path: '', active: true }
-            ]} 
-          />
-          
-          <div className="mt-8">
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Error</AlertTitle>
-              <AlertDescription>
-                Gagal memuat detail properti. Silakan coba lagi nanti.
-                {propertyError && <p className="mt-2 text-sm text-red-400">Detail: {propertyError}</p>}
-              </AlertDescription>
-            </Alert>
-            
-            <div className="mt-4">
-              <Link to="/produk">
-                <Button variant="outline" className="flex items-center gap-2">
-                  <ArrowLeft size={16} />
-                  Kembali ke Daftar Produk
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
+  // Format features dari konten
+  const getFormattedFeatures = () => {
+    if (content?.features && Array.isArray(content.features) && content.features.length > 0) {
+      return content.features;
+    }
+    
+    // Fallback ke default features jika tidak ada konten
+    return [
+      "Akses mudah",
+      "Lokasi strategis",
+      "Sertifikat SHM",
+      "Bebas banjir",
+      "ROI tinggi",
+    ];
+  };
 
-  // Fallback ke data mock jika tidak ada properti yang ditemukan
-  if (!property) {
-    return (
-      <Layout>
-        <div className="container mx-auto px-4 py-8">
-          <ProductBreadcrumb 
-            paths={[
-              { name: 'Beranda', path: '/', active: false },
-              { name: 'Produk', path: '/produk', active: false },
-              { name: 'Properti Tidak Ditemukan', path: '', active: true }
-            ]} 
-          />
-          
-          <div className="mt-8">
-            <Alert className="mb-6">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Properti Tidak Ditemukan</AlertTitle>
-              <AlertDescription>
-                Maaf, properti yang Anda cari tidak ditemukan atau mungkin telah dihapus.
-              </AlertDescription>
-            </Alert>
-            
-            <div className="mt-4">
-              <Link to="/produk">
-                <Button variant="default" className="flex items-center gap-2">
-                  <Home size={16} />
-                  Lihat Semua Properti
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
+  // Spesifikasi properti
+  const propertySpecs = [
+    { label: "Luas Tanah", value: property?.land_size ? `${property.land_size} m²` : "N/A" },
+    { label: "Luas Bangunan", value: property?.building_size ? `${property.building_size} m²` : "N/A" },
+    { label: "Kamar Tidur", value: property?.bedrooms || "N/A" },
+    { label: "Kamar Mandi", value: property?.bathrooms || "N/A" },
+    { label: "Status", value: property?.status === "available" ? "Tersedia" : 
+      property?.status === "sold" ? "Terjual" : "Pending" },
+  ];
 
-  // Format display untuk properti
-  const formatCategory = (category: string) => {
-    switch (category) {
-      case 'empty_lot': return 'Kavling Kosongan';
-      case 'semi_finished': return 'Kavling Bangunan';
-      case 'ready_to_occupy': return 'Siap Huni';
-      default: return category;
+  // Format kategori untuk label
+  const getCategoryLabel = () => {
+    if (!property) return { text: "Properti", className: "bg-gray-500" };
+    
+    switch(property.category) {
+      case 'empty_lot':
+        return { text: "Kavling Kosongan", className: "bg-blue-500" };
+      case 'semi_finished':
+        return { text: "Kavling Bangunan", className: "bg-yellow-500" };
+      case 'ready_to_occupy':
+        return { text: "Kavling Siap Huni", className: "bg-green-500" };
+      default:
+        return { text: "Properti", className: "bg-gray-500" };
     }
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(price);
-  };
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <div className="container mx-auto px-4 py-12">
+          <div className="flex justify-center items-center min-h-[60vh]">
+            <div className="text-center">
+              <Loader2 className="h-12 w-12 animate-spin text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500">Memuat detail properti...</p>
+            </div>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
 
-  // Tampilkan data properti dan kontennya
+  if (error) {
+    return (
+      <MainLayout>
+        <div className="container mx-auto px-4 py-12">
+          <div className="text-center py-16 bg-red-50 rounded-lg">
+            <h2 className="text-2xl font-bold text-red-600 mb-4">Terjadi Kesalahan</h2>
+            <p className="text-gray-600 mb-6">{error}</p>
+            <Button onClick={handleGoBack} variant="outline">Kembali</Button>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (!property) {
+    return (
+      <MainLayout>
+        <div className="container mx-auto px-4 py-12">
+          <div className="text-center py-16 bg-gray-50 rounded-lg">
+            <h2 className="text-2xl font-bold text-gray-700 mb-4">Properti Tidak Ditemukan</h2>
+            <p className="text-gray-600 mb-6">Detail properti yang Anda cari tidak tersedia atau telah dihapus.</p>
+            <Button onClick={() => navigate('/produk')} variant="default">Lihat Semua Properti</Button>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+  
+  const categoryInfo = getCategoryLabel();
+  const images = property.images?.length ? property.images : 
+    [`https://source.unsplash.com/random/800x600?property&sig=${property.id}`];
+
   return (
-    <Layout>
-      <div className="container mx-auto px-4 py-8">
-        <ProductBreadcrumb 
-          paths={[
-            { name: 'Beranda', path: '/', active: false },
-            { name: 'Produk', path: '/produk', active: false },
-            { name: formatCategory(property.category), path: `/produk/${property.category}`, active: false },
-            { name: property.title, path: '', active: true }
-          ]} 
-        />
+    <MainLayout>
+      <div className="container mx-auto px-4 py-6 md:py-12">
+        <div className="flex items-center mb-6">
+          <Button 
+            variant="ghost" 
+            className="text-gray-600 mr-4" 
+            onClick={handleGoBack}
+          >
+            <ChevronLeft className="h-5 w-5 mr-1" />
+            Kembali
+          </Button>
+          <div>
+            {(isPropertySynced || isContentSynced) && (
+              <div className="text-xs text-green-600 flex items-center">
+                <span className="h-2 w-2 rounded-full bg-green-500 mr-1 animate-pulse"></span>
+                Update real-time aktif
+              </div>
+            )}
+          </div>
+        </div>
         
-        <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Kolom Kiri - Galeri & Detail */}
           <div className="lg:col-span-2">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden mb-8">
-              <div className="h-[300px] md:h-[400px] bg-gray-200 relative">
-                {property.images && property.images.length > 0 ? (
-                  <img 
-                    src={property.images[0]} 
-                    alt={property.title} 
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-700">
-                    <div className="text-center text-gray-400">
-                      <Home size={48} className="mx-auto mb-2" />
-                      <p>Tidak ada gambar</p>
-                    </div>
-                  </div>
-                )}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+              {/* Galeri Gambar */}
+              <div className="relative">
+                <img 
+                  src={images[activeImageIndex]} 
+                  alt={property.title} 
+                  className="w-full h-[400px] object-cover"
+                />
+                <div className="absolute top-4 left-4 flex flex-col gap-2">
+                  <Badge className={`${categoryInfo.className} text-white px-3 py-1.5 rounded-full`}>
+                    {categoryInfo.text}
+                  </Badge>
+                </div>
+                <div className="absolute top-4 right-4 flex gap-2">
+                  <Button 
+                    variant="secondary" 
+                    size="icon"
+                    className="bg-white/80 dark:bg-gray-800/80 hover:bg-white rounded-full"
+                  >
+                    <Heart className="h-5 w-5 text-gray-700" />
+                  </Button>
+                  <Button 
+                    variant="secondary" 
+                    size="icon"
+                    className="bg-white/80 dark:bg-gray-800/80 hover:bg-white rounded-full"
+                  >
+                    <Share2 className="h-5 w-5 text-gray-700" />
+                  </Button>
+                </div>
               </div>
               
+              {/* Thumbnail images */}
+              {images.length > 1 && (
+                <div className="flex overflow-x-auto p-2 gap-2 hide-scrollbar">
+                  {images.map((image, index) => (
+                    <img
+                      key={index}
+                      src={image}
+                      alt={`${property.title} thumbnail ${index + 1}`}
+                      className={`h-16 w-24 object-cover cursor-pointer rounded ${
+                        index === activeImageIndex 
+                          ? "border-2 border-orange-500" 
+                          : "border border-gray-200 opacity-80 hover:opacity-100"
+                      }`}
+                      onClick={() => setActiveImageIndex(index)}
+                    />
+                  ))}
+                </div>
+              )}
+              
+              {/* Detail Properti */}
               <div className="p-6">
-                <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
-                  <h1 className="text-2xl md:text-3xl font-bold">{property.title}</h1>
-                  <span className="text-xl md:text-2xl font-bold text-orange-600 dark:text-orange-400">
-                    {formatPrice(property.price)}
-                  </span>
-                </div>
-                
-                <div className="flex items-center text-gray-500 mb-4">
-                  <MapPin size={18} className="mr-1" />
-                  <span>{property.location}</span>
-                </div>
-                
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 my-6">
-                  {property.land_size && (
-                    <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                      <div className="text-sm text-gray-500 dark:text-gray-400">Luas Tanah</div>
-                      <div className="font-medium">{property.land_size} m²</div>
-                    </div>
-                  )}
-                  
-                  {property.building_size && (
-                    <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                      <div className="text-sm text-gray-500 dark:text-gray-400">Luas Bangunan</div>
-                      <div className="font-medium">{property.building_size} m²</div>
-                    </div>
-                  )}
-                  
-                  {property.bedrooms && (
-                    <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                      <div className="text-sm text-gray-500 dark:text-gray-400">Kamar Tidur</div>
-                      <div className="font-medium">{property.bedrooms}</div>
-                    </div>
-                  )}
-                  
-                  {property.bathrooms && (
-                    <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                      <div className="text-sm text-gray-500 dark:text-gray-400">Kamar Mandi</div>
-                      <div className="font-medium">{property.bathrooms}</div>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="mt-6">
-                  <h2 className="text-lg font-semibold mb-3">Deskripsi</h2>
-                  <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line">
-                    {property.description || "Tidak ada deskripsi tersedia untuk properti ini."}
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
-              <div className="p-6">
-                <h2 className="text-xl font-semibold mb-4">Detail Produk</h2>
-                <ProductContentDisplay 
-                  content={content}
-                  loading={loadingContent}
-                  error={contentError}
-                />
-                
-                {isRealTimeConnected && (
-                  <div className="text-xs text-green-600 mt-4 flex items-center">
-                    <span className="h-2 w-2 rounded-full bg-green-500 mr-1 animate-pulse"></span>
-                    Konten real-time tersinkronisasi
+                <div className="mb-4">
+                  <h1 className="text-2xl md:text-3xl font-bold mb-2">{property.title}</h1>
+                  <div className="flex items-center text-gray-600 dark:text-gray-300 mb-4">
+                    <MapPin className="h-4 w-4 mr-1 text-gray-500" />
+                    <span>{property.location}</span>
                   </div>
-                )}
+                </div>
+                
+                <div className="grid grid-cols-2 gap-8 mb-6">
+                  <div>
+                    <p className="text-3xl font-bold text-orange-500 mb-1">
+                      Rp {formatCurrency(property.price)}
+                    </p>
+                    <p className="text-sm text-gray-500">Harga Cash</p>
+                  </div>
+                  <div>
+                    <p className="text-2xl font-semibold text-gray-700 dark:text-gray-200 mb-1">
+                      Rp {formatCurrency(property.price * 0.3)}
+                    </p>
+                    <p className="text-sm text-gray-500">DP Kredit</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+                  {propertySpecs.map((spec, index) => (
+                    <div key={index} className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                        {spec.label}
+                      </p>
+                      <p className="font-semibold">{spec.value}</p>
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Tabs for different content sections */}
+                <Tabs defaultValue="deskripsi" value={activeTab} onValueChange={setActiveTab}>
+                  <TabsList className="mb-4">
+                    <TabsTrigger value="deskripsi">Deskripsi</TabsTrigger>
+                    <TabsTrigger value="fitur">Fitur</TabsTrigger>
+                    <TabsTrigger value="lokasi">Lokasi</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="deskripsi" className="space-y-4">
+                    <div className="prose dark:prose-invert max-w-none">
+                      {content?.description ? (
+                        <div dangerouslySetInnerHTML={{ __html: content.description }} />
+                      ) : (
+                        <p className="text-gray-600 dark:text-gray-300">{property.description || 
+                          "Properti premium dengan lokasi strategis dan akses mudah. Investasi properti dengan potensi nilai yang terus meningkat. Hubungi kami untuk informasi lebih lanjut."}</p>
+                      )}
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="fitur">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {getFormattedFeatures().map((feature, index) => (
+                        <div key={index} className="flex items-start">
+                          <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5 mr-2 flex-shrink-0" />
+                          <span className="text-gray-700 dark:text-gray-300">{feature}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="lokasi">
+                    <div className="aspect-video bg-gray-100 dark:bg-gray-700 flex items-center justify-center rounded-lg mb-4">
+                      <div className="text-center">
+                        <MapPin className="h-10 w-10 text-gray-400 mb-2 mx-auto" />
+                        <p className="text-gray-500 dark:text-gray-400">Peta lokasi akan segera tersedia</p>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-start">
+                        <MapPin className="h-5 w-5 text-orange-500 mt-0.5 mr-2 flex-shrink-0" />
+                        <div>
+                          <h4 className="font-medium mb-1">Alamat Lengkap</h4>
+                          <p className="text-gray-600 dark:text-gray-300">
+                            {property.address || `${property.location}, Indonesia`}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </div>
             </div>
           </div>
           
-          <div className="lg:col-span-1">
-            <Card className="sticky top-20">
+          {/* Kolom Kanan - Aksi & Kontak */}
+          <div>
+            <Card className="mb-6">
               <CardContent className="p-6">
-                <h3 className="text-lg font-semibold mb-4">Informasi Kontak</h3>
+                <h3 className="font-bold text-lg mb-4">Hubungi Agen</h3>
                 
-                <div className="space-y-4">
-                  <div className="flex items-center">
-                    <div className="bg-orange-100 dark:bg-orange-900/20 p-2 rounded-full mr-3">
-                      <Phone size={20} className="text-orange-600 dark:text-orange-400" />
-                    </div>
-                    <div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">Telepon</div>
-                      <div className="font-medium">+62 812-3456-7890</div>
-                    </div>
+                <div className="flex items-center mb-6">
+                  <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 mr-4 overflow-hidden">
+                    <img
+                      src="https://source.unsplash.com/random/100x100?person"
+                      alt="Property Agent"
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                  
-                  <div className="flex items-center">
-                    <div className="bg-orange-100 dark:bg-orange-900/20 p-2 rounded-full mr-3">
-                      <MessageSquare size={20} className="text-orange-600 dark:text-orange-400" />
-                    </div>
-                    <div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">Email</div>
-                      <div className="font-medium">info@rekaland.com</div>
-                    </div>
+                  <div>
+                    <h4 className="font-medium">Tim Marketing Rekaland</h4>
+                    <p className="text-sm text-gray-500">Properti Consultant</p>
                   </div>
                 </div>
                 
-                <div className="mt-6 space-y-3">
-                  <Button className="w-full bg-orange-500 hover:bg-orange-600">
+                <div className="space-y-4 mb-6">
+                  <Button 
+                    className="w-full bg-green-500 hover:bg-green-600 text-white gap-2"
+                    onClick={handleContactAgent}
+                  >
+                    <Phone className="h-5 w-5" />
+                    Hubungi via WhatsApp
+                  </Button>
+                  
+                  <Button 
+                    className="w-full bg-orange-500 hover:bg-orange-600 text-white gap-2"
+                  >
+                    <Calendar className="h-5 w-5" />
                     Jadwalkan Kunjungan
                   </Button>
-                  <Button variant="outline" className="w-full">
-                    Tanya Informasi
-                  </Button>
                 </div>
                 
-                <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                  <h4 className="font-medium mb-2">Status Properti</h4>
-                  <div className="flex items-center">
-                    <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
-                    <span>{property.status === 'available' ? 'Tersedia' : 
-                            property.status === 'sold' ? 'Terjual' : 
-                            property.status === 'pending' ? 'Dalam Proses' : 
-                            property.status}</span>
+                <div className="border-t pt-4">
+                  <h4 className="text-sm font-medium mb-2">Rekomendasi Pembiayaan</h4>
+                  
+                  <div className="space-y-3 text-sm">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600 dark:text-gray-300">DP 30%</span>
+                      <span className="font-medium">Rp {formatCurrency(property.price * 0.3)}</span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600 dark:text-gray-300">Cicilan per bulan</span>
+                      <span className="font-medium">Rp {formatCurrency((property.price - (property.price * 0.3)) / 60)}</span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600 dark:text-gray-300">Tenor</span>
+                      <span className="font-medium">5 tahun</span>
+                    </div>
+                    
+                    <div className="pt-2 text-xs text-gray-500">
+                      * Estimasi, hubungi agen untuk informasi lebih detail
+                    </div>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-6">
+                <h3 className="font-bold text-lg mb-4">Fitur Properti</h3>
+                
+                <div className="space-y-3">
+                  {getFormattedFeatures().slice(0, 5).map((feature, index) => (
+                    <div key={index} className="flex items-start">
+                      <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" />
+                      <span className="text-gray-700 dark:text-gray-300">{feature}</span>
+                    </div>
+                  ))}
+                </div>
+                
+                <Button 
+                  variant="link" 
+                  className="text-orange-500 pl-0 mt-2"
+                  onClick={() => setActiveTab("fitur")}
+                >
+                  Lihat semua fitur <ArrowRight className="h-4 w-4 ml-1" />
+                </Button>
               </CardContent>
             </Card>
           </div>
         </div>
       </div>
-    </Layout>
+    </MainLayout>
   );
 };
 

@@ -1,25 +1,32 @@
 
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
- 
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
-export function formatCurrency(value: number): string {
-  if (value >= 1000000000) {
-    return `${(value / 1000000000).toFixed(1)}M`;
-  } else if (value >= 1000000) {
-    return `${(value / 1000000).toFixed(0)}jt`;
-  } else if (value >= 1000) {
-    return `${(value / 1000).toFixed(0)}rb`;
-  } else {
-    return value.toString();
-  }
+/**
+ * Format a number as currency
+ * @param number The number to format
+ * @returns Formatted string (e.g., 1,000,000)
+ */
+export function formatCurrency(number: number | string | undefined): string {
+  if (number === undefined) return "0";
+  
+  const num = typeof number === "string" ? parseFloat(number) : number;
+  
+  // Format number with thousand separators
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
 
+/**
+ * Get category path from category ID
+ * @param category The category ID
+ * @returns The path for the category
+ */
 export function getCategoryPath(category: string): string {
-  switch(category) {
+  switch (category) {
     case 'empty_lot':
       return 'kavling-kosongan';
     case 'semi_finished':
@@ -27,22 +34,25 @@ export function getCategoryPath(category: string): string {
     case 'ready_to_occupy':
       return 'kavling-siap-huni';
     default:
-      return category;
+      return 'all';
   }
 }
 
-export function getCategoryLabel(category: string): string {
-  switch(category) {
-    case 'empty_lot':
-    case 'kavling-kosongan':
-      return 'Kavling Kosongan';
-    case 'semi_finished':
-    case 'kavling-setengah-jadi':
-      return 'Kavling Bangunan';
-    case 'ready_to_occupy':
-    case 'kavling-siap-huni':
-      return 'Kavling Siap Huni';
-    default:
-      return 'Semua Kavling';
+/**
+ * Parse URL category to database category
+ * @param urlCategory The category from URL
+ * @returns Database category
+ */
+export function parseUrlCategory(urlCategory?: string): string | undefined {
+  if (!urlCategory || urlCategory === 'all') return undefined;
+  
+  if (urlCategory === 'kavling-kosongan') {
+    return 'empty_lot';
+  } else if (urlCategory === 'kavling-setengah-jadi') {
+    return 'semi_finished';
+  } else if (urlCategory === 'kavling-siap-huni') {
+    return 'ready_to_occupy';
   }
+  
+  return undefined;
 }

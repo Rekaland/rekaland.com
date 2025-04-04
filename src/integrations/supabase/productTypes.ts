@@ -1,57 +1,44 @@
 
-// Tipe untuk konten produk yang disimpan di Supabase
+// Type definitions for product content management
+import { content } from "i18next";
+
 export interface ProductContentDB {
   id: string;
   product_id?: string;
   title: string;
   description: string;
-  features: any; // JSONB di database
-  specifications: any; // JSONB di database
+  features?: string[];
+  specifications?: Record<string, any>;
   meta_description?: string;
   created_at?: string;
   updated_at?: string;
 }
 
-// Tipe untuk digunakan pada frontend dengan features dan specifications yang sudah diubah ke tipe spesifik
 export interface ProductContent {
   id: string;
   product_id?: string;
   title: string;
   description: string;
-  features: string[];
-  specifications?: Record<string, string>;
+  features?: string[];
+  specifications?: Record<string, any>;
   meta_description?: string;
   created_at?: string;
   updated_at?: string;
 }
 
-// Helper function untuk memastikan tipe data sesuai
-export function convertDBToProductContent(dbContent: ProductContentDB | null): ProductContent | null {
-  if (!dbContent) return null;
+// Function to convert DB data to ProductContent interface
+export const convertDBToProductContent = (data: ProductContentDB | null): ProductContent | null => {
+  if (!data) return null;
   
-  // Parse features jika dalam format string
-  let features = dbContent.features || [];
-  if (typeof features === 'string') {
-    try {
-      features = JSON.parse(features);
-    } catch (e) {
-      features = [String(features)];
-    }
-  }
-
-  // Parse specifications jika dalam format string
-  let specifications = dbContent.specifications || {};
-  if (typeof specifications === 'string') {
-    try {
-      specifications = JSON.parse(specifications);
-    } catch (e) {
-      specifications = {};
-    }
-  }
-
   return {
-    ...dbContent,
-    features: Array.isArray(features) ? features : [],
-    specifications: typeof specifications === 'object' ? specifications : {}
+    id: data.id,
+    product_id: data.product_id,
+    title: data.title,
+    description: data.description,
+    features: Array.isArray(data.features) ? data.features : [],
+    specifications: data.specifications || {},
+    meta_description: data.meta_description,
+    created_at: data.created_at,
+    updated_at: data.updated_at
   };
-}
+};
