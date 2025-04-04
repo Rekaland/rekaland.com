@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { PropertyProps } from "@/types/product";
 
 interface SavedProperty {
-  id: number;
+  id: string; // Diubah dari number menjadi string
   title: string;
   location: string;
   type: string;

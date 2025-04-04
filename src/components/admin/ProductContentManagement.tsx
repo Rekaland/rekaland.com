@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,11 +25,9 @@ const ProductContentManagement = () => {
   const [selectedContent, setSelectedContent] = useState<ProductContent | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Real-time sync untuk properties dan product_contents
   const { isSubscribed: isPropertiesSynced } = useRealTimeSync('properties', fetchProperties);
   const { isSubscribed: isContentsSynced } = useRealTimeSync('product_contents', fetchContents);
 
-  // Fungsi untuk mengambil data properti
   async function fetchProperties() {
     try {
       setIsLoadingProperties(true);
@@ -57,7 +54,6 @@ const ProductContentManagement = () => {
     }
   }
 
-  // Fungsi untuk mengambil konten produk
   async function fetchContents() {
     try {
       setIsLoadingContents(true);
@@ -70,15 +66,7 @@ const ProductContentManagement = () => {
       
       if (data) {
         const processedContents = data.map(item => {
-          // Ensure features is parsed as an array if it's a string or JSON
-          const itemWithParsedFeatures: ProductContentDB = {
-            ...item,
-            features: Array.isArray(item.features) 
-              ? item.features 
-              : (item.features ? JSON.parse(String(item.features)) : [])
-          };
-          
-          return convertDBToProductContent(itemWithParsedFeatures);
+          return convertDBToProductContent(item);
         }).filter(Boolean) as ProductContent[];
         
         setContents(processedContents);
@@ -95,18 +83,15 @@ const ProductContentManagement = () => {
     }
   }
 
-  // Muat data saat komponen dimuat
   useEffect(() => {
     fetchProperties();
     fetchContents();
   }, []);
 
-  // Fungsi untuk menyimpan konten produk
   const handleSaveContent = async (content: ProductContent) => {
     try {
       setIsSaving(true);
       
-      // Validasi data sebelum menyimpan
       if (!content.title || !selectedProperty) {
         return { 
           success: false, 
@@ -117,7 +102,6 @@ const ProductContentManagement = () => {
       let result;
       
       if (content.id) {
-        // Update konten yang sudah ada
         result = await supabase
           .from('product_contents')
           .update({
@@ -130,7 +114,6 @@ const ProductContentManagement = () => {
           })
           .eq('id', content.id);
       } else {
-        // Buat konten baru
         result = await supabase
           .from('product_contents')
           .insert({
@@ -147,10 +130,8 @@ const ProductContentManagement = () => {
         throw result.error;
       }
       
-      // Muat ulang konten setelah perubahan
       await fetchContents();
       
-      // Reset form dan pindah ke tab list
       setActiveTab("list");
       
       toast({
@@ -171,7 +152,6 @@ const ProductContentManagement = () => {
     }
   };
 
-  // Fungsi untuk mengedit konten
   const handleEditContent = (contentId: string) => {
     const content = contents.find(item => item.id === contentId);
     if (content) {
@@ -182,7 +162,6 @@ const ProductContentManagement = () => {
     }
   };
 
-  // Fungsi untuk menghapus konten
   const handleDeleteContent = async (contentId: string) => {
     try {
       const { error } = await supabase
@@ -209,20 +188,17 @@ const ProductContentManagement = () => {
     }
   };
 
-  // Filter property dan konten berdasarkan kata kunci pencarian
   const filteredContents = contents.filter(content => 
     content.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     properties.find(prop => prop.id === content.product_id)?.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Mendapatkan nama properti berdasarkan product_id
   const getPropertyName = (productId?: string) => {
     if (!productId) return "Tidak ada properti terkait";
     const property = properties.find(prop => prop.id === productId);
     return property ? property.title : "Properti tidak ditemukan";
   };
 
-  // Fungsi untuk persiapan penambahan konten baru
   const handleAddNewContent = (property: Property) => {
     setSelectedProperty(property);
     setSelectedContent(null);
