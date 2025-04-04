@@ -13,7 +13,7 @@ import { PropertyGridView } from "@/components/products/PropertyGridView";
 import { PropertyListView } from "@/components/products/PropertyListView";
 import { PropertyPagination } from "@/components/products/PropertyPagination";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { CategoryProps } from "@/types/product";
+import { CategoryProps, PropertyProps } from "@/types/product";
 import { useProperties } from "@/hooks/useProperties";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRealTimeSync } from "@/hooks/useRealTimeSync";
@@ -123,7 +123,7 @@ const EmptyLotPage = () => {
   };
 
   // Function to format data for PropertyGridView
-  const formatPropertiesForDisplay = () => {
+  const formatPropertiesForDisplay = (): PropertyProps[] => {
     return properties.map(property => ({
       id: property.id,
       title: property.title,

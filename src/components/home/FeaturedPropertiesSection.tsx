@@ -8,6 +8,7 @@ import { useProperties } from '@/hooks/useProperties';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRealTimeSync } from '@/hooks/useRealTimeSync';
 import { getCategoryPath, formatCurrency } from '@/lib/utils';
+import { PropertyProps } from '@/types/product';
 
 const FeaturedPropertiesSection = () => {
   const navigate = useNavigate();
@@ -62,7 +63,7 @@ const FeaturedPropertiesSection = () => {
   };
   
   // Format properti untuk ditampilkan
-  const formatPropertiesForDisplay = () => {
+  const formatPropertiesForDisplay = (): PropertyProps[] => {
     return properties.map(property => ({
       id: property.id,
       title: property.title,
@@ -87,7 +88,7 @@ const FeaturedPropertiesSection = () => {
   };
   
   // Tampilkan data dari API atau fallback ke data mock jika kosong
-  const displayProperties = properties.length > 0 
+  const displayProperties: PropertyProps[] = properties.length > 0 
     ? formatPropertiesForDisplay() 
     : [
         {

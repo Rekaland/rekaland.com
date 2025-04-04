@@ -3,6 +3,21 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase, Property } from "@/integrations/supabase/client";
 import { useToast } from "./use-toast";
 
+// Helper function to map URL category to database category
+const mapUrlCategoryToDbCategory = (urlCategory?: string): string | undefined => {
+  if (!urlCategory || urlCategory === 'all') return undefined;
+  
+  if (urlCategory === 'kavling-kosongan' || urlCategory === 'empty_lot') {
+    return 'empty_lot';
+  } else if (urlCategory === 'kavling-setengah-jadi' || urlCategory === 'semi_finished') {
+    return 'semi_finished';
+  } else if (urlCategory === 'kavling-siap-huni' || urlCategory === 'ready_to_occupy') {
+    return 'ready_to_occupy';
+  }
+  
+  return undefined;
+};
+
 // Hook untuk mengambil data properti dari Supabase
 export const useProperties = (featured?: boolean, category?: string, limit?: number) => {
   const [properties, setProperties] = useState<Property[]>([]);
@@ -26,21 +41,9 @@ export const useProperties = (featured?: boolean, category?: string, limit?: num
       }
       
       // Filter berdasarkan kategori jika parameter diberikan
-      if (category && category !== 'all') {
-        // Mapping untuk konversi kategori URL ke kategori database
-        let dbCategory: string | null = null;
-        
-        if (category === 'kavling-kosongan' || category === 'empty_lot') {
-          dbCategory = 'empty_lot';
-        } else if (category === 'kavling-setengah-jadi' || category === 'semi_finished') {
-          dbCategory = 'semi_finished';
-        } else if (category === 'kavling-siap-huni' || category === 'ready_to_occupy') {
-          dbCategory = 'ready_to_occupy';
-        }
-        
-        if (dbCategory) {
-          query = query.eq('category', dbCategory);
-        }
+      const dbCategory = mapUrlCategoryToDbCategory(category);
+      if (dbCategory) {
+        query = query.eq('category', dbCategory);
       }
       
       // Batasi hasil jika parameter limit diberikan

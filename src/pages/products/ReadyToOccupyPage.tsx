@@ -11,6 +11,7 @@ import { useProperties } from "@/hooks/useProperties";
 import { PropertyGridView } from "@/components/products/PropertyGridView";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRealTimeSync } from "@/hooks/useRealTimeSync";
+import { PropertyProps } from "@/types/product";
 
 const ReadyToOccupyPage = () => {
   const navigate = useNavigate();
@@ -58,7 +59,7 @@ const ReadyToOccupyPage = () => {
   }, []);
 
   // Function to format data for display
-  const formatPropertiesForDisplay = () => {
+  const formatPropertiesForDisplay = (): PropertyProps[] => {
     return properties.map(property => ({
       id: property.id,
       title: property.title,

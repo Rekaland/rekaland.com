@@ -10,12 +10,15 @@ export interface CategoryProps {
 }
 
 export interface PropertyProps {
-  id: number;
+  id: string | number;
   title: string;
   location: string;
   price: string;
+  priceNumeric?: number;
+  dpPrice?: number;
   area: string;
   type: string;
   image: string;
   features: string[];
+  category?: string;
 }
