@@ -1,7 +1,10 @@
 
 // Type definitions for product content management
 
-import { Json } from "@/integrations/supabase/client";
+import { Database } from "@/integrations/supabase/types";
+
+// Type alias for JSON data from Supabase
+type Json = Database['public']['Tables']['product_contents']['Row']['features'];
 
 export interface ProductContentDB {
   id: string;

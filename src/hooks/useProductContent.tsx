@@ -31,7 +31,7 @@ export const useProductContent = (productId?: string) => {
       setLoading(true);
       console.log("Fetching product content for ID:", productId);
       
-      // Query konten produk dari Supabase menggunakan casting untuk menghindari error tipe
+      // Query konten produk dari Supabase
       const { data, error } = await supabase
         .from('product_contents')
         .select('*')

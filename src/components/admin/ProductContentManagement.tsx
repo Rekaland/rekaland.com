@@ -1,128 +1,239 @@
-import { useState, useEffect } from "react";
+
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { 
+  Table, TableBody, TableCell, TableHead, 
+  TableHeader, TableRow 
+} from "@/components/ui/table";
+import { 
+  Card, CardContent, CardDescription, 
+  CardHeader, CardTitle 
+} from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ProductContentEditor } from "./content/ProductContentEditor";
-import { Search, Plus, Edit, Trash2, Eye, FileText, Loader2, RefreshCw } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { 
+  Search, Edit, Trash2, Save, Plus, 
+  FileText, ListChecks, CheckSquare, Loader2
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Property } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import { useRealTimeSync } from "@/hooks/useRealTimeSync";
-import { ProductContent, ProductContentDB, convertDBToProductContent } from "@/integrations/supabase/productTypes";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { 
+  ProductContent, 
+  ProductContentDB, 
+  convertDBToProductContent 
+} from "@/integrations/supabase/productTypes";
 
 const ProductContentManagement = () => {
   const { toast } = useToast();
-  const [properties, setProperties] = useState<Property[]>([]);
   const [contents, setContents] = useState<ProductContent[]>([]);
-  const [isLoadingProperties, setIsLoadingProperties] = useState(true);
-  const [isLoadingContents, setIsLoadingContents] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [activeTab, setActiveTab] = useState("list");
-  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
-  const [selectedContent, setSelectedContent] = useState<ProductContent | null>(null);
+  const [properties, setProperties] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-
-  const { isSubscribed: isPropertiesSynced } = useRealTimeSync('properties', fetchProperties);
-  const { isSubscribed: isContentsSynced } = useRealTimeSync('product_contents', fetchContents);
-
-  async function fetchProperties() {
+  const [activeTab, setActiveTab] = useState("list");
+  const [searchTerm, setSearchTerm] = useState("");
+  
+  const [activeContent, setActiveContent] = useState<ProductContent>({
+    id: "",
+    product_id: "",
+    title: "",
+    description: "",
+    features: [],
+    specifications: {},
+    meta_description: ""
+  });
+  
+  const [newFeature, setNewFeature] = useState("");
+  const [specKey, setSpecKey] = useState("");
+  const [specValue, setSpecValue] = useState("");
+  
+  // Setup real-time sync for tabel product_contents
+  const { isSubscribed } = useRealTimeSync('product_contents', loadContents);
+  
+  // Muat daftar properti dan konten produk
+  useEffect(() => {
+    loadProperties();
+    loadContents();
+  }, []);
+  
+  // Fungsi untuk memuat daftar properti
+  async function loadProperties() {
     try {
-      setIsLoadingProperties(true);
-      
       const { data, error } = await supabase
         .from('properties')
-        .select('*')
-        .order('title', { ascending: true });
-      
+        .select('id, title, category');
+        
       if (error) throw error;
       
       if (data) {
         setProperties(data);
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error loading properties:", err);
       toast({
         title: "Gagal memuat data properti",
-        description: err.message,
+        description: "Terjadi kesalahan saat mengambil data dari server",
         variant: "destructive",
       });
-    } finally {
-      setIsLoadingProperties(false);
     }
   }
-
-  async function fetchContents() {
+  
+  // Fungsi untuk memuat daftar konten produk
+  async function loadContents() {
     try {
-      setIsLoadingContents(true);
+      setLoading(true);
       
       const { data, error } = await supabase
         .from('product_contents')
         .select('*');
-      
+        
       if (error) throw error;
       
       if (data) {
-        const processedContents = data.map(item => {
-          return convertDBToProductContent(item as ProductContentDB);
-        }).filter(Boolean) as ProductContent[];
+        // Konversi data dari database ke format frontend
+        const processedContents = data.map((item: ProductContentDB) => 
+          convertDBToProductContent(item)
+        ).filter((item): item is ProductContent => item !== null);
         
         setContents(processedContents);
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error loading product contents:", err);
       toast({
-        title: "Gagal memuat konten produk",
-        description: err.message,
+        title: "Gagal memuat data konten",
+        description: "Terjadi kesalahan saat mengambil data dari server",
         variant: "destructive",
       });
     } finally {
-      setIsLoadingContents(false);
+      setLoading(false);
     }
   }
-
-  useEffect(() => {
-    fetchProperties();
-    fetchContents();
-  }, []);
-
-  const handleSaveContent = async (content: ProductContent) => {
+  
+  // Fungsi untuk mengedit konten produk
+  const handleEditContent = (content: ProductContent) => {
+    setActiveContent({
+      ...content,
+      features: content.features || [],
+      specifications: content.specifications || {}
+    });
+    setActiveTab("edit");
+  };
+  
+  // Fungsi untuk membuat konten baru
+  const handleNewContent = () => {
+    setActiveContent({
+      id: "",
+      product_id: "",
+      title: "",
+      description: "",
+      features: [],
+      specifications: {},
+      meta_description: ""
+    });
+    setActiveTab("edit");
+  };
+  
+  // Fungsi untuk menambahkan fitur
+  const handleAddFeature = () => {
+    if (!newFeature.trim()) return;
+    
+    setActiveContent({
+      ...activeContent,
+      features: [...(activeContent.features || []), newFeature.trim()]
+    });
+    
+    setNewFeature("");
+  };
+  
+  // Fungsi untuk menghapus fitur
+  const handleRemoveFeature = (index: number) => {
+    const updatedFeatures = [...(activeContent.features || [])];
+    updatedFeatures.splice(index, 1);
+    setActiveContent({
+      ...activeContent,
+      features: updatedFeatures
+    });
+  };
+  
+  // Fungsi untuk menambahkan spesifikasi
+  const handleAddSpecification = () => {
+    if (!specKey.trim() || !specValue.trim()) return;
+    
+    setActiveContent({
+      ...activeContent,
+      specifications: {
+        ...(activeContent.specifications || {}),
+        [specKey.trim()]: specValue.trim()
+      }
+    });
+    
+    setSpecKey("");
+    setSpecValue("");
+  };
+  
+  // Fungsi untuk menghapus spesifikasi
+  const handleRemoveSpecification = (key: string) => {
+    const updatedSpecs = { ...(activeContent.specifications || {}) };
+    delete updatedSpecs[key];
+    
+    setActiveContent({
+      ...activeContent,
+      specifications: updatedSpecs
+    });
+  };
+  
+  // Fungsi untuk menyimpan konten produk
+  const handleSaveContent = async () => {
     try {
       setIsSaving(true);
       
-      if (!content.title || !selectedProperty) {
-        return { 
-          success: false, 
-          error: "Data tidak lengkap. Pastikan judul dan properti terkait sudah dipilih." 
-        };
+      // Validasi data
+      if (!activeContent.title) {
+        toast({
+          title: "Data tidak lengkap",
+          description: "Judul konten harus diisi",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (!activeContent.product_id) {
+        toast({
+          title: "Data tidak lengkap",
+          description: "Pilih properti terlebih dahulu",
+          variant: "destructive",
+        });
+        return;
       }
       
       let result;
       
-      if (content.id) {
+      if (activeContent.id) {
+        // Update konten yang sudah ada
         result = await supabase
           .from('product_contents')
           .update({
-            title: content.title,
-            description: content.description,
-            features: content.features,
-            specifications: content.specifications,
-            meta_description: content.meta_description,
+            title: activeContent.title,
+            description: activeContent.description,
+            features: activeContent.features,
+            specifications: activeContent.specifications,
+            meta_description: activeContent.meta_description,
             updated_at: new Date().toISOString()
           })
-          .eq('id', content.id);
+          .eq('id', activeContent.id);
       } else {
+        // Buat konten baru
         result = await supabase
           .from('product_contents')
           .insert({
-            product_id: selectedProperty.id,
-            title: content.title,
-            description: content.description,
-            features: content.features,
-            specifications: content.specifications,
-            meta_description: content.meta_description
+            product_id: activeContent.product_id,
+            title: activeContent.title,
+            description: activeContent.description,
+            features: activeContent.features,
+            specifications: activeContent.specifications,
+            meta_description: activeContent.meta_description
           });
       }
       
@@ -130,8 +241,10 @@ const ProductContentManagement = () => {
         throw result.error;
       }
       
-      await fetchContents();
+      // Muat ulang data setelah perubahan
+      await loadContents();
       
+      // Reset form dan kembali ke tab list
       setActiveTab("list");
       
       toast({
@@ -139,120 +252,95 @@ const ProductContentManagement = () => {
         description: "Perubahan pada konten produk berhasil disimpan",
         className: "bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg",
       });
-      
-      return { success: true };
     } catch (err: any) {
       console.error("Error saving product content:", err);
-      return { 
-        success: false, 
-        error: err.message || "Terjadi kesalahan saat menyimpan konten"
-      };
+      toast({
+        title: "Gagal menyimpan konten",
+        description: err.message || "Terjadi kesalahan saat menyimpan ke database",
+        variant: "destructive",
+      });
     } finally {
       setIsSaving(false);
     }
   };
-
-  const handleEditContent = (contentId: string) => {
-    const content = contents.find(item => item.id === contentId);
-    if (content) {
-      const property = properties.find(prop => prop.id === content.product_id);
-      setSelectedProperty(property || null);
-      setSelectedContent(content);
-      setActiveTab("edit");
-    }
-  };
-
-  const handleDeleteContent = async (contentId: string) => {
+  
+  // Fungsi untuk menghapus konten produk
+  const handleDeleteContent = async (id: string) => {
+    if (!confirm("Apakah Anda yakin ingin menghapus konten ini?")) return;
+    
     try {
       const { error } = await supabase
         .from('product_contents')
         .delete()
-        .eq('id', contentId);
-      
+        .eq('id', id);
+        
       if (error) throw error;
       
-      await fetchContents();
+      await loadContents();
       
       toast({
-        title: "Konten dihapus",
+        title: "Konten terhapus",
         description: "Konten produk berhasil dihapus",
-        className: "bg-gradient-to-r from-red-500 to-red-600 text-white border-0 shadow-lg",
+        className: "bg-gray-900 text-white",
       });
     } catch (err: any) {
       console.error("Error deleting product content:", err);
       toast({
         title: "Gagal menghapus konten",
-        description: err.message,
+        description: err.message || "Terjadi kesalahan saat menghapus dari database",
         variant: "destructive",
       });
     }
   };
-
-  const filteredContents = contents.filter(content => 
-    content.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    properties.find(prop => prop.id === content.product_id)?.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const getPropertyName = (productId?: string) => {
-    if (!productId) return "Tidak ada properti terkait";
-    const property = properties.find(prop => prop.id === productId);
+  
+  // Mendapatkan nama properti berdasarkan ID
+  const getPropertyTitle = (id: string | null | undefined) => {
+    if (!id) return "Tidak ada properti terkait";
+    const property = properties.find(p => p.id === id);
     return property ? property.title : "Properti tidak ditemukan";
   };
-
-  const handleAddNewContent = (property: Property) => {
-    setSelectedProperty(property);
-    setSelectedContent(null);
-    setActiveTab("edit");
-  };
-
+  
+  // Filter konten berdasarkan kata kunci pencarian
+  const filteredContents = contents.filter(content => 
+    content.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    getPropertyTitle(content.product_id).toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  
   return (
-    <div>
+    <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <h2 className="text-xl font-semibold">Kelola Konten Produk</h2>
-        <div className="flex items-center gap-2">
-          {(isPropertiesSynced && isContentsSynced) && (
-            <div className="text-xs text-green-600 flex items-center mr-2">
-              <span className="h-2 w-2 rounded-full bg-green-500 mr-1 animate-pulse"></span>
-              Real-time sync aktif
-            </div>
-          )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              fetchProperties();
-              fetchContents();
-            }}
-            className="h-9"
-          >
-            <RefreshCw size={14} className="mr-1" />
-            Refresh
-          </Button>
-        </div>
+        <Button 
+          className="bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:from-orange-600 hover:to-amber-600"
+          onClick={handleNewContent}
+        >
+          <Plus size={16} className="mr-2" />
+          Tambah Konten Baru
+        </Button>
       </div>
-
+      
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-4">
           <TabsTrigger value="list" className="flex items-center gap-2">
             <FileText size={16} />
             Daftar Konten
           </TabsTrigger>
-          <TabsTrigger value="edit" className="flex items-center gap-2" disabled={!selectedProperty}>
+          <TabsTrigger value="edit" className="flex items-center gap-2">
             <Edit size={16} />
-            {selectedContent ? "Edit Konten" : "Tambah Konten"}
+            {activeContent.id ? "Edit Konten" : "Konten Baru"}
           </TabsTrigger>
         </TabsList>
-
+        
         <TabsContent value="list">
-          <Card className="mb-6">
-            <CardHeader className="pb-3">
+          <Card>
+            <CardHeader className="pb-0">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <CardTitle>Konten Produk</CardTitle>
+                <CardTitle>Daftar Konten Produk</CardTitle>
                 <div className="relative">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
                   <Input
                     placeholder="Cari konten..."
-                    className="pl-8 w-full sm:w-[250px]"
+                    className="pl-8 w-full sm:w-[200px] h-9"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
@@ -260,179 +348,307 @@ const ProductContentManagement = () => {
               </div>
             </CardHeader>
             <CardContent>
-              {isLoadingContents || isLoadingProperties ? (
+              {loading ? (
                 <div className="flex justify-center items-center py-8">
                   <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-                  <span className="ml-2 text-gray-500">Memuat data...</span>
+                  <span className="ml-2 text-gray-500">Memuat data konten...</span>
                 </div>
-              ) : contents.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-gray-500 mb-4">Belum ada konten produk yang ditambahkan</p>
-                  <Button
-                    onClick={() => setActiveTab("properties")}
-                    className="bg-orange-500 hover:bg-orange-600 text-white"
-                  >
-                    <Plus size={16} className="mr-2" />
-                    Tambah Konten Produk
-                  </Button>
+              ) : filteredContents.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  {searchTerm 
+                    ? "Tidak ditemukan konten yang sesuai dengan pencarian" 
+                    : "Belum ada konten produk yang ditambahkan"}
                 </div>
               ) : (
-                <div className="rounded-md border overflow-x-auto">
+                <div className="rounded-md border overflow-hidden mt-4">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Judul</TableHead>
+                        <TableHead className="w-[300px]">Judul Konten</TableHead>
                         <TableHead>Properti Terkait</TableHead>
                         <TableHead>Fitur</TableHead>
-                        <TableHead>Terakhir Diperbarui</TableHead>
+                        <TableHead>Spesifikasi</TableHead>
                         <TableHead className="text-right">Aksi</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredContents.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={5} className="h-24 text-center">
-                            Tidak ada konten yang sesuai dengan pencarian
+                      {filteredContents.map((content) => (
+                        <TableRow key={content.id} className="hover:bg-gray-50">
+                          <TableCell className="font-medium">{content.title}</TableCell>
+                          <TableCell>{getPropertyTitle(content.product_id)}</TableCell>
+                          <TableCell>{content.features?.length || 0} fitur</TableCell>
+                          <TableCell>
+                            {content.specifications 
+                              ? Object.keys(content.specifications).length 
+                              : 0} item
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex gap-2 justify-end">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleEditContent(content)}
+                              >
+                                <Edit size={14} className="mr-1" />
+                                Edit
+                              </Button>
+                              <Button 
+                                variant="destructive" 
+                                size="sm"
+                                onClick={() => handleDeleteContent(content.id)}
+                              >
+                                <Trash2 size={14} className="mr-1" />
+                                Hapus
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
-                      ) : (
-                        filteredContents.map(content => (
-                          <TableRow key={content.id}>
-                            <TableCell className="font-medium">{content.title}</TableCell>
-                            <TableCell>{getPropertyName(content.product_id)}</TableCell>
-                            <TableCell>{content.features?.length || 0} fitur</TableCell>
-                            <TableCell>
-                              {content.updated_at ? new Date(content.updated_at).toLocaleDateString() : '-'}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex justify-end gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleEditContent(content.id)}
-                                >
-                                  <Edit size={14} className="mr-1" />
-                                  Edit
-                                </Button>
-                                <Button
-                                  variant="destructive"
-                                  size="sm"
-                                  onClick={() => handleDeleteContent(content.id)}
-                                >
-                                  Hapus
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
+                      ))}
                     </TableBody>
                   </Table>
                 </div>
               )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Properti Tersedia</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <Alert className="bg-blue-50 border-blue-200">
-                  <AlertTitle>Tip Penggunaan</AlertTitle>
-                  <AlertDescription>
-                    Pilih properti dari daftar di bawah ini untuk menambahkan atau mengedit konten produknya
-                  </AlertDescription>
-                </Alert>
-
-                {isLoadingProperties ? (
-                  <div className="flex justify-center items-center py-8">
-                    <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-                    <span className="ml-2 text-gray-500">Memuat properti...</span>
-                  </div>
-                ) : properties.length === 0 ? (
-                  <p className="text-center py-4 text-gray-500">
-                    Belum ada properti yang tersedia. Tambahkan properti terlebih dahulu.
-                  </p>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {properties.map(property => {
-                      const hasContent = contents.some(c => c.product_id === property.id);
-                      return (
-                        <Card key={property.id} className="border overflow-hidden hover:shadow-md transition-shadow duration-200">
-                          <CardContent className="p-0">
-                            <div className="p-4">
-                              <h3 className="font-semibold text-sm mb-1 truncate" title={property.title}>
-                                {property.title}
-                              </h3>
-                              <div className="text-xs text-gray-500 mb-3">
-                                {property.location}
-                              </div>
-                              
-                              <div className="flex items-center justify-between mt-4">
-                                <div className="flex items-center text-xs">
-                                  <div className={`w-2 h-2 rounded-full mr-1 ${hasContent ? 'bg-green-500' : 'bg-amber-500'}`}></div>
-                                  <span>{hasContent ? 'Memiliki konten' : 'Belum ada konten'}</span>
-                                </div>
-                                <Button
-                                  size="sm"
-                                  variant={hasContent ? "outline" : "default"}
-                                  className={!hasContent ? "bg-orange-500 hover:bg-orange-600 text-white" : ""}
-                                  onClick={() => {
-                                    const existingContent = contents.find(c => c.product_id === property.id);
-                                    if (existingContent) {
-                                      handleEditContent(existingContent.id);
-                                    } else {
-                                      handleAddNewContent(property);
-                                    }
-                                  }}
-                                >
-                                  {hasContent ? (
-                                    <>
-                                      <Edit size={14} className="mr-1" />
-                                      Edit
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Plus size={14} className="mr-1" />
-                                      Tambah
-                                    </>
-                                  )}
-                                </Button>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
+              
+              {isSubscribed && (
+                <div className="mt-4 text-xs text-right text-green-600">
+                  <span className="flex items-center justify-end">
+                    <span className="h-2 w-2 rounded-full bg-green-500 mr-1 animate-pulse"></span>
+                    Sinkronisasi real-time aktif
+                  </span>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
-
+        
         <TabsContent value="edit">
-          {selectedProperty && (
-            <Card>
-              <CardHeader>
-                <CardTitle>{selectedContent ? "Edit Konten Produk" : "Tambah Konten Produk Baru"}</CardTitle>
-                <div className="text-sm text-gray-500">
-                  Properti: {selectedProperty.title} ({selectedProperty.location})
+          <Card>
+            <CardHeader>
+              <CardTitle>{activeContent.id ? "Edit Konten Produk" : "Tambah Konten Produk Baru"}</CardTitle>
+              <CardDescription>Kelola informasi konten untuk properti</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); handleSaveContent(); }}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="product_id">Pilih Properti</Label>
+                    <select 
+                      id="product_id" 
+                      className="w-full h-10 px-3 py-2 bg-white border border-input rounded-md"
+                      value={activeContent.product_id || ""}
+                      onChange={(e) => setActiveContent({...activeContent, product_id: e.target.value})}
+                    >
+                      <option value="">-- Pilih Properti --</option>
+                      {properties.map((property) => (
+                        <option key={property.id} value={property.id}>
+                          {property.title} ({property.category === 'empty_lot' 
+                            ? 'Kavling Kosongan' 
+                            : property.category === 'semi_finished' 
+                              ? 'Kavling Bangunan' 
+                              : 'Kavling Siap Huni'})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <Label htmlFor="title">Judul Konten</Label>
+                    <Input 
+                      id="title" 
+                      value={activeContent.title}
+                      onChange={(e) => setActiveContent({...activeContent, title: e.target.value})}
+                      placeholder="Judul konten produk"
+                      required
+                    />
+                  </div>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <ProductContentEditor
-                  initialContent={selectedContent}
-                  productId={selectedProperty.id}
-                  onSave={handleSaveContent}
-                  isSaving={isSaving}
-                  isRealTimeConnected={isContentsSynced}
-                />
-              </CardContent>
-            </Card>
-          )}
+                
+                <div>
+                  <Label htmlFor="description">Deskripsi</Label>
+                  <Textarea 
+                    id="description" 
+                    rows={5}
+                    value={activeContent.description}
+                    onChange={(e) => setActiveContent({...activeContent, description: e.target.value})}
+                    placeholder="Deskripsi detail tentang produk"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="meta_description">Meta Deskripsi (SEO)</Label>
+                  <Textarea 
+                    id="meta_description" 
+                    rows={2}
+                    value={activeContent.meta_description || ""}
+                    onChange={(e) => setActiveContent({...activeContent, meta_description: e.target.value})}
+                    placeholder="Deskripsi singkat untuk SEO (maks. 160 karakter)"
+                    maxLength={160}
+                  />
+                </div>
+                
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <Label htmlFor="features">Fitur Unggulan</Label>
+                    <div className="flex items-center text-xs text-gray-500">
+                      <CheckSquare size={14} className="mr-1" />
+                      <span>{activeContent.features?.length || 0} fitur</span>
+                    </div>
+                  </div>
+                  
+                  <div className="border rounded-md p-4 space-y-4">
+                    <div className="flex gap-2">
+                      <Input 
+                        id="newFeature"
+                        value={newFeature}
+                        onChange={(e) => setNewFeature(e.target.value)}
+                        placeholder="Tambahkan fitur baru"
+                        onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddFeature())}
+                      />
+                      <Button 
+                        type="button" 
+                        onClick={handleAddFeature}
+                      >
+                        Tambah
+                      </Button>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      {activeContent.features && activeContent.features.length > 0 ? (
+                        activeContent.features.map((feature, index) => (
+                          <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                            <div className="flex items-center">
+                              <CheckSquare size={16} className="text-green-500 mr-2" />
+                              <span>{feature}</span>
+                            </div>
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => handleRemoveFeature(index)}
+                            >
+                              <Trash2 size={14} className="text-red-500" />
+                            </Button>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-2 text-gray-500 text-sm">
+                          Belum ada fitur yang ditambahkan
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <Label htmlFor="specifications">Spesifikasi Produk</Label>
+                    <div className="flex items-center text-xs text-gray-500">
+                      <ListChecks size={14} className="mr-1" />
+                      <span>
+                        {activeContent.specifications 
+                          ? Object.keys(activeContent.specifications).length 
+                          : 0} item
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="border rounded-md p-4 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                      <div className="md:col-span-1">
+                        <Input 
+                          value={specKey}
+                          onChange={(e) => setSpecKey(e.target.value)}
+                          placeholder="Nama (contoh: Luas Tanah)"
+                        />
+                      </div>
+                      <div className="md:col-span-1">
+                        <Input 
+                          value={specValue}
+                          onChange={(e) => setSpecValue(e.target.value)}
+                          placeholder="Nilai (contoh: 100 m²)"
+                          onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSpecification())}
+                        />
+                      </div>
+                      <div>
+                        <Button 
+                          type="button" 
+                          onClick={handleAddSpecification}
+                          className="w-full"
+                        >
+                          Tambah
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      {activeContent.specifications && Object.keys(activeContent.specifications).length > 0 ? (
+                        Object.entries(activeContent.specifications).map(([key, value], index) => (
+                          <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                            <div className="grid grid-cols-2 w-full">
+                              <div className="font-medium">{key}</div>
+                              <div>{value}</div>
+                            </div>
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => handleRemoveSpecification(key)}
+                            >
+                              <Trash2 size={14} className="text-red-500" />
+                            </Button>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-2 text-gray-500 text-sm">
+                          Belum ada spesifikasi yang ditambahkan
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex gap-2 justify-end">
+                  <Button 
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setActiveTab("list");
+                      // Reset form jika membuat konten baru
+                      if (!activeContent.id) {
+                        setActiveContent({
+                          id: "",
+                          product_id: "",
+                          title: "",
+                          description: "",
+                          features: [],
+                          specifications: {},
+                          meta_description: ""
+                        });
+                      }
+                    }}
+                  >
+                    Batal
+                  </Button>
+                  <Button 
+                    type="submit"
+                    className="bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-600 hover:to-emerald-600"
+                    disabled={isSaving}
+                  >
+                    {isSaving ? (
+                      <>
+                        <Loader2 size={16} className="mr-2 animate-spin" />
+                        Menyimpan...
+                      </>
+                    ) : (
+                      <>
+                        <Save size={16} className="mr-2" />
+                        Simpan Konten
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

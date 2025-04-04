@@ -1,18 +1,22 @@
 
-import { ReactNode } from "react";
-import Layout from "@/components/layout/Layout";
+import React from "react";
+import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/Footer";
+import { Toaster } from "@/components/ui/toaster";
 
 interface MainLayoutProps {
-  children: ReactNode;
+  children: React.ReactNode;
+  hideFooter?: boolean;
 }
 
-const MainLayout = ({ children }: MainLayoutProps) => {
+const MainLayout: React.FC<MainLayoutProps> = ({ children, hideFooter = false }) => {
   return (
-    <Layout>
-      <div className="w-full">
-        {children}
-      </div>
-    </Layout>
+    <div className="flex flex-col min-h-screen">
+      <Navbar />
+      <main className="flex-grow">{children}</main>
+      {!hideFooter && <Footer />}
+      <Toaster />
+    </div>
   );
 };
 
