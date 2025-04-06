@@ -18,7 +18,7 @@ import { PropertyProps } from "@/types/product";
 const ProfilePage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, signOut } = useAuth();
+  const { user, logout } = useAuth(); // Changed from signOut to logout
   const [savedProperties, setSavedProperties] = useState<PropertyProps[]>([]);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState({
@@ -57,7 +57,7 @@ const ProfilePage = () => {
       if (data) {
         // Konversi data properti ke format PropertyProps
         const formattedProperties = data.map(item => ({
-          id: item.id,
+          id: String(item.id), // Ensure id is a string
           title: item.title,
           location: item.location,
           type: item.category,
@@ -96,8 +96,8 @@ const ProfilePage = () => {
 
   const handleSignOut = async () => {
     try {
-      if (signOut) {
-        await signOut();
+      if (logout) {  // Changed from signOut to logout
+        await logout();
         navigate("/login");
       }
     } catch (error) {
@@ -254,3 +254,4 @@ const ProfilePage = () => {
 };
 
 export default ProfilePage;
+
