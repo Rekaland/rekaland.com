@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import MainLayout from "@/layouts/MainLayout";
@@ -254,4 +253,3 @@ const ProfilePage = () => {
 };
 
 export default ProfilePage;
-
