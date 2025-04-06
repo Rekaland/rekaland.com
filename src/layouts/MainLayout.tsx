@@ -4,13 +4,13 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Toaster } from "@/components/ui/toaster";
 import { motion } from "framer-motion";
+import { BackToTopButton } from "@/components/layout/BackToTopButton";
 
 interface MainLayoutProps {
   children: React.ReactNode;
-  hideFooter?: boolean;
 }
 
-const MainLayout: React.FC<MainLayoutProps> = ({ children, hideFooter = false }) => {
+const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   return (
     <div className="flex flex-col min-h-screen font-poppins">
       <Navbar />
@@ -22,8 +22,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, hideFooter = false })
       >
         {children}
       </motion.main>
-      {!hideFooter && <Footer />}
+      <Footer />
       <Toaster />
+      <BackToTopButton />
     </div>
   );
 };
