@@ -79,16 +79,17 @@ export const AnimationProvider: React.FC<AnimationProviderProps> = ({
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration, delay }}
-          animate={{ 
-            y: [0, -10, 0] 
-          }}
+          animate={{ y: [0, -10, 0] }}
+          // Perbaikan error: Menghapus duplikasi attribute transition
           transition={{ 
-            duration: 4,
-            repeat: Infinity,
-            repeatType: "loop",
-            ease: "easeInOut",
-            delay 
+            y: {
+              duration: 4,
+              repeat: Infinity,
+              repeatType: "loop",
+              ease: "easeInOut",
+              delay
+            },
+            opacity: { duration, delay }
           }}
         >
           {children}

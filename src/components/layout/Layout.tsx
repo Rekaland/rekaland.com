@@ -14,6 +14,7 @@ const Layout = ({ children }: LayoutProps) => {
       <main className="flex-grow pt-16">
         {children}
       </main>
+      {/* Footer telah dihapus dari Layout untuk mencegah duplikasi */}
       <BackToTopButton />
     </div>
   );

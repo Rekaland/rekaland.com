@@ -1,6 +1,7 @@
 
 import React, { useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 interface Card3DProps {
   children: React.ReactNode;
@@ -9,6 +10,7 @@ interface Card3DProps {
   border?: boolean;
   shadow?: boolean;
   disabled?: boolean;
+  hoverEffect?: "tilt" | "float" | "scale" | "glow" | "none";
 }
 
 export const Card3D = ({
@@ -17,13 +19,14 @@ export const Card3D = ({
   intensity = 10,
   border = true,
   shadow = true,
-  disabled = false
+  disabled = false,
+  hoverEffect = "tilt"
 }: Card3DProps) => {
   const [style, setStyle] = useState<React.CSSProperties>({});
   const cardRef = useRef<HTMLDivElement>(null);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (disabled || !cardRef.current) return;
+    if (disabled || !cardRef.current || hoverEffect !== "tilt") return;
     
     const card = cardRef.current;
     const rect = card.getBoundingClientRect();
@@ -53,6 +56,43 @@ export const Card3D = ({
       transition: 'all 0.5s ease'
     });
   };
+
+  // If hoverEffect is not "tilt", use framer-motion instead
+  if (hoverEffect !== "tilt") {
+    const motionProps = {
+      float: {
+        whileHover: { y: -10 },
+        transition: { duration: 0.4 }
+      },
+      scale: {
+        whileHover: { scale: 1.05 },
+        transition: { duration: 0.3 }
+      },
+      glow: {
+        whileHover: { boxShadow: "0 0 20px rgba(249,115,22,0.5)" },
+        transition: { duration: 0.3 }
+      },
+      none: {}
+    };
+    
+    const currentProps = motionProps[hoverEffect] || {};
+    
+    return (
+      <motion.div
+        ref={cardRef}
+        className={cn(
+          'relative overflow-hidden', 
+          border && 'border border-border',
+          'rounded-xl bg-card',
+          disabled ? '' : 'hover:z-10',
+          className
+        )}
+        {...currentProps}
+      >
+        {children}
+      </motion.div>
+    );
+  }
   
   return (
     <div 
