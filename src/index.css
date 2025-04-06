@@ -43,6 +43,14 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Custom Rekaland colors */
+    --rekaland-orange: 24 95% 53%;
+    --rekaland-orange-hover: 24 94% 45%;
+    --rekaland-black: 0 0% 7%;
+    --rekaland-white: 0 0% 100%;
+    --rekaland-gray: 0 0% 96%;
+    --rekaland-gray-dark: 220 9% 46%;
   }
 
   .dark {
@@ -81,6 +89,11 @@
     @apply border-border;
   }
 
+  html {
+    font-family: "Poppins", sans-serif;
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
@@ -107,6 +120,17 @@
 
 .card-shadow {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+/* Enhanced 3D effects */
+.card-3d-hover {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transform-style: preserve-3d;
+}
+
+.card-3d-hover:hover {
+  transform: translateY(-5px) rotateX(5deg);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
 }
 
 /* Fade in animation */
@@ -182,4 +206,28 @@
 
 .scroll-snap-x > * {
   scroll-snap-align: start;
+}
+
+/* Button subtle 3D effect */
+.btn-3d {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-3d:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.btn-3d:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Image parallax effect */
+.img-parallax {
+  transition: transform 0.2s ease-out;
+}
+
+.img-parallax:hover {
+  transform: scale(1.05) translateY(-5px);
 }

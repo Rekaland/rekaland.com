@@ -29,13 +29,27 @@ body {
   }
 }
 
-/* Better contrast for light mode */
+/* Consistent color scheme */
+:root {
+  --rekaland-orange: #F97316;
+  --rekaland-orange-hover: #EA580C;
+  --rekaland-black: #111111;
+  --rekaland-white: #FFFFFF;
+  --rekaland-gray: #F5F5F5;
+  --rekaland-gray-dark: #374151;
+}
+
+/* Button color consistency */
 .bg-rekaland-orange {
-  background-color: #ff8c38;
+  background-color: var(--rekaland-orange);
 }
 
 .hover\:bg-orange-600:hover {
-  background-color: #e67a2e;
+  background-color: var(--rekaland-orange-hover);
+}
+
+.text-rekaland-orange {
+  color: var(--rekaland-orange);
 }
 
 .text-foreground {
@@ -50,38 +64,41 @@ body {
   background-color: #f9fafb;
 }
 
-/* Mobile menu improvements */
-.mobile-menu-container {
-  max-height: calc(100vh - 4rem);
-  overflow-y: auto;
+/* Enhanced animations */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
 }
 
-/* Back to top button pulse animation */
-@keyframes buttonPulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(255, 140, 56, 0.7);
-  }
-  70% {
-    box-shadow: 0 0 0 10px rgba(255, 140, 56, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(255, 140, 56, 0);
-  }
+.hover-scale {
+  @apply transition-transform duration-300;
 }
 
-.pulse-animation {
-  animation: buttonPulse 2s infinite;
+.hover-scale:hover {
+  transform: scale(1.05);
 }
 
-/* Animations */
-.fade-in {
-  animation: fadeIn 0.3s ease-out forwards;
+.card-shadow {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
 }
 
+/* 3D card effects */
+.card-3d {
+  transition: transform 0.5s ease, box-shadow 0.5s ease;
+  transform-style: preserve-3d;
+}
+
+.card-3d:hover {
+  transform: translateY(-5px) rotateX(2deg) rotateY(-2deg);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Enhanced fade in animation */
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(-8px);
+    transform: translateY(-15px);
   }
   to {
     opacity: 1;
@@ -89,75 +106,115 @@ body {
   }
 }
 
-/* Sticky menu animation */
-.navbar-sticky {
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  animation: slideDown 0.3s ease-out;
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
 }
 
-@keyframes slideDown {
-  from {
-    transform: translateY(-100%);
-  }
-  to {
-    transform: translateY(0);
-  }
+/* 3D button effects */
+.btn-3d {
+  transition: all 0.2s ease;
+  transform-style: preserve-3d;
+  perspective: 1000px;
 }
 
-/* Improved readability for mobile */
-@media (max-width: 768px) {
-  h1, h2, h3 {
-    word-break: break-word;
-  }
-  
-  .mobile-menu-item {
-    padding: 0.75rem 1rem;
-    border-radius: 0.375rem;
-    transition: all 0.2s ease;
-  }
-  
-  .mobile-menu-item:active {
-    transform: scale(0.98);
-  }
-}
-
-/* Remove scrollbar but keep functionality */
-.scrollbar-none {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.scrollbar-none::-webkit-scrollbar {
-  display: none;
-}
-
-/* Image hover effects */
-.img-hover-zoom {
-  overflow: hidden;
-}
-
-.img-hover-zoom img {
-  transition: transform 0.5s ease;
-}
-
-.img-hover-zoom:hover img {
-  transform: scale(1.1);
-}
-
-/* Card hover effects */
-.card-hover {
-  transition: all 0.3s ease;
-}
-
-.card-hover:hover {
-  transform: translateY(-5px);
+.btn-3d:hover {
+  transform: translateY(-2px) scale(1.01);
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 }
 
-/* Glass morphism effect */
-.glass-effect {
-  background: rgba(255, 255, 255, 0.1);
+.btn-3d:active {
+  transform: translateY(1px) scale(0.99);
+}
+
+/* Dark mode improvements */
+.dark .text-rekaland-black {
+  @apply text-gray-100;
+}
+
+.dark .text-rekaland-orange {
+  @apply text-orange-400;
+}
+
+/* Menu hover improvements */
+.menu-item {
+  @apply transition-colors duration-200;
+}
+
+.menu-item-active {
+  @apply bg-orange-100 dark:bg-orange-900/20 text-rekaland-orange font-medium;
+}
+
+.menu-item-hover:hover {
+  @apply bg-gray-100 dark:bg-gray-800 text-rekaland-orange;
+}
+
+/* Line clamp utilities */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+/* Card transitions */
+.card-transition {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+/* For horizontally scrolling containers */
+.scroll-snap-x {
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scroll-snap-x > * {
+  scroll-snap-align: start;
+}
+
+/* Parallax effect */
+.parallax {
+  transform-style: preserve-3d;
+  perspective: 1000px;
+}
+
+.parallax-layer {
+  transition: transform 0.1s ease-out;
+}
+
+@keyframes floatAnimation {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: floatAnimation 4s ease-in-out infinite;
+}
+
+/* Glass effect for cards */
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.dark .glass-card {
+  background: rgba(30, 30, 30, 0.7);
+  border: 1px solid rgba(70, 70, 70, 0.2);
 }

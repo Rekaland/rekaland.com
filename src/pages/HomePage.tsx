@@ -8,78 +8,37 @@ import WhyChooseUsSection from '@/components/home/WhyChooseUsSection';
 import TestimonialsSection from '@/components/home/TestimonialsSection';
 import CtaSection from '@/components/home/CtaSection';
 import WelcomeToast from '@/components/home/WelcomeToast';
-import { motion } from 'framer-motion';
+import AnimationProvider from '@/components/ui/animation-provider';
 
 const HomePage = () => {
   return (
     <MainLayout>
       <WelcomeToast />
-      <motion.div
-        initial="hidden"
-        animate="visible"
-        variants={{
-          hidden: {},
-          visible: {
-            transition: {
-              staggerChildren: 0.3
-            }
-          }
-        }}
-      >
-        <motion.div
-          variants={{
-            hidden: { opacity: 0, y: 20 },
-            visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
-          }}
-        >
+      <div className="space-y-16">
+        <AnimationProvider type="fade" delay={0.3}>
           <HeroSection />
-        </motion.div>
+        </AnimationProvider>
         
-        <motion.div
-          variants={{
-            hidden: { opacity: 0, y: 20 },
-            visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
-          }}
-        >
+        <AnimationProvider type="slide" delay={0.4}>
           <PropertyCategoriesSection />
-        </motion.div>
+        </AnimationProvider>
         
-        <motion.div
-          variants={{
-            hidden: { opacity: 0, y: 20 },
-            visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
-          }}
-        >
+        <AnimationProvider type="scale" delay={0.5}>
           <FeaturedPropertiesSection />
-        </motion.div>
+        </AnimationProvider>
         
-        <motion.div
-          variants={{
-            hidden: { opacity: 0, y: 20 },
-            visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
-          }}
-        >
+        <AnimationProvider type="fade" delay={0.6}>
           <WhyChooseUsSection />
-        </motion.div>
+        </AnimationProvider>
         
-        <motion.div
-          variants={{
-            hidden: { opacity: 0, y: 20 },
-            visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
-          }}
-        >
+        <AnimationProvider type="slide" delay={0.7}>
           <TestimonialsSection />
-        </motion.div>
+        </AnimationProvider>
         
-        <motion.div
-          variants={{
-            hidden: { opacity: 0, y: 20 },
-            visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
-          }}
-        >
+        <AnimationProvider type="scale" delay={0.8}>
           <CtaSection />
-        </motion.div>
-      </motion.div>
+        </AnimationProvider>
+      </div>
     </MainLayout>
   );
 };
