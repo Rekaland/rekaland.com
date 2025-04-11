@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, FileText, Newspaper, BadgeInfo } from "lucide-react";
-import Layout from "@/components/layout/Layout";
+import MainLayout from "@/layouts/MainLayout";
 
 const InformationPage = () => {
   const [activeTab, setActiveTab] = useState("news");
@@ -85,8 +85,8 @@ const InformationPage = () => {
   ];
 
   return (
-    <Layout>
-      <div className="container mx-auto pt-20 px-4 py-12">
+    <MainLayout>
+      <div className="container mx-auto px-4 py-12">
         <h1 className="text-3xl font-bold mb-2 text-center">Informasi</h1>
         <p className="text-gray-600 text-center mb-10">Berita terbaru, event, dan informasi penting lainnya</p>
         
@@ -171,7 +171,7 @@ const InformationPage = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </Layout>
+    </MainLayout>
   );
 };
 

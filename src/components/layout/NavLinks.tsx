@@ -1,5 +1,5 @@
 
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -33,7 +33,7 @@ export const NavLinks = ({
             <button
               onClick={() => toggleDropdown(link.name)}
               className={cn(
-                "px-3 py-2 rounded-md text-sm font-medium flex items-center transition-all duration-300 hover:-translate-y-0.5",
+                "px-3 py-2 rounded-md text-sm font-medium flex items-center transition-all duration-300",
                 isActivePath(link.path)
                   ? "text-rekaland-orange"
                   : "text-gray-700 hover:text-rekaland-orange"
@@ -49,12 +49,8 @@ export const NavLinks = ({
               />
             </button>
             {dropdownOpen === link.name && (
-              <motion.div 
+              <div 
                 className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10"
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
               >
                 {link.dropdown.map((item, j) => (
                   <Link
@@ -65,7 +61,7 @@ export const NavLinks = ({
                     {item.name}
                   </Link>
                 ))}
-              </motion.div>
+              </div>
             )}
           </div>
         ) : (
@@ -73,7 +69,7 @@ export const NavLinks = ({
             key={i}
             to={link.path}
             className={cn(
-              "px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 hover:-translate-y-0.5 hover:shadow-sm",
+              "px-3 py-2 rounded-md text-sm font-medium transition-all duration-300",
               isActivePath(link.path)
                 ? "text-rekaland-orange"
                 : "text-gray-700 hover:text-rekaland-orange"

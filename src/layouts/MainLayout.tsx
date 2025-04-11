@@ -5,7 +5,6 @@ import Footer from "@/components/layout/Footer";
 import { Toaster } from "@/components/ui/toaster";
 import { motion } from "framer-motion";
 import { BackToTopButton } from "@/components/layout/BackToTopButton";
-import AnimationProvider from "@/components/ui/animation-provider";
 import { useLocation } from "react-router-dom";
 
 interface MainLayoutProps {
@@ -22,10 +21,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   
   return (
     <div className="flex flex-col min-h-screen font-poppins overflow-x-hidden">
-      <div className="sticky top-0 z-50">
-        <AnimationProvider type="fade" delay={0.1}>
-          <Navbar />
-        </AnimationProvider>
+      {/* Navbar - tidak menggunakan AnimationProvider untuk memastikan selalu muncul */}
+      <div className="sticky top-0 z-50 bg-white/95 shadow-sm">
+        <Navbar />
       </div>
       
       <motion.main 
@@ -37,9 +35,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         {children}
       </motion.main>
       
-      <AnimationProvider type="fade" delay={0.2}>
-        <Footer />
-      </AnimationProvider>
+      {/* Footer - tidak menggunakan AnimationProvider untuk memastikan selalu muncul */}
+      <Footer />
       
       <Toaster />
       <BackToTopButton />

@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Search, Globe, Menu, X, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AuthButtons } from "./AuthButtons";
@@ -83,7 +83,7 @@ const Navbar = () => {
   return (
     <header
       className={cn(
-        "w-full transition-all duration-300 backdrop-blur-sm",
+        "w-full transition-all duration-300",
         isScrolled ? "bg-white/95 shadow-lg" : "bg-white/80"
       )}
     >
@@ -93,13 +93,15 @@ const Navbar = () => {
           <NavLogo />
 
           {/* Desktop Navigation */}
-          <NavLinks 
-            navLinks={navLinks} 
-            isActivePath={isActivePath} 
-            dropdownOpen={dropdownOpen} 
-            toggleDropdown={toggleDropdown} 
-            className="hidden md:flex"
-          />
+          <div className="hidden md:flex">
+            <NavLinks 
+              navLinks={navLinks} 
+              isActivePath={isActivePath} 
+              dropdownOpen={dropdownOpen} 
+              toggleDropdown={toggleDropdown} 
+              className="hidden md:flex"
+            />
+          </div>
 
           {/* Right Section - Search, Language & Auth */}
           <div className="flex items-center space-x-2">
