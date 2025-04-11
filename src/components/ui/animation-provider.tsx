@@ -8,6 +8,7 @@ interface AnimationProviderProps {
   duration?: number;
   className?: string;
   type?: "fade" | "slide" | "scale" | "float" | "3d-rotate" | "3d-tilt";
+  direction?: "left" | "right" | "up" | "down";
 }
 
 export const AnimationProvider: React.FC<AnimationProviderProps> = ({
@@ -15,7 +16,8 @@ export const AnimationProvider: React.FC<AnimationProviderProps> = ({
   delay = 0,
   duration = 0.5,
   className = "",
-  type = "fade"
+  type = "fade",
+  direction = "up"
 }) => {
   let variants: Variants = {};
   
@@ -27,10 +29,27 @@ export const AnimationProvider: React.FC<AnimationProviderProps> = ({
       };
       break;
     case "slide":
-      variants = {
-        hidden: { opacity: 0, y: 20 },
-        visible: { opacity: 1, y: 0, transition: { duration, delay } }
-      };
+      if (direction === "left") {
+        variants = {
+          hidden: { opacity: 0, x: -20 },
+          visible: { opacity: 1, x: 0, transition: { duration, delay } }
+        };
+      } else if (direction === "right") {
+        variants = {
+          hidden: { opacity: 0, x: 20 },
+          visible: { opacity: 1, x: 0, transition: { duration, delay } }
+        };
+      } else if (direction === "up") {
+        variants = {
+          hidden: { opacity: 0, y: -20 },
+          visible: { opacity: 1, y: 0, transition: { duration, delay } }
+        };
+      } else { // down is default
+        variants = {
+          hidden: { opacity: 0, y: 20 },
+          visible: { opacity: 1, y: 0, transition: { duration, delay } }
+        };
+      }
       break;
     case "scale":
       variants = {
@@ -80,7 +99,6 @@ export const AnimationProvider: React.FC<AnimationProviderProps> = ({
           whileInView={{ opacity: 1 }}
           viewport={{ once: true, margin: "-100px" }}
           animate={{ y: [0, -10, 0] }}
-          // Perbaikan error: Menghapus duplikasi attribute transition
           transition={{ 
             y: {
               duration: 4,

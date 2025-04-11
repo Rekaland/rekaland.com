@@ -2,17 +2,20 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { PropertyCategoryCard } from "@/components/products/PropertyCategoryCard";
 import { CategoryProps } from "@/types/product";
+import { Dispatch, SetStateAction } from "react";
 
 interface ProductCategorySectionProps {
   categories: CategoryProps[];
   activeCategory: string;
   onCategoryClick: (path: string) => void;
+  setActiveCategory?: Dispatch<SetStateAction<string>>;
 }
 
 export const ProductCategorySection = ({
   categories,
   activeCategory,
-  onCategoryClick
+  onCategoryClick,
+  setActiveCategory
 }: ProductCategorySectionProps) => {
   return (
     <div className="mb-8">

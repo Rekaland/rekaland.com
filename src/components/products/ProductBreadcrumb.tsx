@@ -2,14 +2,23 @@
 import { Link } from "react-router-dom";
 
 interface ProductBreadcrumbProps {
-  paths: {
-    name: string;
-    path: string;
-    active?: boolean;
-  }[];
+  category: string;
 }
 
-export const ProductBreadcrumb = ({ paths }: ProductBreadcrumbProps) => {
+export const ProductBreadcrumb = ({ category }: ProductBreadcrumbProps) => {
+  const paths = [
+    { name: "Beranda", path: "/", active: false },
+    { name: "Produk", path: "/produk", active: false },
+    { 
+      name: category === 'all' ? 'Semua Properti' : 
+        category === 'empty_lot' ? 'Kavling Kosongan' :
+        category === 'semi_finished' ? 'Kavling Setengah Jadi' :
+        'Kavling Siap Huni',
+      path: `/produk/${category !== 'all' ? category : ''}`,
+      active: true 
+    },
+  ];
+  
   return (
     <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
       {paths.map((path, index) => (
