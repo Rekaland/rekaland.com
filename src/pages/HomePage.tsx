@@ -14,7 +14,7 @@ const HomePage = () => {
   return (
     <MainLayout>
       <WelcomeToast />
-      <div className="space-y-16">
+      <div className="space-y-16 pt-4">
         <AnimationProvider type="fade" delay={0.3}>
           <HeroSection />
         </AnimationProvider>

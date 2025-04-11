@@ -17,6 +17,7 @@ import RegisterPage from "./pages/RegisterPage";
 import InformationPage from "./pages/InformationPage";
 import ContentPage from "./pages/ContentPage";
 
+// Semua rute menggunakan layout yang sama yang didefinisikan di masing-masing halaman
 export const router = createBrowserRouter([
   {
     path: "/",

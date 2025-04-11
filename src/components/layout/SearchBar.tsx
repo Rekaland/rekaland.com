@@ -3,8 +3,9 @@ import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, X } from "lucide-react";
+import { Search, X, ArrowRight } from "lucide-react";
 import { SearchResults } from "./SearchResults";
+import { motion } from "framer-motion";
 
 interface SearchBarProps {
   focusOnMount?: boolean;
@@ -67,7 +68,13 @@ export const SearchBar = ({ focusOnMount, closeSheet }: SearchBarProps) => {
   };
 
   return (
-    <div className="relative flex items-center gap-3" ref={searchContainerRef}>
+    <motion.div 
+      className="relative flex items-center gap-1 w-full" 
+      ref={searchContainerRef}
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.2 }}
+    >
       <form onSubmit={handleSearch} className="relative flex-1">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
         <Input
@@ -98,6 +105,6 @@ export const SearchBar = ({ focusOnMount, closeSheet }: SearchBarProps) => {
           onTermSelect={setSearchTerm}
         />
       )}
-    </div>
+    </motion.div>
   );
 };

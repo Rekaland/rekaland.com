@@ -21,18 +21,18 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   }, [location.pathname]);
   
   return (
-    <div className="flex flex-col min-h-screen font-poppins">
-      <AnimationProvider type="fade" delay={0.1}>
-        <div className="sticky top-0 z-50">
+    <div className="flex flex-col min-h-screen font-poppins overflow-x-hidden">
+      <div className="sticky top-0 z-50">
+        <AnimationProvider type="fade" delay={0.1}>
           <Navbar />
-        </div>
-      </AnimationProvider>
+        </AnimationProvider>
+      </div>
       
       <motion.main 
         className="flex-grow pt-16 md:pt-16"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
       >
         {children}
       </motion.main>
