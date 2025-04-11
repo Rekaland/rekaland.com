@@ -1,108 +1,77 @@
+import { createBrowserRouter } from "react-router-dom";
+import HomePage from "./pages/HomePage";
+import AboutPage from "./pages/AboutPage";
+import ContactPage from "./pages/ContactPage";
+import ProductsPage from "./pages/ProductsPage";
+import ProductDetailPage from "./pages/ProductDetailPage";
+import EmptyLotPage from "./pages/products/EmptyLotPage";
+import SemiFinishedLotPage from "./pages/products/SemiFinishedLotPage";
+import ReadyToOccupyPage from "./pages/products/ReadyToOccupyPage";
+import NotFound from "./pages/NotFound";
+import AdminDashboard from "./pages/AdminDashboard";
+import ProfilePage from "./pages/ProfilePage";
+import SettingsPage from "./pages/SettingsPage";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
+import App from "./App";
+import InformationPage from "./pages/InformationPage";
+import ContentPage from "./pages/ContentPage";
 
-import React from 'react';
-import { createBrowserRouter, Outlet } from 'react-router-dom';
-import MainLayout from "./layouts/MainLayout";
-import Index from './pages/Index';
-import AboutPage from './pages/AboutPage';
-import ProductsPage from './pages/ProductsPage';
-import InformationPage from './pages/InformationPage';
-import HelpPage from './pages/HelpPage';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import ProfilePage from './pages/ProfilePage';
-import SettingsPage from './pages/SettingsPage';
-import NotFound from './pages/NotFound';
-import AdminDashboard from './pages/AdminDashboard';
-import AdminPage from './pages/AdminPage';
-import AdminSetupPage from './pages/AdminSetupPage';
-import ProductDetailPage from './pages/ProductDetailPage';
-
-const router = createBrowserRouter([
+export const router = createBrowserRouter([
   {
     path: "/",
-    element: <MainLayout><Outlet /></MainLayout>,
-    children: [
-      {
-        index: true,
-        element: <Index />,
-      },
-      {
-        path: "about",
-        element: <AboutPage />,
-      },
-      {
-        path: "tentang",
-        element: <AboutPage />,
-      },
-      {
-        path: "products",
-        element: <ProductsPage />,
-      },
-      {
-        path: "produk",
-        element: <ProductsPage />,
-      },
-      {
-        path: "produk/:id",
-        element: <ProductDetailPage />,
-      },
-      // Redirect old category paths to the main products page with a query parameter
-      {
-        path: "produk/kavling-kosongan",
-        element: <ProductsPage />,
-      },
-      {
-        path: "produk/kavling-setengah-jadi",
-        element: <ProductsPage />,
-      },
-      {
-        path: "produk/kavling-siap-huni",
-        element: <ProductsPage />,
-      },
-      {
-        path: "information",
-        element: <InformationPage />,
-      },
-      {
-        path: "informasi",
-        element: <InformationPage />,
-      },
-      {
-        path: "help",
-        element: <HelpPage />,
-      },
-      {
-        path: "bantuan",
-        element: <HelpPage />,
-      },
-      {
-        path: "profile",
-        element: <ProfilePage />,
-      },
-      {
-        path: "profil",
-        element: <ProfilePage />,
-      },
-      {
-        path: "settings",
-        element: <SettingsPage />,
-      },
-      {
-        path: "pengaturan",
-        element: <SettingsPage />,
-      },
-      {
-        path: "*",
-        element: <NotFound />,
-      },
-    ],
+    element: <HomePage />,
+  },
+  {
+    path: "/tentang",
+    element: <AboutPage />,
+  },
+  {
+    path: "/kontak",
+    element: <ContactPage />,
+  },
+  {
+    path: "/produk",
+    element: <ProductsPage />,
+  },
+  {
+    path: "/produk/:id",
+    element: <ProductDetailPage />,
+  },
+  {
+    path: "/produk/kavling-kosongan",
+    element: <EmptyLotPage />,
+  },
+  {
+    path: "/produk/kavling-setengah-jadi",
+    element: <SemiFinishedLotPage />,
+  },
+  {
+    path: "/produk/kavling-siap-huni",
+    element: <ReadyToOccupyPage />,
+  },
+  {
+    path: "/informasi",
+    element: <InformationPage />,
+  },
+  {
+    path: "/konten/:slug",
+    element: <ContentPage />,
+  },
+  {
+    path: "/admin",
+    element: <AdminDashboard />,
+  },
+  {
+    path: "/profile",
+    element: <ProfilePage />,
+  },
+  {
+    path: "/settings",
+    element: <SettingsPage />,
   },
   {
     path: "/login",
-    element: <LoginPage />,
-  },
-  {
-    path: "/masuk",
     element: <LoginPage />,
   },
   {
@@ -110,20 +79,8 @@ const router = createBrowserRouter([
     element: <RegisterPage />,
   },
   {
-    path: "/daftar",
-    element: <RegisterPage />,
-  },
-  {
-    path: "/admin",
-    element: <AdminPage />,
-  },
-  {
-    path: "/admin-dashboard",
-    element: <AdminDashboard />,
-  },
-  {
-    path: "/admin-setup",
-    element: <AdminSetupPage />,
+    path: "*",
+    element: <NotFound />,
   },
 ]);
 

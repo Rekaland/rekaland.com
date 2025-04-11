@@ -16,6 +16,7 @@ import RealTimeSync from "@/components/admin/RealTimeSync";
 import EnhancedContentManagement from "@/components/admin/EnhancedContentManagement";
 import EnhancedPropertyManagement from "@/components/admin/EnhancedPropertyManagement";
 import ProductContentManagement from "@/components/admin/ProductContentManagement";
+import DashboardTools from "@/components/admin/DashboardTools";
 import {
   LayoutDashboard,
   Home,
@@ -30,7 +31,8 @@ import {
   FileCode,
   BarChart2,
   Package,
-  Code
+  Code,
+  Tool
 } from "lucide-react";
 import MainLayout from "@/layouts/MainLayout";
 
@@ -73,6 +75,10 @@ const AdminDashboard = () => {
                   <Globe size={16} />
                   Website
                 </TabsTrigger>
+                <TabsTrigger value="tools" className="flex items-center gap-2">
+                  <Tool size={16} />
+                  Tools
+                </TabsTrigger>
                 <TabsTrigger value="developers" className="flex items-center gap-2">
                   <Code size={16} />
                   Developer
@@ -114,6 +120,10 @@ const AdminDashboard = () => {
 
               <TabsContent value="website">
                 <WebsiteEditor />
+              </TabsContent>
+              
+              <TabsContent value="tools">
+                <DashboardTools />
               </TabsContent>
 
               <TabsContent value="developers">
