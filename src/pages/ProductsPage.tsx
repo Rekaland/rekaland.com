@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -18,13 +17,9 @@ const ProductsPage = () => {
   const [activeCategory, setActiveCategory] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   
-  // Get properties from Supabase
   const { properties, loading, error, refetchProperties } = useProperties();
-  
-  // Setup real-time listening for updates
   const { isSubscribed } = useRealTimeSync('properties', refetchProperties);
 
-  // Category definitions
   const productCategories: CategoryProps[] = [
     {
       id: "all",
@@ -57,14 +52,12 @@ const ProductsPage = () => {
   ];
 
   useEffect(() => {
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: 0, behavior: "smooth" });
     
-    // Parse search parameters
     const searchParams = new URLSearchParams(location.search);
     const categoryParam = searchParams.get('category');
     
     if (categoryParam) {
-      // Set active category based on URL parameter
       if (categoryParam === 'kavling-kosongan') setActiveCategory("empty_lot");
       else if (categoryParam === 'kavling-setengah-jadi') setActiveCategory("semi_finished");
       else if (categoryParam === 'kavling-siap-huni') setActiveCategory("ready_to_occupy");
@@ -74,7 +67,6 @@ const ProductsPage = () => {
     }
   }, [location.search]);
 
-  // Format properties from the API for display
   const formatPropertiesForDisplay = (): PropertyProps[] => {
     if (!properties || properties.length === 0) return [];
     
@@ -101,7 +93,6 @@ const ProductsPage = () => {
     }));
   };
 
-  // Filter properties based on activeCategory
   const filterProperties = () => {
     const formattedProperties = formatPropertiesForDisplay();
     
@@ -115,7 +106,6 @@ const ProductsPage = () => {
   const filteredProperties = filterProperties();
 
   const getFeaturedProperties = () => {
-    // For the homepage, we might want to show only featured properties
     const featured = properties.filter(p => p.featured);
     if (featured.length === 0) return filterProperties().slice(0, 3);
     
@@ -141,14 +131,12 @@ const ProductsPage = () => {
             )}
           </div>
           
-          {/* Category Selection */}
           <ProductCategorySection
             categories={productCategories}
             activeCategory={activeCategory}
             onCategoryClick={(path) => navigate(path)}
           />
 
-          {/* Loading state */}
           {loading && (
             <div className="flex justify-center items-center py-12">
               <div className="text-center">
@@ -158,7 +146,6 @@ const ProductsPage = () => {
             </div>
           )}
 
-          {/* Error state */}
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
               <p className="text-red-600 font-medium">Error: {error}</p>
@@ -172,7 +159,6 @@ const ProductsPage = () => {
             </div>
           )}
 
-          {/* Property Cards - Grid View */}
           {!loading && !error && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
               {(filteredProperties.length > 0 ? filteredProperties : getFeaturedProperties()).map((property) => (
@@ -181,7 +167,6 @@ const ProductsPage = () => {
             </div>
           )}
           
-          {/* View All Button */}
           <div className="text-center mt-6 mb-8">
             <Button 
               onClick={() => navigate('/produk')} 
@@ -196,11 +181,9 @@ const ProductsPage = () => {
   );
 };
 
-// Featured Property Card Component
 const FeaturedPropertyCard = ({ property }: { property: PropertyProps }) => {
   const navigate = useNavigate();
   
-  // Calculate DP kredit price (30% of total price)
   const dpPrice = Math.round(property.priceNumeric * 0.3);
   const formattedDpPrice = `Rp ${formatCurrency(dpPrice)}`;
   

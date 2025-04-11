@@ -49,7 +49,7 @@ const Navbar = () => {
   const navLinks = [
     { name: "Beranda", path: "/" },
     { name: "Tentang", path: "/tentang" },
-    { name: "Produk", path: "/produk" }, // Removed dropdown items
+    { name: "Produk", path: "/produk" },
     { name: "Informasi", path: "/informasi" }
   ];
 
@@ -61,7 +61,7 @@ const Navbar = () => {
   return (
     <header
       className={cn(
-        "fixed top-0 w-full z-50 transition-all duration-300",
+        "w-full transition-all duration-300",
         isScrolled ? "bg-white shadow-md" : "bg-white/90 backdrop-blur-sm"
       )}
     >
