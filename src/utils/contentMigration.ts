@@ -132,7 +132,7 @@ export const propertyProducts = [
     land_size: 120,
     featured: true,
     description: "Kavling premium berlokasi strategis di Jakarta Selatan, bebas banjir, dengan akses mudah ke jalan tol dan fasilitas publik.",
-    status: "available"
+    status: "available" as "available" | "sold" | "pending"
   },
   {
     title: "Rumah Setengah Jadi Bekasi",
@@ -145,7 +145,7 @@ export const propertyProducts = [
     bathrooms: 1,
     featured: true,
     description: "Rumah setengah jadi dengan struktur kokoh, dapat disesuaikan dengan kebutuhan Anda. Lokasi strategis di Bekasi.",
-    status: "available"
+    status: "available" as "available" | "sold" | "pending"
   },
   {
     title: "Rumah Siap Huni BSD",
@@ -158,7 +158,7 @@ export const propertyProducts = [
     bathrooms: 2,
     featured: true,
     description: "Rumah siap huni dengan desain modern, 3 kamar tidur, 2 kamar mandi, berlokasi di kawasan premium BSD City.",
-    status: "available"
+    status: "available" as "available" | "sold" | "pending"
   }
 ];
 
