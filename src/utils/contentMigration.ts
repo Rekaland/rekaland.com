@@ -126,7 +126,7 @@ export const importContentsToSupabase = async () => {
 export const propertyProducts = [
   {
     title: "Kavling Premium Jakarta",
-    category: "empty_lot",
+    category: "empty_lot" as "empty_lot" | "semi_finished" | "ready_to_occupy",
     location: "Jakarta Selatan",
     price: 350000000,
     land_size: 120,
@@ -136,7 +136,7 @@ export const propertyProducts = [
   },
   {
     title: "Rumah Setengah Jadi Bekasi",
-    category: "semi_finished",
+    category: "semi_finished" as "empty_lot" | "semi_finished" | "ready_to_occupy",
     location: "Bekasi",
     price: 450000000,
     land_size: 150,
@@ -149,7 +149,7 @@ export const propertyProducts = [
   },
   {
     title: "Rumah Siap Huni BSD",
-    category: "ready_to_occupy",
+    category: "ready_to_occupy" as "empty_lot" | "semi_finished" | "ready_to_occupy",
     location: "Tangerang Selatan",
     price: 650000000,
     land_size: 180,

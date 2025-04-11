@@ -32,7 +32,7 @@ import {
   BarChart2,
   Package,
   Code,
-  Tool
+  Wrench
 } from "lucide-react";
 import MainLayout from "@/layouts/MainLayout";
 
@@ -76,7 +76,7 @@ const AdminDashboard = () => {
                   Website
                 </TabsTrigger>
                 <TabsTrigger value="tools" className="flex items-center gap-2">
-                  <Tool size={16} />
+                  <Wrench size={16} />
                   Tools
                 </TabsTrigger>
                 <TabsTrigger value="developers" className="flex items-center gap-2">
