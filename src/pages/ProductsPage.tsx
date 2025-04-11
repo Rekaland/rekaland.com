@@ -8,7 +8,7 @@ import { PropertyFilters } from '@/components/products/PropertyFilters';
 import { PropertyPagination } from '@/components/products/PropertyPagination';
 import { ProductCategorySection } from '@/components/products/ProductCategorySection';
 import { Button } from '@/components/ui/button';
-import { Grid3x3, List, Home, Buildings, Building, Castle, MapPin } from 'lucide-react';
+import { Grid3x3, List, Home, Building, Castle, MapPin } from 'lucide-react';
 import { useProperties } from '@/hooks/useProperties';
 import { cn } from '@/lib/utils';
 import { ProductBreadcrumb } from '@/components/products/ProductBreadcrumb';
@@ -89,14 +89,14 @@ const ProductsPage = () => {
 
     // Filter by price range
     filtered = filtered.filter(property => {
-      const price = property.priceNumeric || 0;
+      const price = property.price || 0;
       return price >= priceRange.min && price <= priceRange.max;
     });
 
     // Filter by land size
     filtered = filtered.filter(property => {
-      if (!property.landSize) return true;
-      return property.landSize >= landSizeRange.min && property.landSize <= landSizeRange.max;
+      if (!property.land_size) return true;
+      return property.land_size >= landSizeRange.min && property.land_size <= landSizeRange.max;
     });
 
     // Filter by bedrooms
@@ -106,19 +106,19 @@ const ProductsPage = () => {
 
     // Filter by featured
     if (featuredOnly) {
-      filtered = filtered.filter(property => property.isFeatured);
+      filtered = filtered.filter(property => property.featured);
     }
 
     // Sort properties
     switch (sortOption) {
       case "priceAsc":
-        return filtered.sort((a, b) => (a.priceNumeric || 0) - (b.priceNumeric || 0));
+        return filtered.sort((a, b) => (a.price || 0) - (b.price || 0));
       case "priceDesc":
-        return filtered.sort((a, b) => (b.priceNumeric || 0) - (a.priceNumeric || 0));
+        return filtered.sort((a, b) => (b.price || 0) - (a.price || 0));
       case "areaAsc":
-        return filtered.sort((a, b) => (a.landSize || 0) - (b.landSize || 0));
+        return filtered.sort((a, b) => (a.land_size || 0) - (b.land_size || 0));
       case "areaDesc":
-        return filtered.sort((a, b) => (b.landSize || 0) - (a.landSize || 0));
+        return filtered.sort((a, b) => (b.land_size || 0) - (a.land_size || 0));
       default:
         return filtered; // Default sort (newest first) is assumed to be the default order from API
     }
@@ -131,10 +131,33 @@ const ProductsPage = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // Format properties to match PropertyProps interface
+  const formatPropertiesForDisplay = () => {
+    return filteredProperties.map(property => ({
+      id: property.id,
+      title: property.title,
+      location: property.location,
+      type: property.category === 'empty_lot' ? 'Kavling Kosongan' : 
+           property.category === 'semi_finished' ? 'Kavling Setengah Jadi' : 'Kavling Siap Huni',
+      price: `Rp ${Math.floor((property.price || 0) / 1000000)} juta`,
+      priceNumeric: property.price || 0,
+      dpPrice: (property.price || 0) * 0.3,
+      area: property.land_size ? `${property.land_size} m²` : "120 m²",
+      image: property.images?.[0] || `https://source.unsplash.com/random/300x200?property&sig=${property.id}`,
+      category: property.category,
+      features: [
+        property.bedrooms ? `${property.bedrooms} kamar tidur` : "Akses mudah",
+        property.bathrooms ? `${property.bathrooms} kamar mandi` : "Lokasi strategis",
+        "Sertifikat SHM"
+      ]
+    }));
+  };
+
   const paginatedProperties = React.useMemo(() => {
+    const formattedProperties = formatPropertiesForDisplay();
     const startIndex = (currentPage - 1) * propertiesPerPage;
     const endIndex = startIndex + propertiesPerPage;
-    return filteredProperties.slice(startIndex, endIndex);
+    return formattedProperties.slice(startIndex, endIndex);
   }, [filteredProperties, currentPage, propertiesPerPage]);
 
   const handleCategoryClick = (path: string) => {
@@ -175,7 +198,7 @@ const ProductsPage = () => {
         </AnimationProvider>
 
         <div className="flex flex-col md:flex-row gap-8 mt-8">
-          <AnimationProvider type="slide" direction="left" delay={0.4}>
+          <AnimationProvider type="slide" delay={0.4}>
             <aside className="w-full md:w-64 flex-shrink-0">
               <PropertyFilters 
                 searchTerm={searchTerm}
@@ -197,7 +220,7 @@ const ProductsPage = () => {
             </aside>
           </AnimationProvider>
 
-          <AnimationProvider type="slide" direction="right" delay={0.5}>
+          <AnimationProvider type="slide" delay={0.5}>
             <div className="flex-grow">
               <div className="flex justify-between items-center mb-6">
                 <div>

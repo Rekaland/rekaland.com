@@ -28,7 +28,12 @@ export const ProductCategorySection = ({
                 key={category.id}
                 category={category}
                 isActive={category.id === activeCategory}
-                onClick={() => onCategoryClick(category.path)}
+                onClick={() => {
+                  onCategoryClick(category.path);
+                  if (setActiveCategory) {
+                    setActiveCategory(category.id);
+                  }
+                }}
               />
             ))}
           </div>
