@@ -4,7 +4,7 @@ import { supabase, Property } from "@/integrations/supabase/client";
 import { useToast } from "./use-toast";
 
 // Helper function to map URL category to database category
-const mapUrlCategoryToDbCategory = (urlCategory?: string): string | undefined => {
+export const mapUrlCategoryToDbCategory = (urlCategory?: string): string | undefined => {
   if (!urlCategory || urlCategory === 'all') return undefined;
   
   if (urlCategory === 'kavling-kosongan' || urlCategory === 'empty_lot') {
@@ -29,6 +29,19 @@ export const mapDbCategoryToUrlCategory = (dbCategory: string): string => {
   }
   
   return 'unknown-category';
+};
+
+// Helper untuk konversi kategori database ke nama tampilan
+export const mapDbCategoryToDisplayName = (dbCategory: string): string => {
+  if (dbCategory === 'empty_lot') {
+    return 'Kavling Kosongan';
+  } else if (dbCategory === 'semi_finished') {
+    return 'Kavling Bangunan';
+  } else if (dbCategory === 'ready_to_occupy') {
+    return 'Kavling Siap Huni';
+  }
+  
+  return 'Properti';
 };
 
 // Hook untuk mengambil data properti dari Supabase
@@ -57,14 +70,16 @@ export const useProperties = (featured?: boolean, category?: string, limit?: num
       const dbCategory = mapUrlCategoryToDbCategory(category);
       if (dbCategory) {
         console.log('Filtering by category:', dbCategory);
-        // Use type assertion to fix the TypeScript error
-        query = query.eq('category', dbCategory as "empty_lot" | "semi_finished" | "ready_to_occupy");
+        query = query.eq('category', dbCategory as any);
       }
       
       // Batasi hasil jika parameter limit diberikan
       if (limit) {
         query = query.limit(limit);
       }
+      
+      // Order by created_at descendingly to get newest properties first
+      query = query.order('created_at', { ascending: false });
       
       const { data, error } = await query;
       

@@ -9,11 +9,17 @@ import { PropertyPagination } from '@/components/products/PropertyPagination';
 import { ProductCategorySection } from '@/components/products/ProductCategorySection';
 import { Button } from '@/components/ui/button';
 import { Grid3x3, List, Home, Building, Castle, MapPin } from 'lucide-react';
-import { useProperties, mapDbCategoryToUrlCategory } from '@/hooks/useProperties';
+import { 
+  useProperties, 
+  mapDbCategoryToUrlCategory,
+  mapDbCategoryToDisplayName 
+} from '@/hooks/useProperties';
 import { cn, formatCurrency } from '@/lib/utils';
 import { ProductBreadcrumb } from '@/components/products/ProductBreadcrumb';
 import AnimationProvider from '@/components/ui/animation-provider';
 import { CategoryProps } from '@/types/product';
+import { PropertyList } from '@/components/properties/PropertyList';
+import { useRealTimeSync } from '@/hooks/useRealTimeSync';
 
 const ProductsPage = () => {
   const [searchParams] = useSearchParams();
@@ -21,7 +27,7 @@ const ProductsPage = () => {
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [propertiesPerPage] = useState(12);
-  const [priceRange, setPriceRange] = useState({ min: 0, max: 1000000 });
+  const [priceRange, setPriceRange] = useState({ min: 0, max: 10000000000 });
   const [landSizeRange, setLandSizeRange] = useState({ min: 0, max: 1000 });
   const [bedroomsFilter, setBedroomsFilter] = useState<number | null>(null);
   const [featuredOnly, setFeaturedOnly] = useState(false);
@@ -29,7 +35,10 @@ const ProductsPage = () => {
   const [sortOption, setSortOption] = useState("default");
   
   // Using the hook directly with its existing return values
-  const { properties, loading, error, refetchProperties } = useProperties();
+  const { properties, loading, error, refetchProperties } = useProperties(undefined, activeCategory);
+
+  // Setup real-time sync
+  const { isSubscribed } = useRealTimeSync('properties', refetchProperties);
 
   useEffect(() => {
     const category = searchParams.get('category') || 'all';
@@ -70,7 +79,7 @@ const ProductsPage = () => {
   ];
 
   const filteredProperties = React.useMemo(() => {
-    if (!properties) return [];
+    if (!properties || properties.length === 0) return [];
 
     let filtered = [...properties];
 
@@ -82,9 +91,11 @@ const ProductsPage = () => {
       );
     }
 
-    // Filter by category
+    // Filter by category if not 'all'
     if (activeCategory !== 'all') {
-      filtered = filtered.filter(property => property.category === activeCategory);
+      filtered = filtered.filter(property => 
+        mapDbCategoryToUrlCategory(property.category) === activeCategory
+      );
     }
 
     // Filter by price range
@@ -120,7 +131,7 @@ const ProductsPage = () => {
       case "areaDesc":
         return filtered.sort((a, b) => (b.land_size || 0) - (a.land_size || 0));
       default:
-        return filtered; // Default sort (newest first) is assumed to be the default order from API
+        return filtered;
     }
   }, [properties, activeCategory, priceRange, landSizeRange, bedroomsFilter, featuredOnly, searchTerm, sortOption]);
 
@@ -137,9 +148,8 @@ const ProductsPage = () => {
       id: property.id,
       title: property.title,
       location: property.location,
-      type: property.category === 'empty_lot' ? 'Kavling Kosongan' : 
-           property.category === 'semi_finished' ? 'Kavling Setengah Jadi' : 'Kavling Siap Huni',
-      price: `Rp ${formatCurrency(property.price)}`,
+      type: mapDbCategoryToDisplayName(property.category),
+      price: `Rp ${formatCurrency(property.price || 0)}`,
       priceNumeric: property.price || 0,
       dpPrice: (property.price || 0) * 0.3,
       area: property.land_size ? `${property.land_size} m²` : "120 m²",
@@ -162,9 +172,9 @@ const ProductsPage = () => {
 
   const handleCategoryClick = (path: string) => {
     let categoryId = 'all';
-    if (path.includes('kavling-kosongan')) categoryId = 'empty_lot';
-    else if (path.includes('kavling-setengah-jadi')) categoryId = 'semi_finished';
-    else if (path.includes('kavling-siap-huni')) categoryId = 'ready_to_occupy';
+    if (path.includes('kavling-kosongan')) categoryId = 'kavling-kosongan';
+    else if (path.includes('kavling-setengah-jadi')) categoryId = 'kavling-setengah-jadi';
+    else if (path.includes('kavling-siap-huni')) categoryId = 'kavling-siap-huni';
     setActiveCategory(categoryId);
   };
 
@@ -183,8 +193,8 @@ const ProductsPage = () => {
         <AnimationProvider type="slide" delay={0.2}>
           <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mt-2 mb-6">
             {activeCategory === 'all' ? 'Semua Properti' : 
-              activeCategory === 'empty_lot' ? 'Kavling Kosongan' :
-              activeCategory === 'semi_finished' ? 'Kavling Setengah Jadi' :
+              activeCategory === 'kavling-kosongan' ? 'Kavling Kosongan' :
+              activeCategory === 'kavling-setengah-jadi' ? 'Kavling Setengah Jadi' :
               'Kavling Siap Huni'}
           </h1>
         </AnimationProvider>
@@ -192,7 +202,12 @@ const ProductsPage = () => {
         <AnimationProvider type="fade" delay={0.3}>
           <ProductCategorySection 
             categories={categories} 
-            activeCategory={activeCategory} 
+            activeCategory={
+              activeCategory === 'all' ? 'all' :
+              activeCategory === 'kavling-kosongan' ? 'empty_lot' :
+              activeCategory === 'kavling-setengah-jadi' ? 'semi_finished' :
+              activeCategory === 'kavling-siap-huni' ? 'ready_to_occupy' : 'all'
+            } 
             onCategoryClick={handleCategoryClick}
           />
         </AnimationProvider>
@@ -229,6 +244,13 @@ const ProductsPage = () => {
                       error ? 'Gagal memuat data' : 
                       `${filteredProperties.length} properti ditemukan`}
                   </p>
+                  
+                  {isSubscribed && (
+                    <div className="text-xs text-green-600 mt-1 flex items-center">
+                      <span className="h-2 w-2 rounded-full bg-green-500 mr-1 animate-pulse"></span>
+                      Update real-time aktif
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center space-x-2">
                   <Button 
@@ -264,10 +286,6 @@ const ProductsPage = () => {
                   >
                     Coba Lagi
                   </Button>
-                </div>
-              ) : filteredProperties.length === 0 ? (
-                <div className="p-6 text-center bg-gray-50 rounded-lg">
-                  <p className="text-gray-600">Tidak ada properti yang ditemukan</p>
                 </div>
               ) : viewMode === 'grid' ? (
                 <PropertyGridView properties={paginatedProperties} />

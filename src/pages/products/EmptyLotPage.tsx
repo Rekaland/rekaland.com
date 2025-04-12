@@ -14,7 +14,7 @@ import { PropertyListView } from "@/components/products/PropertyListView";
 import { PropertyPagination } from "@/components/products/PropertyPagination";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { CategoryProps, PropertyProps } from "@/types/product";
-import { useProperties, mapDbCategoryToUrlCategory } from "@/hooks/useProperties";
+import { useProperties, mapDbCategoryToUrlCategory, mapDbCategoryToDisplayName } from "@/hooks/useProperties";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRealTimeSync } from "@/hooks/useRealTimeSync";
 import { formatCurrency } from "@/lib/utils";
@@ -82,12 +82,12 @@ const EmptyLotPage = () => {
     })
     .sort((a, b) => {
       if (sortOption === "priceAsc") {
-        const aPrice = a.price;
-        const bPrice = b.price;
+        const aPrice = a.price || 0;
+        const bPrice = b.price || 0;
         return aPrice - bPrice;
       } else if (sortOption === "priceDesc") {
-        const aPrice = a.price;
-        const bPrice = b.price;
+        const aPrice = a.price || 0;
+        const bPrice = b.price || 0;
         return bPrice - aPrice;
       } else if (sortOption === "areaAsc") {
         const aArea = a.land_size || 0;
@@ -130,9 +130,9 @@ const EmptyLotPage = () => {
       title: property.title,
       location: property.location,
       type: "Kavling Kosongan",
-      price: `Rp ${formatCurrency(property.price)}`,
-      priceNumeric: property.price,
-      dpPrice: property.price * 0.3,
+      price: `Rp ${formatCurrency(property.price || 0)}`,
+      priceNumeric: property.price || 0,
+      dpPrice: (property.price || 0) * 0.3,
       area: property.land_size ? `${property.land_size} m²` : "120 m²",
       image: property.images?.[0] || `https://source.unsplash.com/random/300x200?property&sig=${property.id}`,
       features: [
@@ -250,7 +250,10 @@ const EmptyLotPage = () => {
 
         <Tabs value={viewMode} className="w-full">
           <TabsContent value="grid">
-            <PropertyGridView properties={formattedProperties} />
+            <PropertyGridView 
+              properties={formattedProperties} 
+              emptyMessage="Tidak ada properti kavling kosongan yang tersedia saat ini."
+            />
           </TabsContent>
 
           <TabsContent value="list">
@@ -261,7 +264,7 @@ const EmptyLotPage = () => {
         {formattedProperties.length > 0 && (
           <PropertyPagination 
             currentPage={currentPage}
-            totalPages={1}
+            totalPages={Math.max(1, Math.ceil(formattedProperties.length / 6))}
             onPageChange={setCurrentPage}
           />
         )}
