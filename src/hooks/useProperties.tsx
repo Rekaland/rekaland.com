@@ -18,6 +18,19 @@ const mapUrlCategoryToDbCategory = (urlCategory?: string): string | undefined =>
   return undefined;
 };
 
+// Helper untuk konversi kategori database ke URL path
+export const mapDbCategoryToUrlCategory = (dbCategory: string): string => {
+  if (dbCategory === 'empty_lot') {
+    return 'kavling-kosongan';
+  } else if (dbCategory === 'semi_finished') {
+    return 'kavling-setengah-jadi';
+  } else if (dbCategory === 'ready_to_occupy') {
+    return 'kavling-siap-huni';
+  }
+  
+  return 'unknown-category';
+};
+
 // Hook untuk mengambil data properti dari Supabase
 export const useProperties = (featured?: boolean, category?: string, limit?: number) => {
   const [properties, setProperties] = useState<Property[]>([]);

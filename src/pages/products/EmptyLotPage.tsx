@@ -14,9 +14,10 @@ import { PropertyListView } from "@/components/products/PropertyListView";
 import { PropertyPagination } from "@/components/products/PropertyPagination";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { CategoryProps, PropertyProps } from "@/types/product";
-import { useProperties } from "@/hooks/useProperties";
+import { useProperties, mapDbCategoryToUrlCategory } from "@/hooks/useProperties";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRealTimeSync } from "@/hooks/useRealTimeSync";
+import { formatCurrency } from "@/lib/utils";
 
 const EmptyLotPage = () => {
   const navigate = useNavigate();
@@ -129,7 +130,7 @@ const EmptyLotPage = () => {
       title: property.title,
       location: property.location,
       type: "Kavling Kosongan",
-      price: `Rp ${Math.floor(property.price / 1000000)} juta`,
+      price: `Rp ${formatCurrency(property.price)}`,
       priceNumeric: property.price,
       dpPrice: property.price * 0.3,
       area: property.land_size ? `${property.land_size} m²` : "120 m²",

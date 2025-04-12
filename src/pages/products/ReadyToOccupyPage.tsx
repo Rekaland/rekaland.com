@@ -7,11 +7,12 @@ import MainLayout from "@/layouts/MainLayout";
 import { MapPin, ArrowRight, Info, Check, Grid3X3, Home, Building, Map } from "lucide-react";
 import { PropertyCategoryCard } from "@/components/products/PropertyCategoryCard";
 import { PropertyCard } from "@/components/products/PropertyCard";
-import { useProperties } from "@/hooks/useProperties";
+import { useProperties, mapDbCategoryToUrlCategory } from "@/hooks/useProperties";
 import { PropertyGridView } from "@/components/products/PropertyGridView";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRealTimeSync } from "@/hooks/useRealTimeSync";
 import { PropertyProps } from "@/types/product";
+import { formatCurrency } from "@/lib/utils";
 
 const ReadyToOccupyPage = () => {
   const navigate = useNavigate();
@@ -65,7 +66,7 @@ const ReadyToOccupyPage = () => {
       title: property.title,
       location: property.location,
       type: "Kavling Siap Huni",
-      price: `Rp ${Math.floor(property.price / 1000000)} juta`,
+      price: `Rp ${formatCurrency(property.price)}`,
       priceNumeric: property.price,
       dpPrice: property.price * 0.3,
       area: property.land_size ? `${property.land_size} m²` : "200 m²",

@@ -9,8 +9,8 @@ import { PropertyPagination } from '@/components/products/PropertyPagination';
 import { ProductCategorySection } from '@/components/products/ProductCategorySection';
 import { Button } from '@/components/ui/button';
 import { Grid3x3, List, Home, Building, Castle, MapPin } from 'lucide-react';
-import { useProperties } from '@/hooks/useProperties';
-import { cn } from '@/lib/utils';
+import { useProperties, mapDbCategoryToUrlCategory } from '@/hooks/useProperties';
+import { cn, formatCurrency } from '@/lib/utils';
 import { ProductBreadcrumb } from '@/components/products/ProductBreadcrumb';
 import AnimationProvider from '@/components/ui/animation-provider';
 import { CategoryProps } from '@/types/product';
@@ -139,12 +139,12 @@ const ProductsPage = () => {
       location: property.location,
       type: property.category === 'empty_lot' ? 'Kavling Kosongan' : 
            property.category === 'semi_finished' ? 'Kavling Setengah Jadi' : 'Kavling Siap Huni',
-      price: `Rp ${Math.floor((property.price || 0) / 1000000)} juta`,
+      price: `Rp ${formatCurrency(property.price)}`,
       priceNumeric: property.price || 0,
       dpPrice: (property.price || 0) * 0.3,
       area: property.land_size ? `${property.land_size} m²` : "120 m²",
       image: property.images?.[0] || `https://source.unsplash.com/random/300x200?property&sig=${property.id}`,
-      category: property.category,
+      category: mapDbCategoryToUrlCategory(property.category),
       features: [
         property.bedrooms ? `${property.bedrooms} kamar tidur` : "Akses mudah",
         property.bathrooms ? `${property.bathrooms} kamar mandi` : "Lokasi strategis",

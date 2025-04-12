@@ -1,13 +1,12 @@
-
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PropertyCard } from '@/components/products/PropertyCard';
-import { useProperties } from '@/hooks/useProperties';
+import { useProperties, mapDbCategoryToUrlCategory } from '@/hooks/useProperties';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRealTimeSync } from '@/hooks/useRealTimeSync';
-import { getCategoryPath, formatCurrency } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
 import { PropertyProps } from '@/types/product';
 
 const FeaturedPropertiesSection = () => {
@@ -57,11 +56,6 @@ const FeaturedPropertiesSection = () => {
     );
   }
   
-  // Mendapatkan kategori URL dari kategori properti
-  const getCategoryFromType = (category: string) => {
-    return getCategoryPath(category);
-  };
-  
   // Format properti untuk ditampilkan
   const formatPropertiesForDisplay = (): PropertyProps[] => {
     return properties.map(property => ({
@@ -78,7 +72,7 @@ const FeaturedPropertiesSection = () => {
       dpPrice: property.price * 0.3,
       area: property.land_size ? `${property.land_size} m²` : "120 m²",
       image: property.images?.length ? property.images[0] : `https://source.unsplash.com/random/300x200?property&sig=${property.id}`,
-      category: getCategoryFromType(property.category),
+      category: mapDbCategoryToUrlCategory(property.category),
       features: [
         property.bedrooms ? `${property.bedrooms} kamar tidur` : "Akses mudah",
         property.bathrooms ? `${property.bathrooms} kamar mandi` : "Lokasi strategis",
