@@ -38,6 +38,7 @@ export const NavLinks = ({
                   ? "text-rekaland-orange"
                   : "text-gray-700 hover:text-rekaland-orange"
               )}
+              aria-expanded={dropdownOpen === link.name}
             >
               {link.name}
               <ChevronDown 
@@ -51,12 +52,14 @@ export const NavLinks = ({
             {dropdownOpen === link.name && (
               <div 
                 className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10"
+                role="menu"
               >
                 {link.dropdown.map((item, j) => (
                   <Link
                     key={j}
                     to={item.path}
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-rekaland-orange transition-colors"
+                    role="menuitem"
                   >
                     {item.name}
                   </Link>

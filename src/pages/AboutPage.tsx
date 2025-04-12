@@ -1,11 +1,11 @@
 
-import Layout from "@/components/layout/Layout";
+import MainLayout from "@/layouts/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
 const AboutPage = () => {
   return (
-    <Layout>
+    <MainLayout>
       <div className="py-16 bg-white">
         {/* Hero Section */}
         <div className="container mx-auto px-4 mb-20">
@@ -146,7 +146,7 @@ const AboutPage = () => {
           </div>
         </div>
       </div>
-    </Layout>
+    </MainLayout>
   );
 };
 

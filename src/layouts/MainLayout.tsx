@@ -21,13 +21,14 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   
   return (
     <div className="flex flex-col min-h-screen font-poppins overflow-x-hidden">
-      {/* Navbar - tidak menggunakan AnimationProvider untuk memastikan selalu muncul */}
-      <div className="sticky top-0 z-50 bg-white/95 shadow-sm">
+      {/* Navbar - diatur sebagai fixed untuk konsistensi */}
+      <div className="sticky top-0 z-50 bg-white shadow-sm">
         <Navbar />
       </div>
       
+      {/* Main content - mengurangi padding atas agar tidak ada jarak dengan navbar */}
       <motion.main 
-        className="flex-grow pt-16 md:pt-16"
+        className="flex-grow"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
@@ -35,7 +36,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         {children}
       </motion.main>
       
-      {/* Footer - tidak menggunakan AnimationProvider untuk memastikan selalu muncul */}
+      {/* Footer */}
       <Footer />
       
       <Toaster />
