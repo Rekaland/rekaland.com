@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,9 +34,19 @@ import {
   Wrench
 } from "lucide-react";
 import MainLayout from "@/layouts/MainLayout";
+import { useToast } from "@/components/ui/use-toast";
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
+  const { toast } = useToast();
+
+  const handleInitialSync = () => {
+    toast({
+      title: "Real-Time Sync Aktif",
+      description: "Semua tabel telah tersinkronisasi secara real-time",
+      className: "bg-gradient-to-r from-green-500 to-green-600 text-white",
+    });
+  };
 
   return (
     <MainLayout>
@@ -95,7 +104,7 @@ const AdminDashboard = () => {
                       <CardDescription>Status koneksi real-time ke database</CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <RealTimeSync />
+                      <RealTimeSync onInitialSync={handleInitialSync} />
                     </CardContent>
                   </Card>
                 </div>

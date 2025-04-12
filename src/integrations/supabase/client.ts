@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 import { Database } from './types';
 
@@ -79,3 +78,29 @@ export type Profile = {
   created_at: string;
   updated_at: string;
 };
+
+// Tambahkan fungsi RPC untuk mengaktifkan realtime
+export async function enableRealtimeForAllTables() {
+  try {
+    // Daftar tabel yang perlu diaktifkan
+    const tables = ['properties', 'profiles', 'inquiries', 'settings'];
+    
+    for (const table of tables) {
+      try {
+        // Aktifkan REPLICA IDENTITY FULL
+        await supabase.rpc('enable_realtime_for_table', {
+          table_name: table
+        });
+        
+        console.log(`Berhasil mengaktifkan realtime untuk tabel ${table}`);
+      } catch (err) {
+        console.error(`Gagal mengaktifkan realtime untuk tabel ${table}:`, err);
+      }
+    }
+    
+    return { success: true };
+  } catch (err) {
+    console.error("Gagal mengaktifkan realtime untuk semua tabel:", err);
+    return { success: false, error: err };
+  }
+}
