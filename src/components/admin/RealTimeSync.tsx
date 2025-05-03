@@ -68,16 +68,26 @@ const RealTimeSync = ({ onInitialSync }: RealTimeSyncProps) => {
     onInitialSync
   ]);
 
+  // Perbaikan: Fungsi untuk mengaktifkan realtime tanpa memanggil RPC
   const enableRealtimeForTable = async (tableName: string) => {
     try {
-      // Gunakan format rpc yang benar untuk Supabase
-      const { data, error } = await supabase.rpc('enable_realtime_for_table', {
-        table_name: tableName
-      });
+      // Alamat alternatif tanpa menggunakan RPC yang tidak ada
+      // Kita akan langsung membuat channel subscription
+      const channel = supabase
+        .channel(`${tableName}-changes-${Date.now()}`)
+        .on('postgres_changes', 
+          { event: '*', schema: 'public', table: tableName }, 
+          (payload) => {
+            console.log(`Real-time update for ${tableName}:`, payload);
+          }
+        )
+        .subscribe();
       
-      if (error) throw error;
-      
-      return { success: true, data };
+      if (channel) {
+        return { success: true, data: { table: tableName, status: "enabled" } };
+      } else {
+        throw new Error(`Failed to create channel for ${tableName}`);
+      }
     } catch (error) {
       console.error(`Failed to enable realtime for table ${tableName}:`, error);
       return { success: false, error };

@@ -14,8 +14,8 @@ const FeaturedPropertiesSection = () => {
   const navigate = useNavigate();
   const { properties, loading, error, refetchProperties } = useProperties(true, undefined, 3);
   
-  // Setup real-time listening untuk update properti
-  const { isSubscribed } = useRealTimeSync('properties', refetchProperties);
+  // Setup real-time listening untuk update properti tanpa mempengaruhi UI
+  useRealTimeSync('properties', refetchProperties);
   
   // Tampilkan skeleton loader selama data dimuat
   if (loading) {

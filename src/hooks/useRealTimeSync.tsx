@@ -54,21 +54,8 @@ export const useRealTimeSync = (
         if (status === 'SUBSCRIBED') {
           setIsSubscribed(true);
           setRetryCount(0); // Reset retry count on successful subscription
-          
-          if (retryCount > 0) {
-            toast({
-              title: "Koneksi berhasil",
-              description: `Tabel ${table} berhasil terhubung secara real-time`,
-              className: "bg-gradient-to-r from-green-500 to-green-600 text-white",
-            });
-          }
         } else {
           setIsSubscribed(false);
-          
-          // Only show errors after several retries to avoid spamming
-          if (retryCount > 3) {
-            console.error(`Gagal tersambung ke tabel ${table} setelah ${retryCount} percobaan`);
-          }
         }
       });
 
@@ -77,22 +64,20 @@ export const useRealTimeSync = (
       console.log(`Membersihkan subscription real-time untuk ${table}`);
       supabase.removeChannel(channel);
     };
-  }, [table, onUpdate, specificFilters, retryCount, toast]);
+  }, [table, onUpdate, specificFilters, toast]);
 
   useEffect(() => {
     const cleanup = setupSubscription();
     
-    // Retry setup if not subscribed, with increasing delay
+    // Mengurangi percobaan ulang yang berlebihan
     let retryTimer: ReturnType<typeof setTimeout>;
     
-    if (!isSubscribed && retryCount < 5) {
-      const retryDelay = Math.min(1000 * Math.pow(2, retryCount), 30000); // Exponential backoff up to 30s
+    if (!isSubscribed && retryCount < 2) { // Kurangi jumlah retry
+      const retryDelay = 5000; // Delay tetap 5 detik
       console.log(`Akan mencoba ulang terhubung ke ${table} dalam ${retryDelay/1000} detik`);
       
       retryTimer = setTimeout(() => {
         setRetryCount(prev => prev + 1);
-        cleanup(); // Clean up previous subscription attempt
-        setupSubscription(); // Try again
       }, retryDelay);
     }
     
@@ -101,12 +86,6 @@ export const useRealTimeSync = (
       if (retryTimer) clearTimeout(retryTimer);
     };
   }, [isSubscribed, retryCount, setupSubscription, table]);
-
-  // Function to force a refresh of the subscription
-  const refreshSubscription = useCallback(() => {
-    setRetryCount(0); // Reset retry count
-    return setupSubscription();
-  }, [setupSubscription]);
 
   return { isSubscribed, lastEvent };
 };
