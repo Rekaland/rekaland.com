@@ -244,13 +244,6 @@ const ProductsPage = () => {
                       error ? 'Gagal memuat data' : 
                       `${filteredProperties.length} properti ditemukan`}
                   </p>
-                  
-                  {isSubscribed && (
-                    <div className="text-xs text-green-600 mt-1 flex items-center">
-                      <span className="h-2 w-2 rounded-full bg-green-500 mr-1 animate-pulse"></span>
-                      Update real-time aktif
-                    </div>
-                  )}
                 </div>
                 <div className="flex items-center space-x-2">
                   <Button 

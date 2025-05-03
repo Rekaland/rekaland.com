@@ -153,12 +153,6 @@ const ReadyToOccupyPage = () => {
             <p className="text-gray-600 dark:text-gray-300 max-w-2xl">
               Properti yang sudah selesai dibangun dan siap untuk dihuni, dengan desain modern dan fasilitas lengkap.
             </p>
-            {isSubscribed && (
-              <div className="text-xs text-green-600 mt-2 flex items-center">
-                <span className="h-2 w-2 rounded-full bg-green-500 mr-1 animate-pulse"></span>
-                Update real-time aktif
-              </div>
-            )}
           </div>
         </div>
         

@@ -153,12 +153,6 @@ const SemiFinishedLotPage = () => {
             <p className="text-gray-600 dark:text-gray-300 max-w-2xl">
               Rumah dan bangunan dengan struktur dasar yang dapat Anda selesaikan dan kembangkan sesuai dengan keinginan Anda.
             </p>
-            {isSubscribed && (
-              <div className="text-xs text-green-600 mt-2 flex items-center">
-                <span className="h-2 w-2 rounded-full bg-green-500 mr-1 animate-pulse"></span>
-                Update real-time aktif
-              </div>
-            )}
           </div>
         </div>
         

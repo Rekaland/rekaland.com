@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -134,12 +135,6 @@ const FeaturedPropertiesSection = () => {
           <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
             Temukan properti premium kami dengan lokasi strategis dan harga terbaik
           </p>
-          {isSubscribed && (
-            <div className="text-xs text-green-600 mt-2 flex items-center justify-center">
-              <span className="h-2 w-2 rounded-full bg-green-500 mr-1 animate-pulse"></span>
-              Update real-time aktif
-            </div>
-          )}
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

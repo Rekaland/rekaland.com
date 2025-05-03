@@ -211,12 +211,6 @@ const EmptyLotPage = () => {
             <p className="text-gray-600 dark:text-gray-300 max-w-2xl">
               Investasi tanah kavling dengan lokasi strategis dan sertifikat legal yang dapat Anda kembangkan sesuai kebutuhan dan keinginan.
             </p>
-            {isSubscribed && (
-              <div className="text-xs text-green-600 mt-2 flex items-center">
-                <span className="h-2 w-2 rounded-full bg-green-500 mr-1 animate-pulse"></span>
-                Update real-time aktif
-              </div>
-            )}
           </div>
         </div>
         
