@@ -9,7 +9,14 @@ import { AiAssistant } from './components/customer-service/AiAssistant';
 import router from './routes';
 
 function App() {
-  const queryClient = new QueryClient();
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        refetchOnWindowFocus: false,
+        retry: 1,
+      },
+    },
+  });
 
   return (
     <TooltipProvider>

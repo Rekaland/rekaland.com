@@ -7,7 +7,10 @@ import { LogIn, UserPlus } from "lucide-react";
 import { motion } from "framer-motion";
 
 export const AuthButtons = () => {
-  const { isAuthenticated, isAdmin } = useAuth();
+  // Gunakan optional chaining untuk menghindari error jika useAuth belum tersedia
+  const auth = useAuth();
+  const isAuthenticated = auth?.isAuthenticated || false;
+  const isAdmin = auth?.isAdmin || false;
 
   return (
     <>
@@ -21,7 +24,6 @@ export const AuthButtons = () => {
                 variant="ghost" 
                 className="text-gray-700 hover:text-rekaland-orange hover:bg-orange-50 flex items-center gap-1.5 shadow-sm hover:shadow-md transition-all duration-200"
                 size="sm"
-                animation="3d"
               >
                 <LogIn size={16} />
                 <span>Masuk</span>
@@ -34,7 +36,6 @@ export const AuthButtons = () => {
               <Button 
                 className="bg-rekaland-orange hover:bg-orange-600 text-white border-transparent flex items-center gap-1.5 shadow-sm hover:shadow-md transition-all duration-200"
                 size="sm"
-                animation="3d"
               >
                 <UserPlus size={16} />
                 <span>Daftar</span>
