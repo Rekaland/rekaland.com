@@ -18,6 +18,8 @@ function App() {
     },
   });
 
+  // Remove any code that might be injecting the Lovable badge
+
   return (
     <TooltipProvider>
       <AuthProvider>

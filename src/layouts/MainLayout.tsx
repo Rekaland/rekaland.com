@@ -41,8 +41,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       
       <Toaster />
       <BackToTopButton />
+      
+      {/* Removed any code that might be injecting the Lovable badge */}
     </div>
   );
-};
+}
 
 export default MainLayout;

@@ -8,6 +8,21 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Hide any Lovable badge that might be injected */
+#lovable-badge,
+a[href*="lovable.dev"],
+a[target="_blank"][href*="lovable"],
+[id*="lovable-badge"] {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
+
 .container {
   width: 100%;
   max-width: 1280px;
