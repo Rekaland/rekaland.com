@@ -23,7 +23,7 @@ const RealTimeSync = ({ onInitialSync }: RealTimeSyncProps) => {
   });
   const { toast } = useToast();
 
-  // Pantau koneksi real-time untuk tabel properties
+  // Use stable channel names for each table to prevent flickering
   const propertiesSync = useRealTimeSync('properties');
   const profilesSync = useRealTimeSync('profiles');
   const inquiriesSync = useRealTimeSync('inquiries');
@@ -32,9 +32,9 @@ const RealTimeSync = ({ onInitialSync }: RealTimeSyncProps) => {
   const contentsSync = useRealTimeSync('contents');
   const productContentsSync = useRealTimeSync('product_contents');
 
-  // Update status ketika status sinkronisasi berubah
+  // Optimize status update by using a single effect for all statuses
   useEffect(() => {
-    setStatus({
+    const newStatus = {
       properties: propertiesSync.isSubscribed,
       profiles: profilesSync.isSubscribed,
       inquiries: inquiriesSync.isSubscribed,
@@ -42,9 +42,14 @@ const RealTimeSync = ({ onInitialSync }: RealTimeSyncProps) => {
       testimonials: testimonialsSync.isSubscribed,
       contents: contentsSync.isSubscribed,
       product_contents: productContentsSync.isSubscribed
-    });
+    };
+    
+    // Only update the state if there are actual changes to prevent re-renders
+    if (JSON.stringify(newStatus) !== JSON.stringify(status)) {
+      setStatus(newStatus);
+    }
 
-    // Jika semua tabel tersinkronisasi
+    // Call onInitialSync only once when all tables are successfully synced
     const allSynced = 
       propertiesSync.isSubscribed && 
       profilesSync.isSubscribed && 
@@ -65,16 +70,19 @@ const RealTimeSync = ({ onInitialSync }: RealTimeSyncProps) => {
     testimonialsSync.isSubscribed,
     contentsSync.isSubscribed,
     productContentsSync.isSubscribed,
-    onInitialSync
+    onInitialSync,
+    status
   ]);
 
-  // Perbaikan: Fungsi untuk mengaktifkan realtime tanpa memanggil RPC
+  // Use a more stable and efficient way to enable realtime
   const enableRealtimeForTable = async (tableName: string) => {
     try {
-      // Alamat alternatif tanpa menggunakan RPC yang tidak ada
-      // Kita akan langsung membuat channel subscription
+      // Create a stable channel name without using timestamp to prevent flickering
+      const channelName = `${tableName}-changes-stable`;
+      
+      // Create and subscribe to the channel
       const channel = supabase
-        .channel(`${tableName}-changes-${Date.now()}`)
+        .channel(channelName)
         .on('postgres_changes', 
           { event: '*', schema: 'public', table: tableName }, 
           (payload) => {
@@ -101,10 +109,18 @@ const RealTimeSync = ({ onInitialSync }: RealTimeSyncProps) => {
       const tables = ['properties', 'profiles', 'inquiries', 'settings', 'testimonials', 'contents', 'product_contents'];
       let successCount = 0;
       
+      // Process tables sequentially to avoid overwhelming the connection
       for (const table of tables) {
         const result = await enableRealtimeForTable(table);
         if (result.success) {
           successCount++;
+          // Update status immediately for better UX
+          setStatus(prev => ({
+            ...prev,
+            [table]: true
+          }));
+          // Small delay between table activations
+          await new Promise(resolve => setTimeout(resolve, 100));
         }
       }
       
@@ -173,7 +189,7 @@ const RealTimeSync = ({ onInitialSync }: RealTimeSyncProps) => {
         
         <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
           <div 
-            className="h-full bg-gradient-to-r from-rekaland-orange to-amber-500" 
+            className="h-full bg-gradient-to-r from-rekaland-orange to-amber-500 transition-all duration-300" 
             style={{ width: `${percentage}%` }}
           ></div>
         </div>

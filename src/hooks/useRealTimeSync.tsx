@@ -37,9 +37,13 @@ export const useRealTimeSync = (
       }, {} as Record<string, any>);
     }
     
+    // Create a stable channel name using the table name, without the timestamp
+    // This prevents creating multiple channels for the same table which causes flickering
+    const channelName = `${table}-changes-stable`;
+    
     // Setup real-time subscription ke perubahan tabel
     const channel = supabase
-      .channel(`${table}-changes-${Date.now()}`)
+      .channel(channelName)
       .on('postgres_changes', subscriptionOptions, (payload) => {
         console.log(`Real-time update diterima untuk ${table}:`, payload);
         setLastEvent(payload);
@@ -64,16 +68,16 @@ export const useRealTimeSync = (
       console.log(`Membersihkan subscription real-time untuk ${table}`);
       supabase.removeChannel(channel);
     };
-  }, [table, onUpdate, specificFilters, toast]);
+  }, [table, onUpdate, specificFilters]);
 
   useEffect(() => {
     const cleanup = setupSubscription();
     
-    // Mengurangi percobaan ulang yang berlebihan
+    // Limit retries to reduce flickering
     let retryTimer: ReturnType<typeof setTimeout>;
     
-    if (!isSubscribed && retryCount < 2) { // Kurangi jumlah retry
-      const retryDelay = 5000; // Delay tetap 5 detik
+    if (!isSubscribed && retryCount < 1) { // Drastically reduce retry attempts
+      const retryDelay = 3000; // Fixed delay of 3 seconds
       console.log(`Akan mencoba ulang terhubung ke ${table} dalam ${retryDelay/1000} detik`);
       
       retryTimer = setTimeout(() => {
