@@ -1,10 +1,9 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { 
   Map, Home, Ruler, Bed, Bath, 
   Tag, User, Calendar, CheckCircle2, 
-  X as XIcon, Square, Image 
+  X as XIcon, Square, Image, Clock 
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,21 +22,22 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 
+// Definisi tipe untuk properti
 interface Property {
   id?: string;
   title: string;
-  description?: string;
+  description?: string | null;
   price: number;
   location: string;
-  address?: string;
-  land_size?: number;
-  building_size?: number;
-  bedrooms?: number;
-  bathrooms?: number;
+  address?: string | null;
+  land_size?: number | null;
+  building_size?: number | null;
+  bedrooms?: number | null;
+  bathrooms?: number | null;
   category: 'empty_lot' | 'semi_finished' | 'ready_to_occupy';
   status: 'available' | 'sold' | 'pending';
   featured: boolean;
-  images?: string[];
+  images?: string[] | null;
 }
 
 interface PropertyFormProps {
@@ -49,18 +49,18 @@ interface PropertyFormProps {
 
 const propertySchema = z.object({
   title: z.string().min(1, "Judul properti wajib diisi"),
-  description: z.string().optional(),
+  description: z.string().optional().nullable(),
   price: z.coerce.number().positive("Harga harus berupa angka positif"),
   location: z.string().min(1, "Lokasi wajib diisi"),
-  address: z.string().optional(),
-  land_size: z.coerce.number().positive("Luas tanah harus berupa angka positif").optional(),
-  building_size: z.coerce.number().positive("Luas bangunan harus berupa angka positif").optional(),
-  bedrooms: z.coerce.number().int().min(0).optional(),
-  bathrooms: z.coerce.number().int().min(0).optional(),
+  address: z.string().optional().nullable(),
+  land_size: z.coerce.number().positive("Luas tanah harus berupa angka positif").optional().nullable(),
+  building_size: z.coerce.number().positive("Luas bangunan harus berupa angka positif").optional().nullable(),
+  bedrooms: z.coerce.number().int().min(0).optional().nullable(),
+  bathrooms: z.coerce.number().int().min(0).optional().nullable(),
   category: z.enum(['empty_lot', 'semi_finished', 'ready_to_occupy']),
   status: z.enum(['available', 'sold', 'pending']).default('available'),
   featured: z.boolean().default(false),
-  images: z.array(z.string()).optional(),
+  images: z.array(z.string()).optional().nullable(),
 });
 
 const PropertyForm: React.FC<PropertyFormProps> = ({ property, onSubmit, onCancel, isSubmitting }) => {
@@ -95,9 +95,20 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ property, onSubmit, onCance
   // Handle submit form
   const handleFormSubmit = (data: z.infer<typeof propertySchema>) => {
     // Pastikan images tersimpan di form data
-    const formData = {
-      ...data,
-      images,
+    const formData: Property = {
+      title: data.title,
+      description: data.description,
+      price: data.price,
+      location: data.location,
+      address: data.address,
+      land_size: data.land_size,
+      building_size: data.building_size,
+      bedrooms: data.bedrooms,
+      bathrooms: data.bathrooms,
+      category: data.category,
+      status: data.status,
+      featured: data.featured,
+      images: images,
     };
     
     if (property?.id) {
