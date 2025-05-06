@@ -11,7 +11,7 @@ export type Database = {
     Tables: {
       contents: {
         Row: {
-          content: string | null
+          content: string
           created_at: string | null
           id: string
           meta_description: string | null
@@ -20,7 +20,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          content?: string | null
+          content: string
           created_at?: string | null
           id?: string
           meta_description?: string | null
@@ -29,7 +29,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
-          content?: string | null
+          content?: string
           created_at?: string | null
           id?: string
           meta_description?: string | null
@@ -41,39 +41,39 @@ export type Database = {
       }
       inquiries: {
         Row: {
-          created_at: string | null
+          created_at: string
           email: string
           id: string
           message: string
           name: string
           phone: string | null
           property_id: string | null
-          status: string | null
-          updated_at: string | null
+          status: string
+          updated_at: string
           user_id: string | null
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           email: string
           id?: string
           message: string
           name: string
           phone?: string | null
           property_id?: string | null
-          status?: string | null
-          updated_at?: string | null
+          status?: string
+          updated_at?: string
           user_id?: string | null
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           email?: string
           id?: string
           message?: string
           name?: string
           phone?: string | null
           property_id?: string | null
-          status?: string | null
-          updated_at?: string | null
+          status?: string
+          updated_at?: string
           user_id?: string | null
         }
         Relationships: [
@@ -134,26 +134,38 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string | null
+          email: string
           full_name: string | null
           id: string
+          is_admin: boolean | null
           phone: string | null
           updated_at: string | null
+          user_id: string | null
+          username: string | null
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string | null
+          email: string
           full_name?: string | null
           id: string
+          is_admin?: boolean | null
           phone?: string | null
           updated_at?: string | null
+          user_id?: string | null
+          username?: string | null
         }
         Update: {
           avatar_url?: string | null
           created_at?: string | null
+          email?: string
           full_name?: string | null
           id?: string
+          is_admin?: boolean | null
           phone?: string | null
           updated_at?: string | null
+          user_id?: string | null
+          username?: string | null
         }
         Relationships: []
       }
@@ -163,8 +175,8 @@ export type Database = {
           bathrooms: number | null
           bedrooms: number | null
           building_size: number | null
-          category: Database["public"]["Enums"]["property_category"]
-          created_at: string | null
+          category: string
+          created_at: string
           description: string | null
           featured: boolean | null
           id: string
@@ -172,17 +184,17 @@ export type Database = {
           land_size: number | null
           location: string
           price: number
-          status: Database["public"]["Enums"]["property_status"] | null
+          status: string
           title: string
-          updated_at: string | null
+          updated_at: string
         }
         Insert: {
           address?: string | null
           bathrooms?: number | null
           bedrooms?: number | null
           building_size?: number | null
-          category: Database["public"]["Enums"]["property_category"]
-          created_at?: string | null
+          category: string
+          created_at?: string
           description?: string | null
           featured?: boolean | null
           id?: string
@@ -190,17 +202,17 @@ export type Database = {
           land_size?: number | null
           location: string
           price: number
-          status?: Database["public"]["Enums"]["property_status"] | null
+          status?: string
           title: string
-          updated_at?: string | null
+          updated_at?: string
         }
         Update: {
           address?: string | null
           bathrooms?: number | null
           bedrooms?: number | null
           building_size?: number | null
-          category?: Database["public"]["Enums"]["property_category"]
-          created_at?: string | null
+          category?: string
+          created_at?: string
           description?: string | null
           featured?: boolean | null
           id?: string
@@ -208,11 +220,40 @@ export type Database = {
           land_size?: number | null
           location?: string
           price?: number
-          status?: Database["public"]["Enums"]["property_status"] | null
+          status?: string
           title?: string
-          updated_at?: string | null
+          updated_at?: string
         }
         Relationships: []
+      }
+      saved_properties: {
+        Row: {
+          created_at: string | null
+          id: string
+          property_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          property_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          property_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_properties_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       settings: {
         Row: {
@@ -220,54 +261,45 @@ export type Database = {
           id: string
           key: string
           updated_at: string | null
-          value: Json | null
+          value: Json
         }
         Insert: {
           created_at?: string | null
           id?: string
           key: string
           updated_at?: string | null
-          value?: Json | null
+          value: Json
         }
         Update: {
           created_at?: string | null
           id?: string
           key?: string
           updated_at?: string | null
-          value?: Json | null
+          value?: Json
         }
         Relationships: []
       }
-      testimonials: {
+      user_activities: {
         Row: {
-          avatar_url: string | null
-          company: string | null
+          activity_data: Json | null
+          activity_type: string
           created_at: string | null
           id: string
-          name: string
-          position: string | null
-          rating: number | null
-          testimonial: string
+          user_id: string
         }
         Insert: {
-          avatar_url?: string | null
-          company?: string | null
+          activity_data?: Json | null
+          activity_type: string
           created_at?: string | null
           id?: string
-          name: string
-          position?: string | null
-          rating?: number | null
-          testimonial: string
+          user_id: string
         }
         Update: {
-          avatar_url?: string | null
-          company?: string | null
+          activity_data?: Json | null
+          activity_type?: string
           created_at?: string | null
           id?: string
-          name?: string
-          position?: string | null
-          rating?: number | null
-          testimonial?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -276,19 +308,19 @@ export type Database = {
           created_at: string | null
           id: string
           role: string
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           created_at?: string | null
           id?: string
           role: string
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           created_at?: string | null
           id?: string
           role?: string
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -297,14 +329,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      is_admin: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
-      property_category: "empty_lot" | "semi_finished" | "ready_to_occupy"
-      property_status: "available" | "sold" | "pending"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -419,9 +447,6 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {
-      property_category: ["empty_lot", "semi_finished", "ready_to_occupy"],
-      property_status: ["available", "sold", "pending"],
-    },
+    Enums: {},
   },
 } as const
