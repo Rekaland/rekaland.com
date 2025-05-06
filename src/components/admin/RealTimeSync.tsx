@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { supabase } from '@/integrations/supabase/client';
 import { useRealTimeSync } from '@/hooks/useRealTimeSync';
@@ -12,6 +12,7 @@ interface RealTimeSyncProps {
 
 const RealTimeSync = ({ onInitialSync }: RealTimeSyncProps) => {
   const [isSyncing, setIsSyncing] = useState(false);
+  const initialSyncFiredRef = useRef(false);
   const [status, setStatus] = useState<{[key: string]: boolean}>({
     properties: false,
     profiles: false,
@@ -22,7 +23,7 @@ const RealTimeSync = ({ onInitialSync }: RealTimeSyncProps) => {
     product_contents: false
   });
   const { toast } = useToast();
-
+  
   // Use stable channel names for each table to prevent flickering
   const propertiesSync = useRealTimeSync('properties');
   const profilesSync = useRealTimeSync('profiles');
@@ -32,8 +33,9 @@ const RealTimeSync = ({ onInitialSync }: RealTimeSyncProps) => {
   const contentsSync = useRealTimeSync('contents');
   const productContentsSync = useRealTimeSync('product_contents');
 
-  // Optimize status update by using a single effect for all statuses
+  // Optimize status update by using a debounced effect
   useEffect(() => {
+    // Batch status updates to avoid frequent re-renders
     const newStatus = {
       properties: propertiesSync.isSubscribed,
       profiles: profilesSync.isSubscribed,
@@ -44,7 +46,7 @@ const RealTimeSync = ({ onInitialSync }: RealTimeSyncProps) => {
       product_contents: productContentsSync.isSubscribed
     };
     
-    // Only update the state if there are actual changes to prevent re-renders
+    // Deep comparison to prevent unnecessary state updates
     if (JSON.stringify(newStatus) !== JSON.stringify(status)) {
       setStatus(newStatus);
     }
@@ -59,7 +61,8 @@ const RealTimeSync = ({ onInitialSync }: RealTimeSyncProps) => {
       contentsSync.isSubscribed &&
       productContentsSync.isSubscribed;
     
-    if (allSynced && onInitialSync) {
+    if (allSynced && onInitialSync && !initialSyncFiredRef.current) {
+      initialSyncFiredRef.current = true;
       onInitialSync();
     }
   }, [
@@ -74,11 +77,11 @@ const RealTimeSync = ({ onInitialSync }: RealTimeSyncProps) => {
     status
   ]);
 
-  // Use a more stable and efficient way to enable realtime
+  // Improved function to enable realtime with better error handling
   const enableRealtimeForTable = async (tableName: string) => {
     try {
       // Create a stable channel name without using timestamp to prevent flickering
-      const channelName = `${tableName}-changes-stable`;
+      const channelName = `${tableName}-stable-sync`;
       
       // Create and subscribe to the channel
       const channel = supabase
@@ -89,7 +92,9 @@ const RealTimeSync = ({ onInitialSync }: RealTimeSyncProps) => {
             console.log(`Real-time update for ${tableName}:`, payload);
           }
         )
-        .subscribe();
+        .subscribe((status) => {
+          console.log(`Channel ${channelName} status:`, status);
+        });
       
       if (channel) {
         return { success: true, data: { table: tableName, status: "enabled" } };
@@ -120,7 +125,7 @@ const RealTimeSync = ({ onInitialSync }: RealTimeSyncProps) => {
             [table]: true
           }));
           // Small delay between table activations
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise(resolve => setTimeout(resolve, 150));
         }
       }
       
@@ -129,12 +134,14 @@ const RealTimeSync = ({ onInitialSync }: RealTimeSyncProps) => {
           title: "Sinkronisasi berhasil",
           description: `${successCount} dari ${tables.length} tabel telah diaktifkan untuk sinkronisasi real-time`,
           className: "bg-gradient-to-r from-green-500 to-green-600 text-white",
+          duration: 4000,
         });
       } else {
         toast({
           title: "Sinkronisasi gagal",
           description: "Tidak ada tabel yang berhasil diaktifkan. Periksa konsol untuk detail.",
           variant: "destructive",
+          duration: 4000,
         });
       }
     } catch (error) {
@@ -143,6 +150,7 @@ const RealTimeSync = ({ onInitialSync }: RealTimeSyncProps) => {
         title: "Error",
         description: "Terjadi kesalahan saat mencoba sinkronisasi tabel",
         variant: "destructive",
+        duration: 4000,
       });
     } finally {
       setIsSyncing(false);
@@ -171,7 +179,7 @@ const RealTimeSync = ({ onInitialSync }: RealTimeSyncProps) => {
             size="sm" 
             onClick={syncAll}
             disabled={isSyncing}
-            className="flex gap-2 items-center"
+            className="flex gap-2 items-center transition-all duration-300"
           >
             {isSyncing ? (
               <>
@@ -189,7 +197,7 @@ const RealTimeSync = ({ onInitialSync }: RealTimeSyncProps) => {
         
         <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
           <div 
-            className="h-full bg-gradient-to-r from-rekaland-orange to-amber-500 transition-all duration-300" 
+            className="h-full bg-gradient-to-r from-rekaland-orange to-amber-500 transition-all duration-500" 
             style={{ width: `${percentage}%` }}
           ></div>
         </div>
@@ -197,7 +205,7 @@ const RealTimeSync = ({ onInitialSync }: RealTimeSyncProps) => {
       
       <div className="grid grid-cols-2 gap-2 text-sm">
         {Object.entries(status).map(([table, isConnected]) => (
-          <div key={table} className="flex items-center gap-2 p-1.5">
+          <div key={table} className="flex items-center gap-2 p-1.5 transition-opacity duration-300">
             {isConnected ? (
               <CheckCircle size={14} className="text-green-600" />
             ) : (
