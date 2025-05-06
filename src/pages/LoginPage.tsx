@@ -1,166 +1,102 @@
 
-import { useState, useEffect } from "react";
-import { useNavigate, Link, useLocation } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import Layout from "@/components/layout/Layout";
-import { FcGoogle } from "react-icons/fc";
-import { Loader2 } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { useAuthMethods } from '../hooks/useAuthMethods';
+import { useAuth } from '../hooks/useAuth';
+import { Navigate } from 'react-router-dom';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card';
+import { Label } from '../components/ui/label';
+import { Separator } from '../components/ui/separator';
+import { toast } from 'sonner';
 
 const LoginPage = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const { signIn } = useAuthMethods();
+  const { session, user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const { login, loginWithGoogle, isAuthenticated } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
-  
-  // Dapatkan parameter redirect_to dari URL query
-  const queryParams = new URLSearchParams(location.search);
-  const redirectTo = queryParams.get('redirect_to') || '/';
 
-  // Redirect ke halaman utama jika sudah login
-  useEffect(() => {
-    console.log("Auth status changed in LoginPage, isAuthenticated:", isAuthenticated);
-    if (isAuthenticated) {
-      navigate(redirectTo);
-    }
-  }, [isAuthenticated, navigate, redirectTo]);
+  // Jika sudah login, redirect ke halaman admin
+  if (session && user) {
+    return <Navigate to="/admin" replace />;
+  }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    setIsLoading(true);
     
-    try {
-      console.log("Attempting login with:", email, password);
-      const success = await login(email, password);
-      console.log("Login success:", success);
-      
-      // Tidak perlu melakukan navigasi manual di sini karena
-      // useEffect di atas akan menangani navigasi otomatis ketika 
-      // isAuthenticated berubah menjadi true
-    } catch (err: any) {
-      console.error("Login error:", err);
-      setError(err.message || "Terjadi kesalahan saat login.");
-    } finally {
-      setIsLoading(false);
+    if (!email || !password) {
+      toast.error('Email dan password wajib diisi');
+      return;
     }
-  };
-
-  const handleGoogleLogin = async () => {
-    setError("");
+    
     setIsLoading(true);
     try {
-      await loginWithGoogle();
-      // Redirect akan ditangani oleh hook useAuth
-    } catch (err: any) {
-      console.error("Google login error:", err);
-      setError(err.message || "Terjadi kesalahan saat login dengan Google.");
+      await signIn(email, password);
+    } catch (error) {
+      console.error('Login error:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <Layout>
-      <div className="container mx-auto px-4 py-12 flex justify-center items-center min-h-[80vh]">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl text-rekaland-black">Masuk ke REKA<span className="text-rekaland-orange">LAND</span></CardTitle>
-            <CardDescription>Masukkan kredensial Anda untuk mengakses akun</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input 
-                  id="email" 
-                  type="email" 
-                  placeholder="Email Anda" 
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Kata Sandi</Label>
-                  <Link to="/reset-password" className="text-sm text-rekaland-orange hover:underline">
-                    Lupa kata sandi?
-                  </Link>
-                </div>
-                <Input 
-                  id="password" 
-                  type="password" 
-                  placeholder="Kata Sandi Anda" 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-              
-              {error && (
-                <Alert variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-              
-              <Button 
-                type="submit" 
-                className="w-full bg-rekaland-orange hover:bg-orange-600"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Memproses...
-                  </>
-                ) : (
-                  "Masuk"
-                )}
-              </Button>
-            </form>
-            
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-xs">
-                <span className="bg-white px-2 text-gray-500">Atau</span>
-              </div>
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-green-50 to-green-100 p-4">
+      <Card className="w-full max-w-md shadow-lg">
+        <CardHeader className="space-y-1 text-center">
+          <CardTitle className="text-2xl font-bold">Login Admin</CardTitle>
+          <CardDescription>
+            Masukkan email dan password untuk akses dashboard admin
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="contoh@rekaland.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
             </div>
-            
-            <Button 
-              type="button" 
-              variant="outline" 
-              className="w-full flex items-center justify-center gap-2"
-              onClick={handleGoogleLogin}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                <a href="#" className="text-sm text-green-600 hover:text-green-800">
+                  Lupa password?
+                </a>
+              </div>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            <Button
+              type="submit"
+              className="w-full bg-green-600 hover:bg-green-700"
               disabled={isLoading}
             >
-              <FcGoogle className="h-5 w-5" />
-              Masuk dengan Google
+              {isLoading ? 'Sedang Masuk...' : 'Masuk'}
             </Button>
-          </CardContent>
-          <CardFooter className="flex justify-center">
-            <div className="text-sm text-gray-600">
-              Belum memiliki akun?{" "}
-              <Link to="/daftar" className="text-rekaland-orange hover:underline font-medium">
-                Daftar
-              </Link>
-            </div>
-          </CardFooter>
-        </Card>
-      </div>
-    </Layout>
+          </form>
+          <div className="text-center text-sm text-gray-500">
+            <p>Default email admin: rekaland.idn@gmail.com</p>
+          </div>
+        </CardContent>
+        <Separator />
+        <CardFooter className="justify-center p-4">
+          <p className="text-xs text-center text-gray-500">
+            Dengan melakukan login, Anda menyetujui Syarat dan Ketentuan serta Kebijakan Privasi kami
+          </p>
+        </CardFooter>
+      </Card>
+    </div>
   );
 };
 

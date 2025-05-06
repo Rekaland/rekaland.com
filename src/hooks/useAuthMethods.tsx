@@ -1,308 +1,103 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
+import { useState } from 'react';
+import { supabase } from '../integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 export const useAuthMethods = () => {
-  const login = async (email: string, password: string) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+
+  const signIn = async (email: string, password: string) => {
     try {
-      console.log("Attempting login with email:", email);
+      setLoading(true);
+      setError(null);
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
-
+      
       if (error) {
-        console.error("Login error:", error);
-        
-        if (error.message.includes("Email not confirmed")) {
-          await supabase.auth.resend({
-            type: 'signup',
-            email: email
-          });
-          
-          toast({
-            title: "Email belum dikonfirmasi",
-            description: "Kami telah mengirim ulang email konfirmasi. Silakan cek kotak masuk email Anda dan klik tautan konfirmasi.",
-            variant: "destructive",
-            duration: 6000,
-          });
-          
-          return false;
-        } else if (error.message.includes("Invalid login credentials")) {
-          toast({
-            title: "Email atau kata sandi salah",
-            description: "Periksa kembali email dan kata sandi Anda, atau daftar jika Anda belum memiliki akun.",
-            variant: "destructive",
-            duration: 5000,
-          });
-        } else {
-          toast({
-            title: "Gagal masuk",
-            description: error.message || "Terjadi kesalahan saat mencoba masuk",
-            variant: "destructive",
-            duration: 3000,
-          });
-        }
-        
+        console.error('Login error:', error.message);
+        setError(error.message);
+        toast.error('Login gagal: ' + error.message);
+        return null;
+      }
+
+      console.log('Login berhasil:', data);
+      toast.success('Login berhasil!');
+      navigate('/admin');
+      return data;
+    } catch (err) {
+      console.error('Unexpected login error:', err);
+      setError('Terjadi kesalahan saat login. Silakan coba lagi.');
+      toast.error('Terjadi kesalahan saat login. Silakan coba lagi.');
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signOut = async () => {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Logout error:', error.message);
+        toast.error('Logout gagal: ' + error.message);
         return false;
       }
-
-      console.log("Login successful:", data);
-
-      // Jika email adalah rekaland.idn@gmail.com, pastikan memiliki hak akses admin
-      if (email === 'rekaland.idn@gmail.com') {
-        // Cek apakah pengguna sudah ada di tabel user_roles dengan peran admin
-        const { data: roleData, error: roleError } = await supabase
-          .from('user_roles')
-          .select('*')
-          .eq('user_id', data.user.id)
-          .eq('role', 'admin')
-          .single();
-          
-        if (roleError && roleError.code === 'PGRST116') {
-          // Jika peran admin belum ada, tambahkan
-          const { error: insertError } = await supabase
-            .from('user_roles')
-            .insert([
-              { user_id: data.user.id, role: 'admin' }
-            ]);
-            
-          if (insertError) {
-            console.error("Error setting admin role:", insertError);
-          } else {
-            console.log("Admin role granted to rekaland.idn@gmail.com");
-          }
-        } else if (roleError) {
-          console.error("Error checking admin role:", roleError);
-        } else {
-          console.log("User already has admin role:", roleData);
-        }
-      }
-
-      toast({
-        title: "Selamat datang kembali!",
-        description: "Anda berhasil masuk.",
-        duration: 3000,
-        className: "bg-gradient-to-r from-blue-500 to-purple-600 text-white border-none",
-      });
-
+      toast.success('Berhasil logout');
+      navigate('/');
       return true;
-    } catch (error: any) {
-      console.error("Login failed:", error);
-      
-      toast({
-        title: "Gagal masuk",
-        description: error.message || "Terjadi kesalahan saat mencoba masuk",
-        variant: "destructive",
-        duration: 3000,
-      });
+    } catch (err) {
+      console.error('Unexpected logout error:', err);
+      toast.error('Terjadi kesalahan saat logout. Silakan coba lagi.');
       return false;
+    } finally {
+      setLoading(false);
     }
   };
 
-  const loginWithGoogle = async () => {
+  const signUp = async (email: string, password: string) => {
     try {
-      console.log("Attempting login with Google");
-      
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`
-        }
-      });
-
-      if (error) {
-        console.error("Google login error:", error);
-        throw error;
-      }
-      
-      console.log("Google login initiated:", data);
-      
-      return true;
-    } catch (error: any) {
-      console.error("Google login failed:", error);
-      
-      toast({
-        title: "Gagal masuk dengan Google",
-        description: error.message || "Terjadi kesalahan saat mencoba masuk dengan Google",
-        variant: "destructive",
-        duration: 3000,
-      });
-      return false;
-    }
-  };
-
-  const register = async (name: string, email: string, password: string) => {
-    try {
-      console.log("Attempting registration for:", email);
+      setLoading(true);
+      setError(null);
       
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: {
-            full_name: name,
-          },
+          emailRedirectTo: window.location.origin
         }
-      });
-
-      if (error) {
-        console.error("Registration error:", error);
-        throw error;
-      }
-
-      console.log("Registration successful:", data);
-
-      toast({
-        title: "Registrasi Berhasil!",
-        description: "Selamat datang di Rekaland.",
-        duration: 3000,
-        className: "bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0",
-      });
-
-      return true;
-    } catch (error: any) {
-      console.error("Registration failed:", error);
-      
-      toast({
-        title: "Gagal mendaftar",
-        description: error.message || "Terjadi kesalahan saat mencoba mendaftar",
-        variant: "destructive",
-        duration: 3000,
-      });
-      return false;
-    }
-  };
-
-  const registerAdmin = async (email: string, password: string, name: string) => {
-    try {
-      console.log("Attempting registration for admin:", email);
-      
-      // 1. Daftarkan pengguna baru
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: name,
-            is_admin: true,
-          },
-          emailRedirectTo: `${window.location.origin}/confirm-email`,
-        }
-      });
-
-      if (error) {
-        console.error("Admin registration error:", error);
-        throw error;
-      }
-
-      console.log("Admin registration successful:", data);
-
-      // 2. Tambahkan role admin ke user_roles tabel
-      if (data.user) {
-        const { error: roleError } = await supabase
-          .from('user_roles')
-          .insert([
-            { user_id: data.user.id, role: 'admin' }
-          ]);
-          
-        if (roleError) {
-          console.error("Error setting admin role:", roleError);
-          throw roleError;
-        }
-        
-        console.log("Admin role set successfully for user:", data.user.id);
-      }
-
-      toast({
-        title: "Registrasi Admin Berhasil!",
-        description: "Akun admin telah dibuat. Silakan cek email Anda untuk konfirmasi.",
-        duration: 5000,
-        className: "bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0",
-      });
-
-      return true;
-    } catch (error: any) {
-      console.error("Admin registration failed:", error);
-      
-      toast({
-        title: "Gagal mendaftar sebagai admin",
-        description: error.message || "Terjadi kesalahan saat mencoba mendaftar",
-        variant: "destructive",
-        duration: 3000,
-      });
-      return false;
-    }
-  };
-
-  const confirmEmail = async (token: string) => {
-    try {
-      console.log("Confirming email with token:", token);
-      const { error } = await supabase.auth.verifyOtp({
-        token_hash: token,
-        type: 'email'
       });
       
       if (error) {
-        console.error("Email confirmation error:", error);
-        throw error;
+        console.error('Signup error:', error.message);
+        setError(error.message);
+        toast.error('Pendaftaran gagal: ' + error.message);
+        return null;
       }
-      
-      console.log("Email confirmation successful");
-      
-      toast({
-        title: "Email berhasil dikonfirmasi",
-        description: "Anda sekarang dapat login dengan akun Anda.",
-        className: "bg-gradient-to-r from-green-500 to-green-600 text-white border-none",
-        duration: 3000,
-      });
-      
-      return true;
-    } catch (error: any) {
-      console.error("Email confirmation failed:", error);
-      
-      toast({
-        title: "Konfirmasi email gagal",
-        description: error.message || "Terjadi kesalahan saat mencoba konfirmasi email",
-        variant: "destructive",
-        duration: 3000,
-      });
-      
-      return false;
-    }
-  };
 
-  const logout = async () => {
-    try {
-      console.log("Attempting logout");
-      
-      await supabase.auth.signOut();
-      
-      console.log("Logout successful");
-      
-      toast({
-        title: "Berhasil Keluar",
-        description: "Anda telah keluar dari akun Anda",
-        duration: 3000,
-        className: "bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0",
-      });
-    } catch (error: any) {
-      console.error("Error during logout:", error);
-      toast({
-        title: "Gagal keluar",
-        description: error.message || "Terjadi kesalahan saat mencoba keluar",
-        variant: "destructive",
-      });
+      toast.success('Pendaftaran berhasil! Silakan verifikasi email Anda.');
+      return data;
+    } catch (err) {
+      console.error('Unexpected signup error:', err);
+      setError('Terjadi kesalahan saat pendaftaran. Silakan coba lagi.');
+      toast.error('Terjadi kesalahan saat pendaftaran. Silakan coba lagi.');
+      return null;
+    } finally {
+      setLoading(false);
     }
   };
 
   return {
-    login,
-    loginWithGoogle,
-    register,
-    registerAdmin,
-    confirmEmail,
-    logout
+    signIn,
+    signOut,
+    signUp,
+    loading,
+    error
   };
 };
