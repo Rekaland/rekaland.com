@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useRealTimeSync } from '@/hooks/useRealTimeSync';
 import { CheckCircle, XCircle, RefreshCw, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 interface RealTimeSyncProps {
   onInitialSync?: () => void;
@@ -83,7 +84,7 @@ const RealTimeSync = ({ onInitialSync }: RealTimeSyncProps) => {
       
       // Remove any existing channel first to prevent duplication
       const existingChannels = supabase.getChannels();
-      const existingChannel = existingChannels.find(ch => ch === channelName);
+      const existingChannel = existingChannels.find(ch => ch.name === channelName);
       if (existingChannel) {
         supabase.removeChannel(existingChannel);
       }

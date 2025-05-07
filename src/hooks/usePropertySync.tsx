@@ -2,6 +2,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from './use-toast';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 // Hook untuk memonitoring real-time sinkronisasi antara dashboard admin dan website
 export const usePropertySync = () => {
@@ -20,7 +21,7 @@ export const usePropertySync = () => {
     
     // Bersihkan channel lama jika ada
     const existingChannels = supabase.getChannels();
-    const existingChannel = existingChannels.find(ch => ch === channelName);
+    const existingChannel = existingChannels.find(ch => ch.name === channelName);
     if (existingChannel) {
       supabase.removeChannel(existingChannel);
     }
