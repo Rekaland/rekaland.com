@@ -1,5 +1,5 @@
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from './use-toast';
 
@@ -15,81 +15,108 @@ export const useRealTimeSync = (
 ): RealTimeSyncResult => {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [lastEvent, setLastEvent] = useState<any>(null);
-  const [retryCount, setRetryCount] = useState(0);
   const { toast } = useToast();
+  
+  // Use refs to maintain stable channel references
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const tableRef = useRef(table);
+  const onUpdateRef = useRef(onUpdate);
+  const filtersRef = useRef(specificFilters);
+  
+  // Update refs when dependencies change
+  useEffect(() => {
+    tableRef.current = table;
+    onUpdateRef.current = onUpdate;
+    filtersRef.current = specificFilters;
+  }, [table, onUpdate, specificFilters]);
   
   // Function to create and manage the subscription channel
   const setupSubscription = useCallback(() => {
-    console.log(`Setting up real-time updates untuk tabel ${table}`);
+    if (channelRef.current) {
+      console.log(`Removing existing channel for ${tableRef.current}`);
+      supabase.removeChannel(channelRef.current);
+    }
+    
+    console.log(`Setting up real-time updates for table ${tableRef.current}`);
     
     // Setup object to hold subscription options
     const subscriptionOptions: any = {
       event: '*', 
       schema: 'public', 
-      table
+      table: tableRef.current
     };
     
     // Add filters if provided
-    if (specificFilters && specificFilters.length > 0) {
-      subscriptionOptions.filter = specificFilters.reduce((obj, filter) => {
+    if (filtersRef.current && filtersRef.current.length > 0) {
+      subscriptionOptions.filter = filtersRef.current.reduce((obj, filter) => {
         obj[filter.column] = filter.value;
         return obj;
       }, {} as Record<string, any>);
     }
     
     // Create a stable channel name using the table name, without the timestamp
-    // This prevents creating multiple channels for the same table which causes flickering
-    const channelName = `${table}-changes-stable`;
+    const channelName = `${tableRef.current}-changes-stable`;
     
-    // Setup real-time subscription ke perubahan tabel
+    // Setup real-time subscription
     const channel = supabase
       .channel(channelName)
       .on('postgres_changes', subscriptionOptions, (payload) => {
-        console.log(`Real-time update diterima untuk ${table}:`, payload);
+        console.log(`Real-time update received for ${tableRef.current}:`, payload);
         setLastEvent(payload);
         
-        // Panggil callback jika disediakan
-        if (onUpdate) {
-          onUpdate();
+        // Call callback if provided
+        if (onUpdateRef.current) {
+          onUpdateRef.current();
         }
       })
       .subscribe((status) => {
-        console.log(`Real-time sync status for ${table}:`, status);
+        console.log(`Real-time sync status for ${tableRef.current}:`, status);
         if (status === 'SUBSCRIBED') {
           setIsSubscribed(true);
-          setRetryCount(0); // Reset retry count on successful subscription
-        } else {
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error(`Channel error for ${tableRef.current}`);
+          setIsSubscribed(false);
+        } else if (status === 'TIMED_OUT') {
+          console.error(`Connection timed out for ${tableRef.current}`);
+          setIsSubscribed(false);
+        } else if (status === 'CLOSED') {
+          console.log(`Channel closed for ${tableRef.current}`);
           setIsSubscribed(false);
         }
       });
-
-    // Cleanup subscription saat komponen unmount
+      
+    channelRef.current = channel;
+    
+    // Return cleanup function
     return () => {
-      console.log(`Membersihkan subscription real-time untuk ${table}`);
-      supabase.removeChannel(channel);
+      console.log(`Cleaning up real-time subscription for ${tableRef.current}`);
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
     };
-  }, [table, onUpdate, specificFilters]);
+  }, []);
 
+  // Setup subscription once and handle reconnection if needed
   useEffect(() => {
     const cleanup = setupSubscription();
     
-    // Limit retries to reduce flickering
-    let retryTimer: ReturnType<typeof setTimeout>;
+    // Implement a more resilient connection mechanism
+    const handleOnlineStatus = () => {
+      if (navigator.onLine && !isSubscribed && channelRef.current === null) {
+        console.log(`Device back online, reconnecting to ${tableRef.current}`);
+        setupSubscription();
+      }
+    };
     
-    if (!isSubscribed && retryCount < 1) { // Drastically reduce retry attempts
-      const retryDelay = 3000; // Fixed delay of 3 seconds
-      console.log(`Akan mencoba ulang terhubung ke ${table} dalam ${retryDelay/1000} detik`);
-      
-      retryTimer = setTimeout(() => {
-        setRetryCount(prev => prev + 1);
-      }, retryDelay);
-    }
+    // Listen for online/offline events
+    window.addEventListener('online', handleOnlineStatus);
     
     return () => {
       cleanup();
-      if (retryTimer) clearTimeout(retryTimer);
+      window.removeEventListener('online', handleOnlineStatus);
     };
-  }, [isSubscribed, retryCount, setupSubscription, table]);
+  }, [setupSubscription, isSubscribed]);
 
   return { isSubscribed, lastEvent };
 };

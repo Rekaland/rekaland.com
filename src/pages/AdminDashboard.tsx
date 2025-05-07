@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -25,28 +26,36 @@ import {
   Database,
   Globe,
   Terminal,
-  Warehouse,
-  MessageSquare,
-  FileCode,
-  BarChart2,
   Package,
   Code,
   Wrench
 } from "lucide-react";
 import MainLayout from "@/layouts/MainLayout";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const { toast } = useToast();
+  const syncNotifiedRef = useRef(false);
 
   const handleInitialSync = () => {
+    // Prevent multiple notifications
+    if (syncNotifiedRef.current) return;
+    syncNotifiedRef.current = true;
+    
     toast({
       title: "Real-Time Sync Aktif",
       description: "Semua tabel telah tersinkronisasi secara real-time",
       className: "bg-gradient-to-r from-green-500 to-green-600 text-white",
     });
   };
+
+  // Reset notification flag when component unmounts and remounts
+  useEffect(() => {
+    return () => {
+      syncNotifiedRef.current = false;
+    };
+  }, []);
 
   return (
     <MainLayout>

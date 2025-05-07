@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { supabase } from '@/integrations/supabase/client';
 import { useRealTimeSync } from '@/hooks/useRealTimeSync';
@@ -9,6 +9,16 @@ import { useToast } from '@/hooks/use-toast';
 interface RealTimeSyncProps {
   onInitialSync?: () => void;
 }
+
+const TABLES = [
+  'properties',
+  'profiles',
+  'inquiries',
+  'settings',
+  'testimonials',
+  'contents',
+  'product_contents'
+];
 
 const RealTimeSync = ({ onInitialSync }: RealTimeSyncProps) => {
   const [isSyncing, setIsSyncing] = useState(false);
@@ -22,63 +32,61 @@ const RealTimeSync = ({ onInitialSync }: RealTimeSyncProps) => {
     product_contents: false
   });
   const { toast } = useToast();
+  const initialSyncCalled = useRef(false);
+  const syncAllTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Use stable channel names for each table to prevent flickering
-  const propertiesSync = useRealTimeSync('properties');
-  const profilesSync = useRealTimeSync('profiles');
-  const inquiriesSync = useRealTimeSync('inquiries');
-  const settingsSync = useRealTimeSync('settings');
-  const testimonialsSync = useRealTimeSync('testimonials');
-  const contentsSync = useRealTimeSync('contents');
-  const productContentsSync = useRealTimeSync('product_contents');
+  // Create stable refs to store sync handlers
+  const syncHandlers = useRef<{[key: string]: ReturnType<typeof useRealTimeSync>}>({});
+
+  // Setup individual sync handlers for each table
+  TABLES.forEach(table => {
+    // Using a stable identifier pattern
+    syncHandlers.current[table] = useRealTimeSync(table);
+  });
 
   // Optimize status update by using a single effect for all statuses
   useEffect(() => {
-    const newStatus = {
-      properties: propertiesSync.isSubscribed,
-      profiles: profilesSync.isSubscribed,
-      inquiries: inquiriesSync.isSubscribed,
-      settings: settingsSync.isSubscribed,
-      testimonials: testimonialsSync.isSubscribed,
-      contents: contentsSync.isSubscribed,
-      product_contents: productContentsSync.isSubscribed
-    };
+    const newStatus: {[key: string]: boolean} = {};
     
-    // Only update the state if there are actual changes to prevent re-renders
-    if (JSON.stringify(newStatus) !== JSON.stringify(status)) {
+    // Check connection status for each table
+    Object.entries(syncHandlers.current).forEach(([table, handler]) => {
+      newStatus[table] = handler.isSubscribed;
+    });
+    
+    // Only update state if there's a change
+    const statusChanged = Object.entries(newStatus).some(
+      ([key, value]) => status[key] !== value
+    );
+    
+    if (statusChanged) {
       setStatus(newStatus);
     }
 
     // Call onInitialSync only once when all tables are successfully synced
-    const allSynced = 
-      propertiesSync.isSubscribed && 
-      profilesSync.isSubscribed && 
-      inquiriesSync.isSubscribed && 
-      settingsSync.isSubscribed &&
-      testimonialsSync.isSubscribed &&
-      contentsSync.isSubscribed &&
-      productContentsSync.isSubscribed;
+    const allSynced = Object.values(newStatus).every(Boolean);
     
-    if (allSynced && onInitialSync) {
+    if (allSynced && onInitialSync && !initialSyncCalled.current) {
+      initialSyncCalled.current = true;
       onInitialSync();
     }
   }, [
-    propertiesSync.isSubscribed, 
-    profilesSync.isSubscribed, 
-    inquiriesSync.isSubscribed,
-    settingsSync.isSubscribed,
-    testimonialsSync.isSubscribed,
-    contentsSync.isSubscribed,
-    productContentsSync.isSubscribed,
     onInitialSync,
-    status
+    status,
+    syncHandlers.current
   ]);
 
-  // Use a more stable and efficient way to enable realtime
+  // Enhanced enableRealtimeForTable with improved stability
   const enableRealtimeForTable = async (tableName: string) => {
     try {
-      // Create a stable channel name without using timestamp to prevent flickering
+      // Create a stable channel name
       const channelName = `${tableName}-changes-stable`;
+      
+      // Remove any existing channel first to prevent duplication
+      const existingChannels = supabase.getChannels();
+      const existingChannel = existingChannels.find(ch => ch.name === channelName);
+      if (existingChannel) {
+        supabase.removeChannel(existingChannel);
+      }
       
       // Create and subscribe to the channel
       const channel = supabase
@@ -89,7 +97,15 @@ const RealTimeSync = ({ onInitialSync }: RealTimeSyncProps) => {
             console.log(`Real-time update for ${tableName}:`, payload);
           }
         )
-        .subscribe();
+        .subscribe((status) => {
+          console.log(`Channel ${channelName} status:`, status);
+          if (status === 'SUBSCRIBED') {
+            setStatus(prev => ({
+              ...prev,
+              [tableName]: true
+            }));
+          }
+        });
       
       if (channel) {
         return { success: true, data: { table: tableName, status: "enabled" } };
@@ -103,31 +119,36 @@ const RealTimeSync = ({ onInitialSync }: RealTimeSyncProps) => {
   };
 
   const syncAll = async () => {
+    // Prevent multiple clicks
+    if (isSyncing) return;
+    
     setIsSyncing(true);
     
+    // Clear any existing timeout
+    if (syncAllTimeoutRef.current) {
+      clearTimeout(syncAllTimeoutRef.current);
+    }
+    
     try {
-      const tables = ['properties', 'profiles', 'inquiries', 'settings', 'testimonials', 'contents', 'product_contents'];
       let successCount = 0;
       
-      // Process tables sequentially to avoid overwhelming the connection
-      for (const table of tables) {
+      // Process tables sequentially with increasing delays
+      for (let i = 0; i < TABLES.length; i++) {
+        const table = TABLES[i];
+        
+        // Add increasing delay between subscriptions to prevent overwhelming
+        await new Promise(resolve => setTimeout(resolve, i * 300));
+        
         const result = await enableRealtimeForTable(table);
         if (result.success) {
           successCount++;
-          // Update status immediately for better UX
-          setStatus(prev => ({
-            ...prev,
-            [table]: true
-          }));
-          // Small delay between table activations
-          await new Promise(resolve => setTimeout(resolve, 100));
         }
       }
       
       if (successCount > 0) {
         toast({
           title: "Sinkronisasi berhasil",
-          description: `${successCount} dari ${tables.length} tabel telah diaktifkan untuk sinkronisasi real-time`,
+          description: `${successCount} dari ${TABLES.length} tabel telah diaktifkan untuk sinkronisasi real-time`,
           className: "bg-gradient-to-r from-green-500 to-green-600 text-white",
         });
       } else {
@@ -145,9 +166,21 @@ const RealTimeSync = ({ onInitialSync }: RealTimeSyncProps) => {
         variant: "destructive",
       });
     } finally {
-      setIsSyncing(false);
+      // Set timeout before allowing another sync to prevent rapid re-clicks
+      syncAllTimeoutRef.current = setTimeout(() => {
+        setIsSyncing(false);
+      }, 3000);
     }
   };
+
+  // Auto-cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (syncAllTimeoutRef.current) {
+        clearTimeout(syncAllTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Hitung jumlah tabel yang tersinkronisasi
   const connectedCount = Object.values(status).filter(Boolean).length;
