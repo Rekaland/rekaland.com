@@ -37,31 +37,23 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const { toast } = useToast();
   const syncNotifiedRef = useRef(false);
-  const initialSyncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleInitialSync = () => {
-    // Prevent multiple notifications by using a ref and a timeout
+    // Prevent multiple notifications
     if (syncNotifiedRef.current) return;
+    syncNotifiedRef.current = true;
     
-    // Set a small timeout to prevent immediate notification and allow UI to stabilize
-    initialSyncTimeoutRef.current = setTimeout(() => {
-      syncNotifiedRef.current = true;
-      
-      toast({
-        title: "Real-Time Sync Aktif",
-        description: "Semua tabel telah tersinkronisasi secara real-time",
-        className: "bg-gradient-to-r from-green-500 to-green-600 text-white",
-      });
-    }, 1000);
+    toast({
+      title: "Real-Time Sync Aktif",
+      description: "Semua tabel telah tersinkronisasi secara real-time",
+      className: "bg-gradient-to-r from-green-500 to-green-600 text-white",
+    });
   };
 
   // Reset notification flag when component unmounts and remounts
   useEffect(() => {
     return () => {
       syncNotifiedRef.current = false;
-      if (initialSyncTimeoutRef.current) {
-        clearTimeout(initialSyncTimeoutRef.current);
-      }
     };
   }, []);
 
