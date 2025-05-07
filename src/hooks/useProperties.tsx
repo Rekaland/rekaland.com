@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Property } from '@/integrations/supabase/client';
@@ -83,7 +84,7 @@ export const usePropertyDetail = (id?: string) => {
   };
 };
 
-export const useProperties = (featured?: boolean, category?: string, limit?: number) => {
+export const useProperties = (showFeatured?: boolean, categoryFilter?: string, limitCount?: number) => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [featuredProperties, setFeaturedProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(false);
@@ -102,17 +103,17 @@ export const useProperties = (featured?: boolean, category?: string, limit?: num
         .select('*');
 
       // Apply featured filter if specified
-      if (featured === true) {
+      if (showFeatured === true) {
         query = query.eq('featured', true);
       }
 
       // Apply category filter if specified
-      if (category && category !== 'all') {
+      if (categoryFilter && categoryFilter !== 'all') {
         // Convert URL category to DB category
         let dbCategory;
-        if (category === 'kavling-kosongan') dbCategory = 'empty_lot';
-        else if (category === 'kavling-setengah-jadi') dbCategory = 'semi_finished';
-        else if (category === 'kavling-siap-huni') dbCategory = 'ready_to_occupy';
+        if (categoryFilter === 'kavling-kosongan') dbCategory = 'empty_lot';
+        else if (categoryFilter === 'kavling-setengah-jadi') dbCategory = 'semi_finished';
+        else if (categoryFilter === 'kavling-siap-huni') dbCategory = 'ready_to_occupy';
 
         if (dbCategory) {
           query = query.eq('category', dbCategory);
@@ -120,8 +121,8 @@ export const useProperties = (featured?: boolean, category?: string, limit?: num
       }
 
       // Apply limit if specified
-      if (limit && limit > 0) {
-        query = query.limit(limit);
+      if (limitCount && limitCount > 0) {
+        query = query.limit(limitCount);
       }
 
       // Order by created date
@@ -134,8 +135,8 @@ export const useProperties = (featured?: boolean, category?: string, limit?: num
       setProperties(data as Property[]);
       
       // Filter featured properties
-      const featured = data.filter((prop: any) => prop.featured) as Property[];
-      setFeaturedProperties(featured);
+      const featuredItems = (data as Property[]).filter((prop) => prop.featured);
+      setFeaturedProperties(featuredItems);
     } catch (err: any) {
       console.error('Error fetching properties:', err);
       setError(err.message || 'Gagal memuat data properti');
@@ -330,7 +331,7 @@ export const useProperties = (featured?: boolean, category?: string, limit?: num
 
   useEffect(() => {
     fetchProperties();
-  }, [featured, category, limit]);
+  }, [showFeatured, categoryFilter, limitCount]);
   
   return {
     properties,
