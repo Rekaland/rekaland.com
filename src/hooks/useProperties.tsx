@@ -1,27 +1,135 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Property } from '@/integrations/supabase/client';
 import { useToast } from './use-toast';
 
-export const useProperties = () => {
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [featuredProperties, setFeaturedProperties] = useState<Property[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+// Helper functions for property category mapping
+export const mapDbCategoryToUrlCategory = (category: string): string => {
+  switch (category) {
+    case 'empty_lot':
+      return 'kavling-kosongan';
+    case 'semi_finished':
+      return 'kavling-setengah-jadi';
+    case 'ready_to_occupy':
+      return 'kavling-siap-huni';
+    default:
+      return 'all';
+  }
+};
+
+export const mapDbCategoryToDisplayName = (category: string): string => {
+  switch (category) {
+    case 'empty_lot':
+      return 'Kavling Kosongan';
+    case 'semi_finished':
+      return 'Kavling Bangunan';
+    case 'ready_to_occupy':
+      return 'Kavling Siap Huni';
+    default:
+      return 'Properti';
+  }
+};
+
+// Property detail hook
+export const usePropertyDetail = (id?: string) => {
+  const [property, setProperty] = useState<Property | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const fetchProperties = async () => {
-    setIsLoading(true);
+  const fetchPropertyDetail = async () => {
+    if (!id) {
+      setProperty(null);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
     setError(null);
     
     try {
       const { data, error } = await supabase
         .from('properties')
         .select('*')
-        .order('created_at', { ascending: false });
+        .eq('id', id)
+        .single();
         
       if (error) throw error;
+      
+      setProperty(data as Property);
+    } catch (err: any) {
+      console.error(`Error fetching property with id ${id}:`, err);
+      setError(err.message || 'Gagal memuat detail properti');
+      
+      toast({
+        title: 'Error',
+        description: 'Gagal memuat detail properti',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPropertyDetail();
+  }, [id]);
+  
+  return { 
+    property, 
+    loading, 
+    error, 
+    refetchPropertyDetail: fetchPropertyDetail 
+  };
+};
+
+export const useProperties = (featured?: boolean, category?: string, limit?: number) => {
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [featuredProperties, setFeaturedProperties] = useState<Property[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const fetchProperties = async () => {
+    setLoading(true);
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      let query = supabase
+        .from('properties')
+        .select('*');
+
+      // Apply featured filter if specified
+      if (featured === true) {
+        query = query.eq('featured', true);
+      }
+
+      // Apply category filter if specified
+      if (category && category !== 'all') {
+        // Convert URL category to DB category
+        let dbCategory;
+        if (category === 'kavling-kosongan') dbCategory = 'empty_lot';
+        else if (category === 'kavling-setengah-jadi') dbCategory = 'semi_finished';
+        else if (category === 'kavling-siap-huni') dbCategory = 'ready_to_occupy';
+
+        if (dbCategory) {
+          query = query.eq('category', dbCategory);
+        }
+      }
+
+      // Apply limit if specified
+      if (limit && limit > 0) {
+        query = query.limit(limit);
+      }
+
+      // Order by created date
+      query = query.order('created_at', { ascending: false });
+        
+      const { data, error: fetchError } = await query;
+        
+      if (fetchError) throw fetchError;
       
       setProperties(data as Property[]);
       
@@ -38,11 +146,16 @@ export const useProperties = () => {
         variant: 'destructive',
       });
     } finally {
+      setLoading(false);
       setIsLoading(false);
     }
   };
   
+  // Alias for fetchProperties to maintain compatibility with existing code
+  const refetchProperties = fetchProperties;
+  
   const fetchPropertyById = async (id: string) => {
+    setLoading(true);
     setIsLoading(true);
     setError(null);
     
@@ -68,6 +181,7 @@ export const useProperties = () => {
       
       return null;
     } finally {
+      setLoading(false);
       setIsLoading(false);
     }
   };
@@ -216,14 +330,16 @@ export const useProperties = () => {
 
   useEffect(() => {
     fetchProperties();
-  }, []);
+  }, [featured, category, limit]);
   
   return {
     properties,
     featuredProperties,
+    loading,
     isLoading,
     error,
     fetchProperties,
+    refetchProperties,
     fetchPropertyById,
     addProperty,
     updateProperty,
