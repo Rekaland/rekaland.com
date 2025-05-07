@@ -1,179 +1,153 @@
 
 import { useState, useEffect } from 'react';
-import { supabase, Inquiry } from '@/integrations/supabase/client';
 import { useToast } from './use-toast';
-import { useRealTimeSync } from './useRealTimeSync';
+import { Inquiry } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useInquiries = () => {
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
-
-  const loadInquiries = async () => {
+  
+  const fetchInquiries = async () => {
+    setIsLoading(true);
+    setError(null);
+    
     try {
-      setLoading(true);
-      
       const { data, error } = await supabase
         .from('inquiries')
-        .select('*, properties(title)')
+        .select('*')
         .order('created_at', { ascending: false });
+        
+      if (error) throw error;
       
-      if (error) {
-        throw error;
-      }
-      
-      if (data) {
-        setInquiries(data);
-      }
+      setInquiries(data as Inquiry[]);
     } catch (err: any) {
-      console.error('Error loading inquiries:', err);
-      setError(err.message);
+      console.error('Error fetching inquiries:', err);
+      setError(err.message || 'Gagal memuat data inquiry');
       
       toast({
-        title: "Gagal memuat inquiry",
-        description: "Terjadi kesalahan saat mengambil data dari server.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Gagal memuat data inquiry',
+        variant: 'destructive',
       });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
-
-  // Setup real-time sync
-  const { isSubscribed } = useRealTimeSync('inquiries', loadInquiries);
-
-  useEffect(() => {
-    loadInquiries();
-  }, []);
-
-  const updateInquiryStatus = async (id: string, status: string) => {
+  
+  const addInquiry = async (inquiry: Omit<Inquiry, 'id' | 'created_at' | 'updated_at' | 'status'>) => {
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('inquiries')
-        .update({ status, updated_at: new Date().toISOString() })
-        .eq('id', id);
+        .insert([{
+          ...inquiry,
+          status: 'new'
+        }])
+        .select();
+        
+      if (error) throw error;
       
-      if (error) {
-        throw error;
-      }
-      
-      // Reload inquiries after update
-      await loadInquiries();
+      setInquiries(prev => [data[0] as Inquiry, ...prev]);
       
       toast({
-        title: "Status diperbarui",
-        description: `Status inquiry berhasil diubah menjadi "${status}"`,
-        className: "bg-gradient-to-r from-green-500 to-green-600 text-white",
+        title: 'Berhasil',
+        description: 'Inquiry berhasil dikirim',
+        className: "bg-gradient-to-r from-green-500 to-green-600 text-white border-0",
       });
       
-      return { success: true };
+      return data[0] as Inquiry;
+    } catch (err: any) {
+      console.error('Error adding inquiry:', err);
+      
+      toast({
+        title: 'Error',
+        description: err.message || 'Gagal mengirim inquiry',
+        variant: 'destructive',
+      });
+      
+      return null;
+    }
+  };
+  
+  const updateInquiryStatus = async (id: string, status: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('inquiries')
+        .update({
+          status,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select();
+        
+      if (error) throw error;
+      
+      setInquiries(prev => prev.map(inq => inq.id === id ? { ...inq, status } as Inquiry : inq));
+      
+      toast({
+        title: 'Berhasil',
+        description: 'Status inquiry berhasil diperbarui',
+        className: "bg-gradient-to-r from-green-500 to-green-600 text-white border-0",
+      });
+      
+      return data[0] as Inquiry;
     } catch (err: any) {
       console.error('Error updating inquiry status:', err);
       
       toast({
-        title: "Gagal memperbarui status",
-        description: err.message || "Terjadi kesalahan saat memperbarui status",
-        variant: "destructive",
+        title: 'Error',
+        description: err.message || 'Gagal memperbarui status inquiry',
+        variant: 'destructive',
       });
       
-      return { success: false, error: err.message };
+      return null;
     }
   };
-
+  
   const deleteInquiry = async (id: string) => {
     try {
       const { error } = await supabase
         .from('inquiries')
         .delete()
         .eq('id', id);
+        
+      if (error) throw error;
       
-      if (error) {
-        throw error;
-      }
-      
-      // Reload inquiries after deletion
-      await loadInquiries();
+      setInquiries(prev => prev.filter(inq => inq.id !== id));
       
       toast({
-        title: "Inquiry dihapus",
-        description: "Inquiry berhasil dihapus dari database",
-        className: "bg-gradient-to-r from-blue-500 to-blue-600 text-white",
+        title: 'Berhasil',
+        description: 'Inquiry berhasil dihapus',
+        className: "bg-gradient-to-r from-green-500 to-green-600 text-white border-0",
       });
       
-      return { success: true };
+      return true;
     } catch (err: any) {
       console.error('Error deleting inquiry:', err);
       
       toast({
-        title: "Gagal menghapus inquiry",
-        description: err.message || "Terjadi kesalahan saat menghapus inquiry",
-        variant: "destructive",
+        title: 'Error',
+        description: err.message || 'Gagal menghapus inquiry',
+        variant: 'destructive',
       });
       
-      return { success: false, error: err.message };
+      return false;
     }
   };
 
-  return { 
-    inquiries, 
-    loading, 
-    error, 
-    isRealTimeActive: isSubscribed,
-    loadInquiries,
+  useEffect(() => {
+    fetchInquiries();
+  }, []);
+  
+  return {
+    inquiries,
+    isLoading,
+    error,
+    fetchInquiries,
+    addInquiry,
     updateInquiryStatus,
     deleteInquiry
-  };
-};
-
-// Hook untuk membuat inquiry baru
-export const useCreateInquiry = () => {
-  const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
-
-  const createInquiry = async (inquiry: Omit<Inquiry, 'id' | 'created_at' | 'updated_at' | 'status'>) => {
-    try {
-      setLoading(true);
-      
-      const { error } = await supabase
-        .from('inquiries')
-        .insert({
-          name: inquiry.name,
-          email: inquiry.email,
-          phone: inquiry.phone,
-          message: inquiry.message,
-          property_id: inquiry.property_id,
-          user_id: inquiry.user_id
-        });
-      
-      if (error) {
-        throw error;
-      }
-      
-      toast({
-        title: "Pesan terkirim!",
-        description: "Terima kasih telah menghubungi kami. Kami akan segera membalas pesan Anda.",
-        className: "bg-gradient-to-r from-green-500 to-green-600 text-white",
-      });
-      
-      return { success: true };
-    } catch (err: any) {
-      console.error('Error creating inquiry:', err);
-      
-      toast({
-        title: "Gagal mengirim pesan",
-        description: err.message || "Terjadi kesalahan saat mengirim pesan. Silakan coba lagi nanti.",
-        variant: "destructive",
-      });
-      
-      return { success: false, error: err.message };
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return { 
-    createInquiry, 
-    loading 
   };
 };

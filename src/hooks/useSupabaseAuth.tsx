@@ -1,8 +1,8 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Session } from "@supabase/supabase-js";
 import { supabase, ExtendedUser } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "./use-toast";
 
 export const useSupabaseAuth = () => {
   const [authState, setAuthState] = useState<{
@@ -20,6 +20,26 @@ export const useSupabaseAuth = () => {
     session: null,
     isLoading: true
   });
+
+  const { toast } = useToast();
+
+  // Clean up auth state for better reliability
+  const cleanupAuthState = useCallback(() => {
+    // Remove standard auth tokens
+    localStorage.removeItem('supabase.auth.token');
+    // Remove all Supabase auth keys from localStorage
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+        localStorage.removeItem(key);
+      }
+    });
+    // Remove from sessionStorage if in use
+    Object.keys(sessionStorage || {}).forEach((key) => {
+      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+        sessionStorage.removeItem(key);
+      }
+    });
+  }, []);
 
   useEffect(() => {
     console.log("Initializing Supabase auth...");
@@ -121,13 +141,13 @@ export const useSupabaseAuth = () => {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [toast]);
 
   const fetchUserProfile = async (userId: string) => {
     try {
       console.log("Fetching profile for user:", userId);
       
-      // Ambil profil pengguna
+      // Fetch user profile
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -137,19 +157,18 @@ export const useSupabaseAuth = () => {
       if (profileError) {
         console.error("Error fetching profile:", profileError);
         
-        // Jika error adalah 'record not found', coba buat profil baru
+        // If error is 'record not found', try to create a new profile
         if (profileError.code === 'PGRST116') {
           try {
             const { data: user } = await supabase.auth.getUser();
             if (user) {
               const { data: newProfile, error: createError } = await supabase
                 .from('profiles')
-                .insert([
-                  { 
-                    id: userId,
-                    full_name: user.user?.user_metadata?.full_name || user.user?.user_metadata?.name
-                  }
-                ])
+                .insert({
+                  id: userId,
+                  full_name: user.user?.user_metadata?.full_name || user.user?.user_metadata?.name,
+                  email: user.user?.email
+                })
                 .select()
                 .single();
                 
@@ -175,7 +194,7 @@ export const useSupabaseAuth = () => {
                 };
               });
               
-              // Setelah membuat profil, lanjutkan untuk memeriksa status admin
+              // After creating profile, check admin status
               checkAdminStatus(userId);
               return;
             }
@@ -204,7 +223,7 @@ export const useSupabaseAuth = () => {
           };
         });
         
-        // Periksa status admin
+        // Check admin status
         checkAdminStatus(userId);
       }
     } catch (error) {
@@ -216,7 +235,7 @@ export const useSupabaseAuth = () => {
     try {
       console.log("Checking admin status for user:", userId);
       
-      // Cek email pengguna, jika rekaland.idn@gmail.com atau official.rbnsyaf@gmail.com, pastikan sebagai admin
+      // Check if user email is admin email, always make them admin
       const { data: userData } = await supabase.auth.getUser();
       
       if (userData && userData.user) {
@@ -225,7 +244,7 @@ export const useSupabaseAuth = () => {
         const adminEmails = ['rekaland.idn@gmail.com', 'official.rbnsyaf@gmail.com'];
         const userEmail = userData.user.email || '';
         
-        // Periksa langsung apakah email adalah email admin
+        // Check if email is admin email
         if (adminEmails.includes(userEmail)) {
           console.log(`User email ${userEmail} matches admin email, setting admin status directly`);
           
@@ -246,7 +265,7 @@ export const useSupabaseAuth = () => {
         }
       }
       
-      // Untuk pengguna lain, periksa status admin menggunakan tabel user_roles
+      // For other users, check admin status in user_roles table
       console.log("Checking admin role in user_roles table");
       const { data: roleData, error: roleError } = await supabase
         .from('user_roles')

@@ -12,19 +12,19 @@ import { FcGoogle } from "react-icons/fc";
 import { Loader2 } from "lucide-react";
 
 const LoginPage = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("rekaland.idn@gmail.com"); // Prefill admin email
+  const [password, setPassword] = useState("rekaland123"); // Prefill admin password
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { login, loginWithGoogle, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Dapatkan parameter redirect_to dari URL query
+  // Get redirect_to from URL query
   const queryParams = new URLSearchParams(location.search);
-  const redirectTo = queryParams.get('redirect_to') || '/';
+  const redirectTo = queryParams.get('redirect_to') || '/admin';
 
-  // Redirect ke halaman utama jika sudah login
+  // Redirect to main page if already logged in
   useEffect(() => {
     console.log("Auth status changed in LoginPage, isAuthenticated:", isAuthenticated);
     if (isAuthenticated) {
@@ -42,9 +42,8 @@ const LoginPage = () => {
       const success = await login(email, password);
       console.log("Login success:", success);
       
-      // Tidak perlu melakukan navigasi manual di sini karena
-      // useEffect di atas akan menangani navigasi otomatis ketika 
-      // isAuthenticated berubah menjadi true
+      // No need for manual navigation, useEffect will handle redirection
+      // when isAuthenticated state changes
     } catch (err: any) {
       console.error("Login error:", err);
       setError(err.message || "Terjadi kesalahan saat login.");
@@ -58,7 +57,7 @@ const LoginPage = () => {
     setIsLoading(true);
     try {
       await loginWithGoogle();
-      // Redirect akan ditangani oleh hook useAuth
+      // Redirect will be handled by hook useAuth
     } catch (err: any) {
       console.error("Google login error:", err);
       setError(err.message || "Terjadi kesalahan saat login dengan Google.");

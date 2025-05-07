@@ -1,209 +1,233 @@
 
-import { useState, useEffect, useCallback } from "react";
-import { supabase, Property } from "@/integrations/supabase/client";
-import { useToast } from "./use-toast";
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Property } from '@/integrations/supabase/client';
+import { useToast } from './use-toast';
 
-// Helper function to map URL category to database category
-export const mapUrlCategoryToDbCategory = (urlCategory?: string): string | undefined => {
-  if (!urlCategory || urlCategory === 'all') return undefined;
-  
-  if (urlCategory === 'kavling-kosongan' || urlCategory === 'empty_lot') {
-    return 'empty_lot';
-  } else if (urlCategory === 'kavling-setengah-jadi' || urlCategory === 'semi_finished') {
-    return 'semi_finished';
-  } else if (urlCategory === 'kavling-siap-huni' || urlCategory === 'ready_to_occupy') {
-    return 'ready_to_occupy';
-  }
-  
-  return undefined;
-};
-
-// Helper untuk konversi kategori database ke URL path
-export const mapDbCategoryToUrlCategory = (dbCategory: string): string => {
-  if (dbCategory === 'empty_lot') {
-    return 'kavling-kosongan';
-  } else if (dbCategory === 'semi_finished') {
-    return 'kavling-setengah-jadi';
-  } else if (dbCategory === 'ready_to_occupy') {
-    return 'kavling-siap-huni';
-  }
-  
-  return 'unknown-category';
-};
-
-// Helper untuk konversi kategori database ke nama tampilan
-export const mapDbCategoryToDisplayName = (dbCategory: string): string => {
-  if (dbCategory === 'empty_lot') {
-    return 'Kavling Kosongan';
-  } else if (dbCategory === 'semi_finished') {
-    return 'Kavling Bangunan';
-  } else if (dbCategory === 'ready_to_occupy') {
-    return 'Kavling Siap Huni';
-  }
-  
-  return 'Properti';
-};
-
-// Hook untuk mengambil data properti dari Supabase
-export const useProperties = (featured?: boolean, category?: string, limit?: number) => {
+export const useProperties = () => {
   const [properties, setProperties] = useState<Property[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [featuredProperties, setFeaturedProperties] = useState<Property[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const fetchProperties = useCallback(async () => {
-    setLoading(true);
+  const fetchProperties = async () => {
+    setIsLoading(true);
+    setError(null);
     
     try {
-      console.log('Fetching properties with params:', { featured, category, limit });
-      
-      let query = supabase
+      const { data, error } = await supabase
         .from('properties')
-        .select('*');
+        .select('*')
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
       
-      // Filter berdasarkan featured jika parameter diberikan
-      if (featured !== undefined) {
-        query = query.eq('featured', featured);
-      }
+      setProperties(data as Property[]);
       
-      // Filter berdasarkan kategori jika parameter diberikan
-      const dbCategory = mapUrlCategoryToDbCategory(category);
-      if (dbCategory) {
-        console.log('Filtering by category:', dbCategory);
-        query = query.eq('category', dbCategory as any);
-      }
-      
-      // Batasi hasil jika parameter limit diberikan
-      if (limit) {
-        query = query.limit(limit);
-      }
-      
-      // Order by created_at descendingly to get newest properties first
-      query = query.order('created_at', { ascending: false });
-      
-      const { data, error } = await query;
-      
-      if (error) {
-        throw error;
-      }
-      
-      console.log('Properties data fetched:', data);
-      setProperties(data || []);
-      setLoading(false);
+      // Filter featured properties
+      const featured = data.filter((prop: any) => prop.featured) as Property[];
+      setFeaturedProperties(featured);
     } catch (err: any) {
       console.error('Error fetching properties:', err);
-      setError(err.message);
-      setLoading(false);
+      setError(err.message || 'Gagal memuat data properti');
       
       toast({
-        title: "Gagal memuat data properti",
-        description: "Terjadi kesalahan saat mengambil data dari server. Detail: " + err.message,
-        variant: "destructive",
+        title: 'Error',
+        description: 'Gagal memuat data properti',
+        variant: 'destructive',
       });
+    } finally {
+      setIsLoading(false);
     }
-  }, [featured, category, limit, toast]);
+  };
   
-  useEffect(() => {
-    fetchProperties();
-  }, [fetchProperties]);
-  
-  const refetchProperties = useCallback(() => {
-    fetchProperties();
-  }, [fetchProperties]);
-  
-  return { properties, loading, error, refetchProperties };
-};
-
-// Hook untuk mengambil detail properti berdasarkan ID atau slug/path
-export const usePropertyDetail = (idOrSlug?: string) => {
-  const [property, setProperty] = useState<Property | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
-  
-  const fetchPropertyDetail = useCallback(async () => {
-    if (!idOrSlug) {
-      setLoading(false);
-      return;
-    }
-    
-    setLoading(true);
+  const fetchPropertyById = async (id: string) => {
+    setIsLoading(true);
+    setError(null);
     
     try {
-      console.log('Fetching property detail for identifier:', idOrSlug);
-      
-      // Cek apakah identifier adalah UUID (format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSlug);
-      
-      let query;
-      
-      if (isUuid) {
-        // Jika UUID, cari berdasarkan ID
-        query = supabase
-          .from('properties')
-          .select('*')
-          .eq('id', idOrSlug)
-          .maybeSingle();
-      } else {
-        // Konversi slug ke kategori database
-        let category = null;
+      const { data, error } = await supabase
+        .from('properties')
+        .select('*')
+        .eq('id', id)
+        .single();
         
-        if (idOrSlug === 'kavling-kosongan' || idOrSlug === 'empty_lot') {
-          category = 'empty_lot';
-        } else if (idOrSlug === 'kavling-setengah-jadi' || idOrSlug === 'semi_finished') {
-          category = 'semi_finished';
-        } else if (idOrSlug === 'kavling-siap-huni' || idOrSlug === 'ready_to_occupy') {
-          category = 'ready_to_occupy';
-        }
-        
-        if (category) {
-          query = supabase
-            .from('properties')
-            .select('*')
-            .eq('category', category)
-            .limit(1)
-            .maybeSingle();
-        } else {
-          // Coba cari berdasarkan title yang mirip dengan slug
-          const searchTerm = idOrSlug.replace(/-/g, ' ');
-          query = supabase
-            .from('properties')
-            .select('*')
-            .ilike('title', `%${searchTerm}%`)
-            .limit(1)
-            .maybeSingle();
-        }
-      }
+      if (error) throw error;
       
-      const { data, error } = await query;
-      
-      if (error) {
-        throw error;
-      }
-      
-      console.log('Property detail fetched:', data);
-      setProperty(data);
-      setLoading(false);
+      return data as Property;
     } catch (err: any) {
-      console.error('Error fetching property detail:', err);
-      setError(err.message);
-      setLoading(false);
+      console.error(`Error fetching property with id ${id}:`, err);
+      setError(err.message || 'Gagal memuat detail properti');
       
       toast({
-        title: "Gagal memuat detail properti",
-        description: "Terjadi kesalahan saat mengambil data dari server. Detail: " + err.message,
-        variant: "destructive",
+        title: 'Error',
+        description: 'Gagal memuat detail properti',
+        variant: 'destructive',
       });
+      
+      return null;
+    } finally {
+      setIsLoading(false);
     }
-  }, [idOrSlug, toast]);
+  };
+  
+  const addProperty = async (property: Omit<Property, 'id' | 'created_at' | 'updated_at'>) => {
+    try {
+      const { data, error } = await supabase
+        .from('properties')
+        .insert([property])
+        .select();
+        
+      if (error) throw error;
+      
+      setProperties(prev => [data[0] as Property, ...prev]);
+      
+      toast({
+        title: 'Berhasil',
+        description: 'Properti baru berhasil ditambahkan',
+        className: "bg-gradient-to-r from-green-500 to-green-600 text-white border-0",
+      });
+      
+      return data[0] as Property;
+    } catch (err: any) {
+      console.error('Error adding property:', err);
+      
+      toast({
+        title: 'Error',
+        description: err.message || 'Gagal menambahkan properti baru',
+        variant: 'destructive',
+      });
+      
+      return null;
+    }
+  };
+  
+  const updateProperty = async (id: string, updates: Partial<Property>) => {
+    try {
+      const { data, error } = await supabase
+        .from('properties')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select();
+        
+      if (error) throw error;
+      
+      setProperties(prev => prev.map(p => p.id === id ? { ...p, ...data[0] } as Property : p));
+      
+      toast({
+        title: 'Berhasil',
+        description: 'Properti berhasil diperbarui',
+        className: "bg-gradient-to-r from-green-500 to-green-600 text-white border-0",
+      });
+      
+      return data[0] as Property;
+    } catch (err: any) {
+      console.error('Error updating property:', err);
+      
+      toast({
+        title: 'Error',
+        description: err.message || 'Gagal memperbarui properti',
+        variant: 'destructive',
+      });
+      
+      return null;
+    }
+  };
+  
+  const deleteProperty = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('properties')
+        .delete()
+        .eq('id', id);
+        
+      if (error) throw error;
+      
+      setProperties(prev => prev.filter(p => p.id !== id));
+      
+      toast({
+        title: 'Berhasil',
+        description: 'Properti berhasil dihapus',
+        className: "bg-gradient-to-r from-green-500 to-green-600 text-white border-0",
+      });
+      
+      return true;
+    } catch (err: any) {
+      console.error('Error deleting property:', err);
+      
+      toast({
+        title: 'Error',
+        description: err.message || 'Gagal menghapus properti',
+        variant: 'destructive',
+      });
+      
+      return false;
+    }
+  };
+  
+  const toggleFeatured = async (id: string, featured: boolean) => {
+    try {
+      const { data, error } = await supabase
+        .from('properties')
+        .update({
+          featured,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select();
+        
+      if (error) throw error;
+      
+      setProperties(prev => prev.map(p => p.id === id ? { ...p, featured } as Property : p));
+      
+      // Update featured properties
+      if (featured) {
+        const property = properties.find(p => p.id === id);
+        if (property) {
+          setFeaturedProperties(prev => [...prev, { ...property, featured: true }]);
+        }
+      } else {
+        setFeaturedProperties(prev => prev.filter(p => p.id !== id));
+      }
+      
+      toast({
+        title: 'Berhasil',
+        description: featured ? 'Properti ditandai sebagai unggulan' : 'Properti tidak lagi unggulan',
+        className: "bg-gradient-to-r from-green-500 to-green-600 text-white border-0",
+      });
+      
+      return data[0] as Property;
+    } catch (err: any) {
+      console.error('Error toggling featured status:', err);
+      
+      toast({
+        title: 'Error',
+        description: err.message || 'Gagal mengubah status unggulan properti',
+        variant: 'destructive',
+      });
+      
+      return null;
+    }
+  };
 
   useEffect(() => {
-    fetchPropertyDetail();
-  }, [fetchPropertyDetail]);
+    fetchProperties();
+  }, []);
   
-  const refetchPropertyDetail = useCallback(() => {
-    fetchPropertyDetail();
-  }, [fetchPropertyDetail]);
-  
-  return { property, loading, error, refetchPropertyDetail };
+  return {
+    properties,
+    featuredProperties,
+    isLoading,
+    error,
+    fetchProperties,
+    fetchPropertyById,
+    addProperty,
+    updateProperty,
+    deleteProperty,
+    toggleFeatured
+  };
 };

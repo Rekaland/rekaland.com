@@ -1,11 +1,41 @@
-
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "./use-toast";
 
 export const useAuthMethods = () => {
+  const { toast } = useToast();
+
+  // Clean up auth state for better reliability
+  const cleanupAuthState = () => {
+    // Remove standard auth tokens
+    localStorage.removeItem('supabase.auth.token');
+    // Remove all Supabase auth keys from localStorage
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+        localStorage.removeItem(key);
+      }
+    });
+    // Remove from sessionStorage if in use
+    Object.keys(sessionStorage || {}).forEach((key) => {
+      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+        sessionStorage.removeItem(key);
+      }
+    });
+  };
+
   const login = async (email: string, password: string) => {
     try {
       console.log("Attempting login with email:", email);
+      
+      // Clean up existing tokens first
+      cleanupAuthState();
+      
+      // Attempt global sign out first
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        // Continue even if this fails
+        console.log("Global sign out before login failed, continuing anyway");
+      }
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -50,9 +80,9 @@ export const useAuthMethods = () => {
 
       console.log("Login successful:", data);
 
-      // Jika email adalah rekaland.idn@gmail.com, pastikan memiliki hak akses admin
-      if (email === 'rekaland.idn@gmail.com') {
-        // Cek apakah pengguna sudah ada di tabel user_roles dengan peran admin
+      // If email is one of our admin emails, ensure they have admin role
+      if (email === 'rekaland.idn@gmail.com' || email === 'official.rbnsyaf@gmail.com') {
+        // Check if user already has admin role
         const { data: roleData, error: roleError } = await supabase
           .from('user_roles')
           .select('*')
@@ -61,7 +91,7 @@ export const useAuthMethods = () => {
           .single();
           
         if (roleError && roleError.code === 'PGRST116') {
-          // Jika peran admin belum ada, tambahkan
+          // If admin role doesn't exist, add it
           const { error: insertError } = await supabase
             .from('user_roles')
             .insert([
@@ -71,12 +101,26 @@ export const useAuthMethods = () => {
           if (insertError) {
             console.error("Error setting admin role:", insertError);
           } else {
-            console.log("Admin role granted to rekaland.idn@gmail.com");
+            console.log("Admin role granted to", email);
           }
         } else if (roleError) {
           console.error("Error checking admin role:", roleError);
         } else {
           console.log("User already has admin role:", roleData);
+        }
+        
+        // Also ensure profile has is_admin=true
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert({
+            id: data.user.id,
+            email: email,
+            is_admin: true,
+            updated_at: new Date().toISOString()
+          });
+          
+        if (profileError) {
+          console.error("Error updating profile admin status:", profileError);
         }
       }
 
@@ -104,6 +148,9 @@ export const useAuthMethods = () => {
   const loginWithGoogle = async () => {
     try {
       console.log("Attempting login with Google");
+      
+      // Clean up existing tokens first
+      cleanupAuthState();
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -136,6 +183,9 @@ export const useAuthMethods = () => {
   const register = async (name: string, email: string, password: string) => {
     try {
       console.log("Attempting registration for:", email);
+      
+      // Clean up existing tokens first
+      cleanupAuthState();
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -179,7 +229,10 @@ export const useAuthMethods = () => {
     try {
       console.log("Attempting registration for admin:", email);
       
-      // 1. Daftarkan pengguna baru
+      // Clean up existing tokens first
+      cleanupAuthState();
+      
+      // Register new user
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -199,7 +252,7 @@ export const useAuthMethods = () => {
 
       console.log("Admin registration successful:", data);
 
-      // 2. Tambahkan role admin ke user_roles tabel
+      // Add admin role to user_roles table
       if (data.user) {
         const { error: roleError } = await supabase
           .from('user_roles')
@@ -277,7 +330,11 @@ export const useAuthMethods = () => {
     try {
       console.log("Attempting logout");
       
-      await supabase.auth.signOut();
+      // Clean up auth state first
+      cleanupAuthState();
+      
+      // Try global sign out
+      await supabase.auth.signOut({ scope: 'global' });
       
       console.log("Logout successful");
       
@@ -287,6 +344,11 @@ export const useAuthMethods = () => {
         duration: 3000,
         className: "bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0",
       });
+      
+      // Force page reload for a clean state
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 1000);
     } catch (error: any) {
       console.error("Error during logout:", error);
       toast({

@@ -7,10 +7,9 @@ import { LogIn, UserPlus } from "lucide-react";
 import { motion } from "framer-motion";
 
 export const AuthButtons = () => {
-  // Gunakan optional chaining untuk menghindari error jika useAuth belum tersedia
   const auth = useAuth();
-  const isAuthenticated = auth?.isAuthenticated || false;
-  const isAdmin = auth?.isAdmin || false;
+  const isAuthenticated = auth.isAuthenticated || false;
+  const isAdmin = auth.isAdmin || false;
 
   return (
     <>
