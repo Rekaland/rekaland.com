@@ -1,20 +1,16 @@
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 const WelcomeToast = () => {
   const { toast } = useToast();
   const [hasShownWelcome, setHasShownWelcome] = useState(false);
-  const toastShownRef = useRef(false);
   
   useEffect(() => {
     // Periksa apakah welcome toast sudah pernah ditampilkan dalam sesi ini
     const hasShown = sessionStorage.getItem("welcomeToastShown");
     
-    // Gunakan ref untuk menghindari multiple toasts
-    if (!hasShown && !hasShownWelcome && !toastShownRef.current) {
-      toastShownRef.current = true;
-      
+    if (!hasShown && !hasShownWelcome) {
       // Set timeout untuk menghindari race condition dengan toast lainnya
       const timer = setTimeout(() => {
         toast({

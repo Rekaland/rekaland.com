@@ -3,22 +3,65 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = "https://eypyhmyltruvzigsuxod.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5cHlobXlsdHJ1dnppZ3N1eG9kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUzNDc1NzUsImV4cCI6MjA2MDkyMzU3NX0.T75EF2nlZHJroPgE-frv1l2Q0PiHSJBJqvqWvNcNxOA";
+const SUPABASE_URL = "https://qnzmhgvpynokshnlbsiw.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuem1oZ3ZweW5va3Nobmxic2l3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyNzI3NTUsImV4cCI6MjA1ODg0ODc1NX0.viIBr28yGeY9SaD9tYejkQ-5_Ihk69VygMYh6l-VThA";
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-// Configure client with settings for stable real-time connections
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-  realtime: {
-    timeout: 60000, // Increase timeout to 60 seconds
-    params: {
-      eventsPerSecond: 10 // Limit events per second to avoid throttling
-    }
-  },
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true
-  }
-});
+export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+// Extended User type that includes our custom fields
+export interface ExtendedUser {
+  id: string;
+  email?: string;
+  name?: string;
+  avatar?: string;
+  role?: string;
+}
+
+// Tipe untuk properti
+export type Property = {
+  id: string;
+  title: string;
+  description?: string;
+  price: number;
+  location: string;
+  address?: string;
+  land_size?: number;
+  building_size?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  category: 'empty_lot' | 'semi_finished' | 'ready_to_occupy';
+  status: 'available' | 'sold' | 'pending';
+  featured: boolean;
+  images?: string[];
+  created_at: string;
+  updated_at: string;
+};
+
+// Tipe untuk testimoni
+export type Testimonial = {
+  id: string;
+  name: string;
+  avatar_url?: string;
+  testimonial: string;
+  rating: number;
+  position?: string;
+  company?: string;
+  created_at: string;
+};
+
+// Tipe untuk inquiry/pesan
+export type Inquiry = {
+  id: string;
+  user_id?: string;
+  property_id?: string;
+  name: string;
+  email: string;
+  phone?: string;
+  message: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+};

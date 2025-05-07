@@ -1,4 +1,3 @@
-
 import * as React from "react"
 
 import type {
@@ -56,7 +55,7 @@ interface State {
 
 const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
 
-const addToRemoveQueue = (toastId: string, duration = TOAST_REMOVE_DELAY) => {
+const addToRemoveQueue = (toastId: string) => {
   if (toastTimeouts.has(toastId)) {
     return
   }
@@ -67,7 +66,7 @@ const addToRemoveQueue = (toastId: string, duration = TOAST_REMOVE_DELAY) => {
       type: "REMOVE_TOAST",
       toastId: toastId,
     })
-  }, duration)
+  }, TOAST_REMOVE_DELAY)
 
   toastTimeouts.set(toastId, timeout)
 }
@@ -94,12 +93,10 @@ export const reducer = (state: State, action: Action): State => {
       // ! Side effects ! - This could be extracted into a dismissToast() action,
       // but I'll keep it here for simplicity
       if (toastId) {
-        const toast = state.toasts.find((t) => t.id === toastId)
-        const duration = toast?.duration || TOAST_REMOVE_DELAY
-        addToRemoveQueue(toastId, duration)
+        addToRemoveQueue(toastId)
       } else {
         state.toasts.forEach((toast) => {
-          addToRemoveQueue(toast.id, toast.duration || TOAST_REMOVE_DELAY)
+          addToRemoveQueue(toast.id)
         })
       }
 
@@ -158,7 +155,6 @@ function toast({ ...props }: Toast) {
       ...props,
       id,
       open: true,
-      duration: props.duration || 5000, // Default 5 seconds if not specified
       onOpenChange: (open) => {
         if (!open) dismiss()
       },

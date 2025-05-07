@@ -1,5 +1,5 @@
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from './use-toast';
 
@@ -17,7 +17,6 @@ export const useRealTimeSync = (
   const [lastEvent, setLastEvent] = useState<any>(null);
   const [retryCount, setRetryCount] = useState(0);
   const { toast } = useToast();
-  const channelRef = useRef<any>(null);
   
   // Function to create and manage the subscription channel
   const setupSubscription = useCallback(() => {
@@ -38,23 +37,18 @@ export const useRealTimeSync = (
       }, {} as Record<string, any>);
     }
     
-    // Create a stable channel name using the table name and a fixed suffix
+    // Create a stable channel name using the table name, without the timestamp
     // This prevents creating multiple channels for the same table which causes flickering
-    const channelName = `${table}-stable-channel`;
+    const channelName = `${table}-changes-stable`;
     
-    // Prevent duplicate channel creation by removing any existing one
-    if (channelRef.current) {
-      supabase.removeChannel(channelRef.current);
-    }
-    
-    // Setup real-time subscription to table changes
+    // Setup real-time subscription ke perubahan tabel
     const channel = supabase
       .channel(channelName)
       .on('postgres_changes', subscriptionOptions, (payload) => {
         console.log(`Real-time update diterima untuk ${table}:`, payload);
         setLastEvent(payload);
         
-        // Call callback if provided, with debounce to prevent excessive updates
+        // Panggil callback jika disediakan
         if (onUpdate) {
           onUpdate();
         }
@@ -68,34 +62,26 @@ export const useRealTimeSync = (
           setIsSubscribed(false);
         }
       });
-      
-    // Store the channel reference for cleanup
-    channelRef.current = channel;
 
-    // Cleanup subscription when component unmounts
+    // Cleanup subscription saat komponen unmount
     return () => {
-      if (channelRef.current) {
-        console.log(`Membersihkan subscription real-time untuk ${table}`);
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
-      }
+      console.log(`Membersihkan subscription real-time untuk ${table}`);
+      supabase.removeChannel(channel);
     };
   }, [table, onUpdate, specificFilters]);
 
   useEffect(() => {
     const cleanup = setupSubscription();
     
-    // Implement a retry strategy with limited attempts
+    // Limit retries to reduce flickering
     let retryTimer: ReturnType<typeof setTimeout>;
     
-    if (!isSubscribed && retryCount < 1) { // Limit retry attempts to reduce flickering
-      const retryDelay = 3000; // Fixed delay of 3 seconds between retries
+    if (!isSubscribed && retryCount < 1) { // Drastically reduce retry attempts
+      const retryDelay = 3000; // Fixed delay of 3 seconds
       console.log(`Akan mencoba ulang terhubung ke ${table} dalam ${retryDelay/1000} detik`);
       
       retryTimer = setTimeout(() => {
-        console.log(`Mencoba ulang koneksi ke ${table} (attempt ${retryCount + 1})...`);
         setRetryCount(prev => prev + 1);
-        setupSubscription();
       }, retryDelay);
     }
     
