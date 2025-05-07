@@ -83,7 +83,7 @@ const RealTimeSync = ({ onInitialSync }: RealTimeSyncProps) => {
       
       // Remove any existing channel first to prevent duplication
       const existingChannels = supabase.getChannels();
-      const existingChannel = existingChannels.find(ch => ch.name === channelName);
+      const existingChannel = existingChannels.find(ch => ch === channelName);
       if (existingChannel) {
         supabase.removeChannel(existingChannel);
       }
