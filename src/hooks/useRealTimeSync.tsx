@@ -19,7 +19,7 @@ export const useRealTimeSync = (
   const { toast } = useToast();
   
   // Use refs to maintain stable channel references
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const channelRef = useRef<RealtimeChannel | null>(null);
   const tableRef = useRef(table);
   const onUpdateRef = useRef(onUpdate);
   const filtersRef = useRef(specificFilters);

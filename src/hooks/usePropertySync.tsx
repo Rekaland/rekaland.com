@@ -9,7 +9,7 @@ export const usePropertySync = () => {
   const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'error'>('syncing');
   const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
   const { toast } = useToast();
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const channelRef = useRef<RealtimeChannel | null>(null);
   const isMounted = useRef(true);
 
   useEffect(() => {
@@ -21,6 +21,7 @@ export const usePropertySync = () => {
     
     // Bersihkan channel lama jika ada
     const existingChannels = supabase.getChannels();
+    // Compare by channel name property instead of the channel object itself
     const existingChannel = existingChannels.find(ch => ch.name === channelName);
     if (existingChannel) {
       supabase.removeChannel(existingChannel);
