@@ -46,6 +46,20 @@ export type Property = {
   updated_at: string;
 };
 
+// Type for property managers
+export type PropertyManager = {
+  id: string;
+  user_id: string;
+  full_name: string;
+  email: string;
+  phone?: string;
+  company: string;
+  region: string;
+  status: 'pending' | 'approved' | 'rejected';
+  created_at: string;
+  updated_at?: string;
+};
+
 // Type for testimonials
 export type Testimonial = {
   id: string;

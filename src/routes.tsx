@@ -14,6 +14,8 @@ import ProfilePage from "./pages/ProfilePage";
 import SettingsPage from "./pages/SettingsPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
+import AdminRegisterPage from "./pages/AdminRegisterPage";
+import AdminRegisterConfirmationPage from "./pages/AdminRegisterConfirmationPage";
 import InformationPage from "./pages/InformationPage";
 import ContentPage from "./pages/ContentPage";
 
@@ -78,6 +80,14 @@ export const router = createBrowserRouter([
   {
     path: "/register",
     element: <RegisterPage />,
+  },
+  {
+    path: "/daftar-pengelola-properti",
+    element: <AdminRegisterPage />,
+  },
+  {
+    path: "/admin-register-confirmation",
+    element: <AdminRegisterConfirmationPage />,
   },
   {
     path: "*",

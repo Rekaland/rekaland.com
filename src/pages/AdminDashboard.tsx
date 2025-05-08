@@ -17,6 +17,7 @@ import EnhancedContentManagement from "@/components/admin/EnhancedContentManagem
 import EnhancedPropertyManagement from "@/components/admin/EnhancedPropertyManagement";
 import ProductContentManagement from "@/components/admin/ProductContentManagement";
 import DashboardTools from "@/components/admin/DashboardTools";
+import PropertyManagerVerification from "@/components/admin/PropertyManagerVerification";
 import {
   LayoutDashboard,
   Home,
@@ -28,7 +29,8 @@ import {
   Terminal,
   Package,
   Code,
-  Wrench
+  Wrench,
+  UserCheck
 } from "lucide-react";
 import MainLayout from "@/layouts/MainLayout";
 import { useToast } from "@/hooks/use-toast";
@@ -77,6 +79,10 @@ const AdminDashboard = () => {
                   <Home size={16} />
                   Properti
                 </TabsTrigger>
+                <TabsTrigger value="property_managers" className="flex items-center gap-2">
+                  <UserCheck size={16} />
+                  Pengelola
+                </TabsTrigger>
                 <TabsTrigger value="contents" className="flex items-center gap-2">
                   <FileText size={16} />
                   Konten
@@ -122,6 +128,10 @@ const AdminDashboard = () => {
 
               <TabsContent value="properties">
                 <PropertyManagement />
+              </TabsContent>
+
+              <TabsContent value="property_managers">
+                <PropertyManagerVerification />
               </TabsContent>
 
               <TabsContent value="contents">
