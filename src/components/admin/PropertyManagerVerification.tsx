@@ -41,8 +41,21 @@ const PropertyManagerVerification = () => {
   const [detailManager, setDetailManager] = useState<PropertyManager | null>(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   
-  // Real-time subscription for property managers
-  useRealTimeSync("property_managers", fetchManagers);
+  // Set up real-time listening for the property_managers table
+  useEffect(() => {
+    const channel = supabase
+      .channel('property-managers-changes')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'property_managers' }, 
+        () => {
+          fetchManagers();
+        })
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   // Fetch property managers on load
   useEffect(() => {
@@ -67,16 +80,16 @@ const PropertyManagerVerification = () => {
   async function fetchManagers() {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('property_managers')
+      // Type assertion to handle the missing type definition
+      const { data, error } = await (supabase
+        .from('property_managers') as any)
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       
-      // Type assertion - we know the structure matches PropertyManager type
-      setManagers(data as unknown as PropertyManager[]);
-      setFilteredManagers(data as unknown as PropertyManager[]);
+      setManagers(data as PropertyManager[]);
+      setFilteredManagers(data as PropertyManager[]);
     } catch (error: any) {
       console.error('Error fetching property managers:', error);
       toast({
@@ -91,8 +104,8 @@ const PropertyManagerVerification = () => {
 
   async function updateManagerStatus(id: string, status: 'approved' | 'rejected') {
     try {
-      const { error } = await supabase
-        .from('property_managers')
+      const { error } = await (supabase
+        .from('property_managers') as any)
         .update({ status })
         .eq('id', id);
 

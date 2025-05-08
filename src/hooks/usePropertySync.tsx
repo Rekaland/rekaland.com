@@ -16,13 +16,14 @@ export const usePropertySync = () => {
     checkSyncStatus();
 
     // Setup real-time subscription dengan channel stabil
-    const channelName = 'property-sync-stable'; // Gunakan nama stabil
+    const channelName = 'property-sync-stable';
     
-    // Bersihkan channel lama jika ada
+    // Remove any existing channel with the same name
     const existingChannels = supabase.getChannels();
-    const existingChannel = existingChannels.find(ch => ch === channelName);
-    if (existingChannel) {
-      supabase.removeChannel(existingChannel);
+    for (const channel of existingChannels) {
+      if (channel.opts?.name === channelName) {
+        supabase.removeChannel(channel);
+      }
     }
     
     // Buat channel baru

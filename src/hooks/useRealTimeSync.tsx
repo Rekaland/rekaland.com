@@ -54,7 +54,7 @@ export const useRealTimeSync = (
       }, {} as Record<string, any>);
     }
     
-    // Create a stable channel name using the table name, without the timestamp
+    // Create a stable channel name using the table name
     const channelName = `${tableRef.current}-changes-stable`;
     
     // Setup real-time subscription

@@ -89,9 +89,8 @@ const AdminRegisterPage = () => {
       if (authError) throw authError;
 
       if (authData.user) {
-        // 2. Create property manager profile with additional details
-        // Using direct SQL query via RPC to avoid type issues
-        const { error: profileError } = await supabase.rpc('create_property_manager', {
+        // Using a SQL RPC function to create the property manager
+        const { error: rpcError } = await supabase.rpc('create_property_manager', {
           p_user_id: authData.user.id,
           p_full_name: values.name,
           p_email: values.email,
@@ -100,17 +99,19 @@ const AdminRegisterPage = () => {
           p_company: values.company
         });
 
-        if (profileError) {
-          // Fallback to direct insert if RPC doesn't exist
-          const { error: insertError } = await supabase.from('property_managers').insert({
-            user_id: authData.user.id, 
-            full_name: values.name,
-            email: values.email,
-            phone: values.phone,
-            region: values.region,
-            company: values.company,
-            status: 'pending'
-          } as any); // Type assertion to bypass TypeScript check
+        if (rpcError) {
+          // Fall back to direct insert using type assertion
+          const { error: insertError } = await (supabase
+            .from('property_managers') as any)
+            .insert({
+              user_id: authData.user.id, 
+              full_name: values.name,
+              email: values.email,
+              phone: values.phone,
+              region: values.region,
+              company: values.company,
+              status: 'pending'
+            });
           
           if (insertError) throw insertError;
         }

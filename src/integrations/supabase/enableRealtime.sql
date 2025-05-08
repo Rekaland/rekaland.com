@@ -1,4 +1,5 @@
 
+
 -- Enable row level security
 ALTER TABLE public.properties ENABLE ROW LEVEL SECURITY;
 
@@ -33,3 +34,4 @@ ALTER TABLE public.profiles REPLICA IDENTITY FULL;
 ALTER TABLE public.inquiries REPLICA IDENTITY FULL;
 ALTER TABLE public.property_managers REPLICA IDENTITY FULL;
 ALTER TABLE public.user_roles REPLICA IDENTITY FULL;
+

@@ -1,4 +1,5 @@
 
+
 -- Function to create a property manager
 CREATE OR REPLACE FUNCTION public.create_property_manager(
   p_user_id UUID,
@@ -37,3 +38,4 @@ BEGIN
   );
 END;
 $$;
+

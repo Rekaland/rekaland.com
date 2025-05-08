@@ -81,11 +81,12 @@ const RealTimeSync = ({ onInitialSync }: RealTimeSyncProps) => {
       // Create a stable channel name
       const channelName = `${tableName}-changes-stable`;
       
-      // Remove any existing channel first to prevent duplication
+      // Remove any existing channel with matching name
       const existingChannels = supabase.getChannels();
-      const existingChannel = existingChannels.find(ch => ch.name === channelName);
-      if (existingChannel) {
-        supabase.removeChannel(existingChannel);
+      for (const channel of existingChannels) {
+        if (channel.opts?.name === channelName) {
+          supabase.removeChannel(channel);
+        }
       }
       
       // Create and subscribe to the channel
