@@ -1,160 +1,245 @@
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { Button } from "@/components/ui/button";
 import { supabase } from '@/integrations/supabase/client';
-import { Check, AlertTriangle, Loader2 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { useRealTimeSync } from '@/hooks/useRealTimeSync';
+import { CheckCircle, XCircle, RefreshCw, AlertTriangle } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 interface RealTimeSyncProps {
   onInitialSync?: () => void;
 }
 
-const RealTimeSync: React.FC<RealTimeSyncProps> = ({ onInitialSync }) => {
-  const [isConnected, setIsConnected] = useState(false);
-  const [tables, setTables] = useState<string[]>([]);
-  const [syncedTables, setSyncedTables] = useState<string[]>([]);
-  const [isInitializing, setIsInitializing] = useState(true);
+const TABLES = [
+  'properties',
+  'profiles',
+  'inquiries',
+  'settings',
+  'testimonials',
+  'contents',
+  'product_contents'
+];
 
-  // Check connection and initialize
+const RealTimeSync = ({ onInitialSync }: RealTimeSyncProps) => {
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [status, setStatus] = useState<{[key: string]: boolean}>({
+    properties: false,
+    profiles: false,
+    inquiries: false,
+    settings: false,
+    testimonials: false,
+    contents: false,
+    product_contents: false
+  });
+  const { toast } = useToast();
+  const initialSyncCalled = useRef(false);
+  const syncAllTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Create stable refs to store sync handlers
+  const syncHandlers = useRef<{[key: string]: ReturnType<typeof useRealTimeSync>}>({});
+
+  // Setup individual sync handlers for each table
+  TABLES.forEach(table => {
+    // Using a stable identifier pattern
+    syncHandlers.current[table] = useRealTimeSync(table);
+  });
+
+  // Optimize status update by using a single effect for all statuses
   useEffect(() => {
-    const checkConnection = async () => {
-      setIsInitializing(true);
-      try {
-        // Get all tables from the database
-        const { data: tableData, error: tableError } = await supabase
-          .from('properties')
-          .select('id')
-          .limit(1);
-          
-        if (tableError) throw tableError;
-        
-        // If we got here, we're connected
-        setIsConnected(true);
-        
-        // Define our key tables
-        const keyTables = ['properties', 'inquiries', 'contents', 'profiles', 'product_contents'];
-        setTables(keyTables);
-        
-        // Initialize subscriptions for all tables
-        keyTables.forEach(table => {
-          setupTableSync(table);
+    const newStatus: {[key: string]: boolean} = {};
+    
+    // Check connection status for each table
+    Object.entries(syncHandlers.current).forEach(([table, handler]) => {
+      newStatus[table] = handler.isSubscribed;
+    });
+    
+    // Only update state if there's a change
+    const statusChanged = Object.entries(newStatus).some(
+      ([key, value]) => status[key] !== value
+    );
+    
+    if (statusChanged) {
+      setStatus(newStatus);
+    }
+
+    // Call onInitialSync only once when all tables are successfully synced
+    const allSynced = Object.values(newStatus).every(Boolean);
+    
+    if (allSynced && onInitialSync && !initialSyncCalled.current) {
+      initialSyncCalled.current = true;
+      onInitialSync();
+    }
+  }, [
+    onInitialSync,
+    status,
+    syncHandlers.current
+  ]);
+
+  // Enhanced enableRealtimeForTable with improved stability
+  const enableRealtimeForTable = async (tableName: string) => {
+    try {
+      // Create a stable channel name
+      const channelName = `${tableName}-changes-stable`;
+      
+      // Remove any existing channel first to prevent duplication
+      const existingChannels = supabase.getChannels();
+      // Compare by channel name property instead of the channel object itself
+      const existingChannel = existingChannels.find(ch => ch.name === channelName);
+      if (existingChannel) {
+        supabase.removeChannel(existingChannel);
+      }
+      
+      // Create and subscribe to the channel
+      const channel = supabase
+        .channel(channelName)
+        .on('postgres_changes', 
+          { event: '*', schema: 'public', table: tableName }, 
+          (payload) => {
+            console.log(`Real-time update for ${tableName}:`, payload);
+          }
+        )
+        .subscribe((status) => {
+          console.log(`Channel ${channelName} status:`, status);
+          if (status === 'SUBSCRIBED') {
+            setStatus(prev => ({
+              ...prev,
+              [tableName]: true
+            }));
+          }
         });
+      
+      if (channel) {
+        return { success: true, data: { table: tableName, status: "enabled" } };
+      } else {
+        throw new Error(`Failed to create channel for ${tableName}`);
+      }
+    } catch (error) {
+      console.error(`Failed to enable realtime for table ${tableName}:`, error);
+      return { success: false, error };
+    }
+  };
+
+  const syncAll = async () => {
+    // Prevent multiple clicks
+    if (isSyncing) return;
+    
+    setIsSyncing(true);
+    
+    // Clear any existing timeout
+    if (syncAllTimeoutRef.current) {
+      clearTimeout(syncAllTimeoutRef.current);
+    }
+    
+    try {
+      let successCount = 0;
+      
+      // Process tables sequentially with increasing delays
+      for (let i = 0; i < TABLES.length; i++) {
+        const table = TABLES[i];
         
-        // Trigger the onInitialSync callback after a short delay
-        if (onInitialSync) {
-          setTimeout(() => {
-            onInitialSync();
-          }, 1000);
+        // Add increasing delay between subscriptions to prevent overwhelming
+        await new Promise(resolve => setTimeout(resolve, i * 300));
+        
+        const result = await enableRealtimeForTable(table);
+        if (result.success) {
+          successCount++;
         }
-      } catch (error) {
-        console.error("Failed to initialize real-time sync:", error);
-        setIsConnected(false);
-      } finally {
-        setIsInitializing(false);
+      }
+      
+      if (successCount > 0) {
+        toast({
+          title: "Sinkronisasi berhasil",
+          description: `${successCount} dari ${TABLES.length} tabel telah diaktifkan untuk sinkronisasi real-time`,
+          className: "bg-gradient-to-r from-green-500 to-green-600 text-white",
+        });
+      } else {
+        toast({
+          title: "Sinkronisasi gagal",
+          description: "Tidak ada tabel yang berhasil diaktifkan. Periksa konsol untuk detail.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Failed to sync all tables:", error);
+      toast({
+        title: "Error",
+        description: "Terjadi kesalahan saat mencoba sinkronisasi tabel",
+        variant: "destructive",
+      });
+    } finally {
+      // Set timeout before allowing another sync to prevent rapid re-clicks
+      syncAllTimeoutRef.current = setTimeout(() => {
+        setIsSyncing(false);
+      }, 3000);
+    }
+  };
+
+  // Auto-cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (syncAllTimeoutRef.current) {
+        clearTimeout(syncAllTimeoutRef.current);
       }
     };
-    
-    checkConnection();
-    
-    // Cleanup function
-    return () => {
-      // We'll handle channel cleanup in the setupTableSync function
-    };
-  }, [onInitialSync]);
-  
-  // Set up real-time sync for a specific table
-  const setupTableSync = (table: string) => {
-    const channelName = `${table}-realtime-sync`;
-    
-    const channel = supabase
-      .channel(channelName)
-      .on('postgres_changes', { event: '*', schema: 'public', table: table }, (payload) => {
-        console.log(`Real-time event on ${table}:`, payload);
-        // Add this table to the list of synced tables if it's not already there
-        setSyncedTables(prev => 
-          prev.includes(table) ? prev : [...prev, table]
-        );
-      })
-      .subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          console.log(`Subscribed to ${table} changes`);
-          // Mark this table as synced
-          setSyncedTables(prev => 
-            prev.includes(table) ? prev : [...prev, table]
-          );
-        } else if (status === 'CHANNEL_ERROR') {
-          console.error(`Error subscribing to ${table} changes`);
-          // Remove this table from the synced list
-          setSyncedTables(prev => prev.filter(t => t !== table));
-        }
-      });
-      
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  };
-  
-  // Handle manual reconnection
-  const handleReconnect = () => {
-    setIsInitializing(true);
-    // Re-initialize all subscriptions
-    tables.forEach(table => {
-      setupTableSync(table);
-    });
-    setIsInitializing(false);
-  };
+  }, []);
 
-  if (isInitializing) {
-    return (
-      <div className="flex items-center space-x-2">
-        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-        <span className="text-sm text-muted-foreground">Initializing real-time sync...</span>
-      </div>
-    );
-  }
-
-  if (!isConnected) {
-    return (
-      <div className="space-y-2">
-        <div className="flex items-center space-x-2">
-          <AlertTriangle className="h-4 w-4 text-amber-500" />
-          <span className="text-sm text-amber-500 font-medium">Tidak terhubung ke database</span>
-        </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleReconnect}
-          className="text-xs"
-        >
-          Coba Hubungkan Kembali
-        </Button>
-      </div>
-    );
-  }
+  // Hitung jumlah tabel yang tersinkronisasi
+  const connectedCount = Object.values(status).filter(Boolean).length;
+  const totalTables = Object.keys(status).length;
+  
+  // Format persentase
+  const percentage = Math.round((connectedCount / totalTables) * 100);
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-            <Check className="h-3 w-3 mr-1" /> Terhubung
-          </Badge>
-          <span className="text-xs text-muted-foreground">
-            {syncedTables.length}/{tables.length} tabel tersinkronisasi
-          </span>
+    <div className="space-y-4">
+      <div className="flex flex-col space-y-2">
+        <div className="flex justify-between items-center">
+          <div>
+            <span className="text-2xl font-bold">{percentage}%</span>
+            <span className="text-gray-500 ml-2">
+              ({connectedCount}/{totalTables} tabel)
+            </span>
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={syncAll}
+            disabled={isSyncing}
+            className="flex gap-2 items-center"
+          >
+            {isSyncing ? (
+              <>
+                <RefreshCw size={16} className="animate-spin" />
+                <span>Menyinkronkan...</span>
+              </>
+            ) : (
+              <>
+                <RefreshCw size={16} />
+                <span>Sinkronkan Ulang Semua</span>
+              </>
+            )}
+          </Button>
+        </div>
+        
+        <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+          <div 
+            className="h-full bg-gradient-to-r from-rekaland-orange to-amber-500 transition-all duration-300" 
+            style={{ width: `${percentage}%` }}
+          ></div>
         </div>
       </div>
       
-      <div className="grid grid-cols-2 gap-1 mt-1">
-        {tables.map(table => (
-          <div key={table} className="flex items-center space-x-1">
-            <div 
-              className={`h-2 w-2 rounded-full ${syncedTables.includes(table) 
-                ? 'bg-green-500 animate-pulse' 
-                : 'bg-gray-300'}`} 
-            />
-            <span className="text-xs text-muted-foreground capitalize">
-              {table.replace('_', ' ')}
+      <div className="grid grid-cols-2 gap-2 text-sm">
+        {Object.entries(status).map(([table, isConnected]) => (
+          <div key={table} className="flex items-center gap-2 p-1.5">
+            {isConnected ? (
+              <CheckCircle size={14} className="text-green-600" />
+            ) : (
+              <AlertTriangle size={14} className="text-amber-500" />
+            )}
+            <span className={isConnected ? "text-gray-900" : "text-gray-500"}>
+              {table.replace(/_/g, ' ')}
             </span>
           </div>
         ))}

@@ -28,35 +28,22 @@ export interface ExtendedUser {
 
 // Types for database entities
 export type Property = {
-  id?: string;
+  id: string;
   title: string;
-  description?: string | null;
+  description?: string;
   price: number;
   location: string;
-  address?: string | null;
-  land_size?: number | null;
-  building_size?: number | null;
-  bedrooms?: number | null;
-  bathrooms?: number | null;
+  address?: string;
+  land_size?: number;
+  building_size?: number;
+  bedrooms?: number;
+  bathrooms?: number;
   category: 'empty_lot' | 'semi_finished' | 'ready_to_occupy';
   status: 'available' | 'sold' | 'pending';
   featured: boolean;
-  images?: string[] | null;
-  created_at?: string;
-  updated_at?: string;
-  // Extended property fields
-  floor_plan_images?: string[] | null;
-  virtual_tour_url?: string | null;
-  location_map_url?: string | null;
-  meta_description?: string | null;
-  features?: string[] | null;
-  specifications?: Record<string, any> | null;
-  faqs?: { question: string; answer: string }[] | null;
-  amenities?: string[] | null;
-  payment_options?: string[] | null;
-  contact_person?: string | null;
-  contact_phone?: string | null;
-  contact_email?: string | null;
+  images?: string[];
+  created_at: string;
+  updated_at: string;
 };
 
 // Type for testimonials

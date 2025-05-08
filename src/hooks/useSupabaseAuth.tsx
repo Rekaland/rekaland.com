@@ -151,13 +151,14 @@ export const useSupabaseAuth = () => {
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', userId);
+        .eq('id', userId)
+        .single();
 
       if (profileError) {
         console.error("Error fetching profile:", profileError);
         
-        // If no profile found, create one
-        if (profileError.code === 'PGRST116' || !profile || profile.length === 0) {
+        // If error is 'record not found', try to create a new profile
+        if (profileError.code === 'PGRST116') {
           try {
             const { data: user } = await supabase.auth.getUser();
             if (user) {
@@ -168,7 +169,7 @@ export const useSupabaseAuth = () => {
                   full_name: user.user?.user_metadata?.full_name || user.user?.user_metadata?.name,
                   email: user.user?.email
                 })
-                .select('*')
+                .select()
                 .single();
                 
               if (createError) {
@@ -203,55 +204,27 @@ export const useSupabaseAuth = () => {
         } else {
           throw profileError;
         }
-      } else if (profile && profile.length > 0) {
-        console.log("User profile data:", profile[0]);
+      } else {
+        console.log("User profile data:", profile);
         
         // Update state with profile data
         setAuthState(prevState => {
           const updatedUser: ExtendedUser = {
             ...(prevState.user || { id: userId }),
-            name: profile[0]?.full_name || '',
-            avatar: profile[0]?.avatar_url || '',
+            name: profile?.full_name || '',
+            avatar: profile?.avatar_url || '',
             role: 'user', // Default role
           };
 
           return {
             ...prevState,
             user: updatedUser,
-            profile: profile[0],
+            profile,
           };
         });
         
         // Check admin status
         checkAdminStatus(userId);
-      } else {
-        console.log("No profile found, will create one");
-        // Create a new profile
-        try {
-          const { data: user } = await supabase.auth.getUser();
-          if (user && user.user) {
-            const { data: newProfile, error: createError } = await supabase
-              .from('profiles')
-              .insert({
-                id: userId,
-                full_name: user.user?.user_metadata?.full_name || user.user?.user_metadata?.name || 'User',
-                email: user.user?.email
-              })
-              .select('*')
-              .single();
-              
-            if (createError) {
-              throw createError;
-            }
-            
-            console.log("Created new profile:", newProfile);
-            
-            // Check admin status after creating profile
-            checkAdminStatus(userId);
-          }
-        } catch (err) {
-          console.error("Error creating profile:", err);
-        }
       }
     } catch (error) {
       console.error('Error fetching user data:', error);
@@ -275,44 +248,6 @@ export const useSupabaseAuth = () => {
         if (adminEmails.includes(userEmail)) {
           console.log(`User email ${userEmail} matches admin email, setting admin status directly`);
           
-          // Ensure user has admin role in user_roles table
-          const { data: existingRole, error: roleCheckError } = await supabase
-            .from('user_roles')
-            .select('*')
-            .eq('user_id', userId)
-            .eq('role', 'admin');
-            
-          if (roleCheckError) {
-            console.error("Error checking existing admin role:", roleCheckError);
-          } else if (!existingRole || existingRole.length === 0) {
-            // Insert admin role if not exists
-            const { error: insertError } = await supabase
-              .from('user_roles')
-              .insert({
-                user_id: userId,
-                role: 'admin'
-              });
-                
-            if (insertError) {
-              console.error("Error inserting admin role:", insertError);
-            } else {
-              console.log("Added admin role for user:", userId);
-            }
-          } else {
-            console.log("User already has admin role in database");
-          }
-          
-          // Update profile is_admin flag
-          const { error: profileUpdateError } = await supabase
-            .from('profiles')
-            .update({ is_admin: true })
-            .eq('id', userId);
-            
-          if (profileUpdateError) {
-            console.error("Error updating profile is_admin flag:", profileUpdateError);
-          }
-          
-          // Set admin status in state
           setAuthState(prevState => {
             const updatedUser = prevState.user ? {
               ...prevState.user,
@@ -358,55 +293,8 @@ export const useSupabaseAuth = () => {
             user: updatedUser,
           };
         });
-        
-        // Ensure profile has is_admin flag set
-        const { error: profileUpdateError } = await supabase
-          .from('profiles')
-          .update({ is_admin: true })
-          .eq('id', userId);
-          
-        if (profileUpdateError) {
-          console.error("Error updating profile is_admin flag:", profileUpdateError);
-        }
       } else {
         console.log("User is not an admin");
-        
-        // Double-check by email as fallback
-        const { data: userData } = await supabase.auth.getUser();
-        if (userData && userData.user && userData.user.email) {
-          const adminEmails = ['rekaland.idn@gmail.com', 'official.rbnsyaf@gmail.com'];
-          if (adminEmails.includes(userData.user.email)) {
-            console.log("User email is admin but no admin role found, adding it");
-            
-            // Add admin role
-            const { error: insertError } = await supabase
-              .from('user_roles')
-              .insert({
-                user_id: userId,
-                role: 'admin'
-              });
-                
-            if (insertError) {
-              console.error("Error inserting admin role:", insertError);
-            } else {
-              console.log("Added admin role for email:", userData.user.email);
-              
-              // Update state
-              setAuthState(prevState => {
-                const updatedUser = prevState.user ? {
-                  ...prevState.user,
-                  role: 'admin',
-                } : null;
-                
-                return {
-                  ...prevState,
-                  isAdmin: true,
-                  user: updatedUser,
-                };
-              });
-            }
-          }
-        }
       }
     } catch (error) {
       console.error('Error checking admin status:', error);

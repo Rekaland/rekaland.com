@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from './use-toast';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 interface RealTimeSyncResult {
   isSubscribed: boolean;
@@ -18,7 +19,7 @@ export const useRealTimeSync = (
   const { toast } = useToast();
   
   // Use refs to maintain stable channel references
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const channelRef = useRef<RealtimeChannel | null>(null);
   const tableRef = useRef(table);
   const onUpdateRef = useRef(onUpdate);
   const filtersRef = useRef(specificFilters);

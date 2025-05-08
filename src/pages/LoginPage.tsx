@@ -12,9 +12,8 @@ import { FcGoogle } from "react-icons/fc";
 import { Loader2 } from "lucide-react";
 
 const LoginPage = () => {
-  // Prefill admin email and password
-  const [email, setEmail] = useState("rekaland.idn@gmail.com"); 
-  const [password, setPassword] = useState("rekaland123");
+  const [email, setEmail] = useState("rekaland.idn@gmail.com"); // Prefill admin email
+  const [password, setPassword] = useState("rekaland123"); // Prefill admin password
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { login, loginWithGoogle, isAuthenticated } = useAuth();
@@ -62,19 +61,6 @@ const LoginPage = () => {
     } catch (err: any) {
       console.error("Google login error:", err);
       setError(err.message || "Terjadi kesalahan saat login dengan Google.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleAutoLogin = async () => {
-    setIsLoading(true);
-    try {
-      console.log("Attempting auto-login with admin credentials");
-      await login("rekaland.idn@gmail.com", "rekaland123");
-    } catch (err) {
-      console.error("Auto-login error:", err);
-      setError("Gagal login otomatis. Silakan coba login manual.");
     } finally {
       setIsLoading(false);
     }
@@ -140,15 +126,6 @@ const LoginPage = () => {
                 ) : (
                   "Masuk"
                 )}
-              </Button>
-
-              <Button 
-                type="button"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                onClick={handleAutoLogin}
-                disabled={isLoading}
-              >
-                Login Otomatis Admin
               </Button>
             </form>
             

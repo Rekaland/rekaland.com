@@ -37,13 +37,14 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const { toast } = useToast();
   const syncNotifiedRef = useRef(false);
+  const initialSyncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleInitialSync = () => {
-    // Prevent multiple notifications
+    // Prevent multiple notifications by using a ref and a timeout
     if (syncNotifiedRef.current) return;
     
-    // Add a delay to make sure the UI is ready
-    setTimeout(() => {
+    // Set a small timeout to prevent immediate notification and allow UI to stabilize
+    initialSyncTimeoutRef.current = setTimeout(() => {
       syncNotifiedRef.current = true;
       
       toast({
@@ -58,6 +59,9 @@ const AdminDashboard = () => {
   useEffect(() => {
     return () => {
       syncNotifiedRef.current = false;
+      if (initialSyncTimeoutRef.current) {
+        clearTimeout(initialSyncTimeoutRef.current);
+      }
     };
   }, []);
 
