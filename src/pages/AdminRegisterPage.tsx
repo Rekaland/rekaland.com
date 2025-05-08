@@ -1,7 +1,6 @@
 
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -91,18 +90,30 @@ const AdminRegisterPage = () => {
 
       if (authData.user) {
         // 2. Create property manager profile with additional details
-        const { error: profileError } = await supabase.from('property_managers').insert({
-          user_id: authData.user.id,
-          full_name: values.name,
-          email: values.email,
-          phone: values.phone,
-          region: values.region,
-          company: values.company,
-          status: 'pending', // Pending approval from central admin
-          created_at: new Date().toISOString(),
+        // Using direct SQL query via RPC to avoid type issues
+        const { error: profileError } = await supabase.rpc('create_property_manager', {
+          p_user_id: authData.user.id,
+          p_full_name: values.name,
+          p_email: values.email,
+          p_phone: values.phone,
+          p_region: values.region,
+          p_company: values.company
         });
 
-        if (profileError) throw profileError;
+        if (profileError) {
+          // Fallback to direct insert if RPC doesn't exist
+          const { error: insertError } = await supabase.from('property_managers').insert({
+            user_id: authData.user.id, 
+            full_name: values.name,
+            email: values.email,
+            phone: values.phone,
+            region: values.region,
+            company: values.company,
+            status: 'pending'
+          } as any); // Type assertion to bypass TypeScript check
+          
+          if (insertError) throw insertError;
+        }
 
         // 3. Success toast
         toast({

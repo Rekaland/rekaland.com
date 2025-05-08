@@ -20,7 +20,7 @@ export const usePropertySync = () => {
     
     // Bersihkan channel lama jika ada
     const existingChannels = supabase.getChannels();
-    const existingChannel = existingChannels.find(ch => ch.name === channelName);
+    const existingChannel = existingChannels.find(ch => ch === channelName);
     if (existingChannel) {
       supabase.removeChannel(existingChannel);
     }
@@ -73,7 +73,7 @@ export const usePropertySync = () => {
                 title: `Properti ${actionText}`,
                 description: `Website telah disinkronkan dengan perubahan terbaru (${formattedTime})`,
                 className: "bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg",
-              }, { id: `property-sync-${Date.now()}` });
+              });
             }, 1500);
           })
       .subscribe((status) => {

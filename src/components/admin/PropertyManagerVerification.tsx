@@ -30,18 +30,7 @@ import {
 } from "@/components/ui/dialog";
 import { AlertCircle, CheckCircle, Clock, Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
-
-type PropertyManager = {
-  id: string;
-  user_id: string;
-  full_name: string;
-  email: string;
-  phone: string;
-  company: string;
-  region: string;
-  status: 'pending' | 'approved' | 'rejected';
-  created_at: string;
-};
+import type { PropertyManager } from "@/integrations/supabase/client";
 
 const PropertyManagerVerification = () => {
   const { toast } = useToast();
@@ -84,8 +73,10 @@ const PropertyManagerVerification = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setManagers(data || []);
-      setFilteredManagers(data || []);
+      
+      // Type assertion - we know the structure matches PropertyManager type
+      setManagers(data as unknown as PropertyManager[]);
+      setFilteredManagers(data as unknown as PropertyManager[]);
     } catch (error: any) {
       console.error('Error fetching property managers:', error);
       toast({
