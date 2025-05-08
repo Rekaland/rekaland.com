@@ -147,16 +147,34 @@ const EnhancedPropertyForm: React.FC<PropertyFormProps> = ({ property, onSubmit,
 
   // Handle submit form
   const handleFormSubmit = (data: z.infer<typeof propertySchema>) => {
-    // Pastikan images tersimpan di form data
+    // Ensure all required fields are explicitly included
     const formData: Property = {
-      ...data,
+      title: data.title, // Explicitly include required fields
+      description: data.description,
+      price: data.price,
+      location: data.location,
+      category: data.category,
+      status: data.status,
+      featured: data.featured,
+      // Include optional fields
+      address: data.address,
+      land_size: data.land_size,
+      building_size: data.building_size,
+      bedrooms: data.bedrooms,
+      bathrooms: data.bathrooms,
       images: images,
       floor_plan_images: floorPlanImages,
       features: features,
+      specifications: specs,
+      virtual_tour_url: data.virtual_tour_url,
+      location_map_url: data.location_map_url,
+      meta_description: data.meta_description,
       amenities: amenities,
       payment_options: paymentOptions,
-      specifications: specs,
       faqs: faqs,
+      contact_person: data.contact_person,
+      contact_phone: data.contact_phone,
+      contact_email: data.contact_email,
     };
     
     if (property?.id) {
