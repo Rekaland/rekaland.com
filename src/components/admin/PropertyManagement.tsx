@@ -12,7 +12,7 @@ import {
   TableHead, TableHeader, TableRow 
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import PropertyForm from "@/components/admin/PropertyForm";
+import EnhancedPropertyForm from "@/components/admin/EnhancedPropertyForm";
 import PropertyDetail from "@/components/admin/PropertyDetail";
 import { 
   Search, Plus, Edit, Trash2, Eye, 
@@ -31,11 +31,15 @@ const PropertyManagement = () => {
   const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [productContents, setProductContents] = useState<any[]>([]);
   
   const { toast } = useToast();
   
   // Setup real-time sync untuk tabel properties
   const { isSubscribed } = useRealTimeSync('properties', fetchProperties);
+  
+  // Setup real-time sync untuk tabel product_contents
+  const { isSubscribed: isProductContentsSynced } = useRealTimeSync('product_contents', fetchProductContents);
   
   // Fungsi untuk memuat daftar properti
   async function fetchProperties() {
@@ -61,10 +65,28 @@ const PropertyManagement = () => {
       setLoading(false);
     }
   }
+  
+  // Fungsi untuk memuat konten produk
+  async function fetchProductContents() {
+    try {
+      const { data, error } = await supabase
+        .from('product_contents')
+        .select('*');
+        
+      if (error) throw error;
+      
+      if (data) {
+        setProductContents(data);
+      }
+    } catch (err: any) {
+      console.error("Error fetching product contents:", err);
+    }
+  }
 
   // Load data saat komponen mount
   useEffect(() => {
     fetchProperties();
+    fetchProductContents();
   }, []);
 
   // Handle pencarian properti
@@ -82,14 +104,36 @@ const PropertyManagement = () => {
   
   // Handle membuka modal untuk mengedit properti
   const handleEditProperty = (property: any) => {
-    setSelectedProperty(property);
+    // Temukan product_content yang terkait dengan properti
+    const productContent = productContents.find(content => content.product_id === property.id);
+    
+    // Gabungkan data properti dengan product_content
+    const enhancedProperty = {
+      ...property,
+      meta_description: productContent?.meta_description || "",
+      features: productContent?.features || [],
+      specifications: productContent?.specifications || {},
+    };
+    
+    setSelectedProperty(enhancedProperty);
     setModalMode('edit');
     setIsModalOpen(true);
   };
   
   // Handle membuka modal untuk melihat detail properti
   const handleViewProperty = (property: any) => {
-    setSelectedProperty(property);
+    // Temukan product_content yang terkait dengan properti
+    const productContent = productContents.find(content => content.product_id === property.id);
+    
+    // Gabungkan data properti dengan product_content
+    const enhancedProperty = {
+      ...property,
+      meta_description: productContent?.meta_description || "",
+      features: productContent?.features || [],
+      specifications: productContent?.specifications || {},
+    };
+    
+    setSelectedProperty(enhancedProperty);
     setModalMode('view');
     setIsModalOpen(true);
   };
@@ -108,29 +152,52 @@ const PropertyManagement = () => {
     setIsSubmitting(true);
     
     try {
+      // Pisahkan data untuk tabel properties dan product_contents
+      const propertyData = {
+        title: formData.title,
+        description: formData.description,
+        price: formData.price,
+        location: formData.location,
+        address: formData.address,
+        land_size: formData.land_size,
+        building_size: formData.building_size,
+        bedrooms: formData.bedrooms,
+        bathrooms: formData.bathrooms,
+        category: formData.category,
+        status: formData.status,
+        featured: formData.featured,
+        images: formData.images,
+        floor_plan_images: formData.floor_plan_images,
+        virtual_tour_url: formData.virtual_tour_url,
+        location_map_url: formData.location_map_url,
+        contact_person: formData.contact_person,
+        contact_phone: formData.contact_phone,
+        contact_email: formData.contact_email,
+        updated_at: new Date().toISOString()
+      };
+      
+      // Data untuk product_contents
+      const productContentData = {
+        meta_description: formData.meta_description,
+        features: formData.features,
+        specifications: formData.specifications,
+        faqs: formData.faqs,
+        amenities: formData.amenities,
+        payment_options: formData.payment_options
+      };
+      
+      let propertyId;
+      
       if (modalMode === 'edit' && selectedProperty?.id) {
         // Update properti yang sudah ada
         const { error } = await supabase
           .from('properties')
-          .update({
-            title: formData.title,
-            description: formData.description,
-            price: formData.price,
-            location: formData.location,
-            address: formData.address,
-            land_size: formData.land_size,
-            building_size: formData.building_size,
-            bedrooms: formData.bedrooms,
-            bathrooms: formData.bathrooms,
-            category: formData.category,
-            status: formData.status,
-            featured: formData.featured,
-            images: formData.images,
-            updated_at: new Date().toISOString()
-          })
+          .update(propertyData)
           .eq('id', selectedProperty.id);
           
         if (error) throw error;
+        
+        propertyId = selectedProperty.id;
         
         toast({
           title: "Properti diperbarui",
@@ -139,25 +206,14 @@ const PropertyManagement = () => {
         });
       } else {
         // Buat properti baru
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('properties')
-          .insert({
-            title: formData.title,
-            description: formData.description,
-            price: formData.price,
-            location: formData.location,
-            address: formData.address,
-            land_size: formData.land_size,
-            building_size: formData.building_size,
-            bedrooms: formData.bedrooms,
-            bathrooms: formData.bathrooms,
-            category: formData.category,
-            status: formData.status,
-            featured: formData.featured,
-            images: formData.images
-          });
+          .insert(propertyData)
+          .select();
           
         if (error) throw error;
+        
+        propertyId = data[0].id;
         
         toast({
           title: "Properti baru ditambahkan",
@@ -166,8 +222,40 @@ const PropertyManagement = () => {
         });
       }
       
+      // Update product_contents
+      if (propertyId) {
+        // Cek apakah sudah ada product_content untuk properti ini
+        const { data: existingContent } = await supabase
+          .from('product_contents')
+          .select('*')
+          .eq('product_id', propertyId);
+          
+        if (existingContent && existingContent.length > 0) {
+          // Update existing
+          await supabase
+            .from('product_contents')
+            .update({
+              ...productContentData,
+              title: formData.title, // Sync title with properties table
+              description: formData.description, // Sync description with properties table
+              updated_at: new Date().toISOString()
+            })
+            .eq('product_id', propertyId);
+        } else {
+          // Insert new
+          await supabase
+            .from('product_contents')
+            .insert({
+              ...productContentData,
+              title: formData.title,
+              description: formData.description,
+              product_id: propertyId
+            });
+        }
+      }
+      
       // Reload data dan tutup modal
-      await fetchProperties();
+      await Promise.all([fetchProperties(), fetchProductContents()]);
       handleCloseModal();
     } catch (err: any) {
       console.error("Error saving property:", err);
@@ -186,6 +274,13 @@ const PropertyManagement = () => {
     if (!confirm("Apakah Anda yakin ingin menghapus properti ini?")) return;
     
     try {
+      // Hapus product_content terlebih dahulu (jika ada)
+      await supabase
+        .from('product_contents')
+        .delete()
+        .eq('product_id', id);
+      
+      // Hapus properti
       const { error } = await supabase
         .from('properties')
         .delete()
@@ -194,6 +289,7 @@ const PropertyManagement = () => {
       if (error) throw error;
       
       await fetchProperties();
+      await fetchProductContents();
       
       toast({
         title: "Properti dihapus",
@@ -302,7 +398,7 @@ const PropertyManagement = () => {
               </Button>
             </div>
             <div className="p-6">
-              <PropertyForm
+              <EnhancedPropertyForm
                 property={selectedProperty || undefined}
                 onSubmit={handleSubmitProperty}
                 onCancel={handleCloseModal}
@@ -456,14 +552,20 @@ const PropertyManagement = () => {
             </div>
           )}
           
-          {isSubscribed && (
-            <div className="mt-4 text-xs text-right text-green-600">
-              <span className="flex items-center justify-end">
+          <div className="mt-4 text-xs text-right">
+            {isSubscribed && (
+              <span className="flex items-center justify-end text-green-600">
                 <span className="h-2 w-2 rounded-full bg-green-500 mr-1 animate-pulse"></span>
-                Sinkronisasi real-time aktif
+                Sinkronisasi properti aktif
               </span>
-            </div>
-          )}
+            )}
+            {isProductContentsSynced && (
+              <span className="flex items-center justify-end text-blue-600 mt-1">
+                <span className="h-2 w-2 rounded-full bg-blue-500 mr-1 animate-pulse"></span>
+                Sinkronisasi konten produk aktif
+              </span>
+            )}
+          </div>
         </CardContent>
       </Card>
       

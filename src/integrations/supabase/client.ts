@@ -3,8 +3,8 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = "https://qnzmhgvpynokshnlbsiw.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuem1oZ3ZweW5va3Nobmxic2l3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyNzI3NTUsImV4cCI6MjA1ODg0ODc1NX0.viIBr28yGeY9SaD9tYejkQ-5_Ihk69VygMYh6l-VThA";
+const SUPABASE_URL = "https://eypyhmyltruvzigsuxod.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5cHlobXlsdHJ1dnppZ3N1eG9kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUzNDc1NzUsImV4cCI6MjA2MDkyMzU3NX0.T75EF2nlZHJroPgE-frv1l2Q0PiHSJBJqvqWvNcNxOA";
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
@@ -44,6 +44,19 @@ export type Property = {
   images?: string[];
   created_at: string;
   updated_at: string;
+  // Extended property fields
+  floor_plan_images?: string[];
+  virtual_tour_url?: string;
+  location_map_url?: string;
+  meta_description?: string;
+  features?: string[];
+  specifications?: Record<string, any>;
+  faqs?: { question: string; answer: string }[];
+  amenities?: string[];
+  payment_options?: string[];
+  contact_person?: string;
+  contact_phone?: string;
+  contact_email?: string;
 };
 
 // Type for testimonials

@@ -41,13 +41,17 @@ const AdminDashboard = () => {
   const handleInitialSync = () => {
     // Prevent multiple notifications
     if (syncNotifiedRef.current) return;
-    syncNotifiedRef.current = true;
     
-    toast({
-      title: "Real-Time Sync Aktif",
-      description: "Semua tabel telah tersinkronisasi secara real-time",
-      className: "bg-gradient-to-r from-green-500 to-green-600 text-white",
-    });
+    // Add a delay to make sure the UI is ready
+    setTimeout(() => {
+      syncNotifiedRef.current = true;
+      
+      toast({
+        title: "Real-Time Sync Aktif",
+        description: "Semua tabel telah tersinkronisasi secara real-time",
+        className: "bg-gradient-to-r from-green-500 to-green-600 text-white",
+      });
+    }, 1000);
   };
 
   // Reset notification flag when component unmounts and remounts
