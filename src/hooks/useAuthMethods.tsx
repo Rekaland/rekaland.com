@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "./use-toast";
 
@@ -29,7 +30,7 @@ export const useAuthMethods = () => {
       // Clean up existing tokens first
       cleanupAuthState();
       
-      // Attempt global sign out first
+      // Attempt global sign out first to prevent auth conflicts
       try {
         await supabase.auth.signOut({ scope: 'global' });
       } catch (err) {
@@ -37,6 +38,7 @@ export const useAuthMethods = () => {
         console.log("Global sign out before login failed, continuing anyway");
       }
       
+      // Sign in with email/password - explicit typing to avoid type errors
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -82,15 +84,18 @@ export const useAuthMethods = () => {
 
       // If email is one of our admin emails, ensure they have admin role
       if (email === 'rekaland.idn@gmail.com' || email === 'official.rbnsyaf@gmail.com') {
+        console.log("Admin email detected, ensuring admin role is set");
+        
         // Check if user already has admin role
         const { data: roleData, error: roleError } = await supabase
           .from('user_roles')
           .select('*')
           .eq('user_id', data.user.id)
-          .eq('role', 'admin')
-          .single();
+          .eq('role', 'admin');
           
-        if (roleError && roleError.code === 'PGRST116') {
+        if (roleError) {
+          console.error("Error checking admin role:", roleError);
+        } else if (!roleData || roleData.length === 0) {
           // If admin role doesn't exist, add it
           const { error: insertError } = await supabase
             .from('user_roles')
@@ -103,24 +108,47 @@ export const useAuthMethods = () => {
           } else {
             console.log("Admin role granted to", email);
           }
-        } else if (roleError) {
-          console.error("Error checking admin role:", roleError);
         } else {
           console.log("User already has admin role:", roleData);
         }
         
         // Also ensure profile has is_admin=true
-        const { error: profileError } = await supabase
+        // First check if profile exists
+        const { data: profileData, error: profileQueryError } = await supabase
           .from('profiles')
-          .upsert({
-            id: data.user.id,
-            email: email,
-            is_admin: true,
-            updated_at: new Date().toISOString()
-          });
+          .select('*')
+          .eq('id', data.user.id);
           
-        if (profileError) {
-          console.error("Error updating profile admin status:", profileError);
+        if (profileQueryError) {
+          console.error("Error checking profile:", profileQueryError);
+        } else if (!profileData || profileData.length === 0) {
+          // Create profile if it doesn't exist
+          const { error: profileInsertError } = await supabase
+            .from('profiles')
+            .insert({
+              id: data.user.id,
+              email: email,
+              full_name: data.user.user_metadata?.full_name || "Admin Rekaland",
+              is_admin: true,
+              updated_at: new Date().toISOString()
+            });
+            
+          if (profileInsertError) {
+            console.error("Error creating admin profile:", profileInsertError);
+          }
+        } else {
+          // Update existing profile
+          const { error: profileUpdateError } = await supabase
+            .from('profiles')
+            .update({
+              is_admin: true,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', data.user.id);
+            
+          if (profileUpdateError) {
+            console.error("Error updating profile admin status:", profileUpdateError);
+          }
         }
       }
 

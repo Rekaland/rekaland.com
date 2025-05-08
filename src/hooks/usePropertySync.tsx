@@ -31,7 +31,9 @@ export const usePropertySync = ({ onUpdate }: UsePropertySyncProps = {}) => {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Properties subscription status:', status);
+      });
       
     propertiesChannelRef.current = propertiesChannel;
     
@@ -47,7 +49,9 @@ export const usePropertySync = ({ onUpdate }: UsePropertySyncProps = {}) => {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Product contents subscription status:', status);
+      });
       
     productContentsChannelRef.current = productContentsChannel;
     
