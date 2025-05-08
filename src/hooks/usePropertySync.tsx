@@ -2,14 +2,13 @@
 import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from './use-toast';
-import { RealtimeChannel } from '@supabase/supabase-js';
 
 // Hook untuk memonitoring real-time sinkronisasi antara dashboard admin dan website
 export const usePropertySync = () => {
   const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'error'>('syncing');
   const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
   const { toast } = useToast();
-  const channelRef = useRef<RealtimeChannel | null>(null);
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const isMounted = useRef(true);
 
   useEffect(() => {
@@ -21,7 +20,6 @@ export const usePropertySync = () => {
     
     // Bersihkan channel lama jika ada
     const existingChannels = supabase.getChannels();
-    // Compare by channel name property instead of the channel object itself
     const existingChannel = existingChannels.find(ch => ch.name === channelName);
     if (existingChannel) {
       supabase.removeChannel(existingChannel);
@@ -75,7 +73,7 @@ export const usePropertySync = () => {
                 title: `Properti ${actionText}`,
                 description: `Website telah disinkronkan dengan perubahan terbaru (${formattedTime})`,
                 className: "bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg",
-              });
+              }, { id: `property-sync-${Date.now()}` });
             }, 1500);
           })
       .subscribe((status) => {
@@ -103,7 +101,7 @@ export const usePropertySync = () => {
         .eq('key', 'website_settings')
         .order('updated_at', { ascending: false })
         .limit(1)
-        .maybeSingle();
+        .single();
       
       if (error) {
         if (error.code !== 'PGRST116') { // Not found error
