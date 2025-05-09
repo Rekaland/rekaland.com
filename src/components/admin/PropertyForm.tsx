@@ -386,7 +386,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ property, onSubmit, onCance
                   </FormControl>
                   <FormDescription>
                     Salin URL embed dari Google Maps untuk menampilkan lokasi properti
-                    (contoh: https://www.google.com/maps/embed?pb=...)
+                    (contoh: https://www.google.com/maps/embed?pb=... atau https://maps.app.goo.gl/...)
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

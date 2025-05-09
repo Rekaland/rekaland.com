@@ -183,6 +183,7 @@ export type Database = {
           images: string[] | null
           land_size: number | null
           location: string
+          map_url: string | null
           price: number
           status: string
           title: string
@@ -201,6 +202,7 @@ export type Database = {
           images?: string[] | null
           land_size?: number | null
           location: string
+          map_url?: string | null
           price: number
           status?: string
           title: string
@@ -219,6 +221,7 @@ export type Database = {
           images?: string[] | null
           land_size?: number | null
           location?: string
+          map_url?: string | null
           price?: number
           status?: string
           title?: string
