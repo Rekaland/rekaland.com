@@ -1,9 +1,10 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { 
   Map, Home, Ruler, Bed, Bath, 
   Tag, User, Calendar, CheckCircle2, 
-  X as XIcon, Square, Image, Clock 
+  X as XIcon, Square, Image, Clock, ExternalLink
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -82,16 +83,29 @@ const PropertyDetail: React.FC<PropertyDetailProps> = ({ property }) => {
           />
         );
       } else {
-        // It's just a URL, create an iframe
+        // It's just a URL, create a clickable iframe with open in maps button
         return (
-          <iframe
-            src={property.map_url}
-            className="w-full aspect-video rounded-lg border-0"
-            allowFullScreen
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-            title={`Lokasi ${property.title}`}
-          ></iframe>
+          <div className="relative">
+            <iframe
+              src={property.map_url.includes('maps.google') || property.map_url.includes('maps.app.goo.gl') ? 
+                property.map_url : 
+                `https://www.google.com/maps?q=${encodeURIComponent(property.address || property.location)}&output=embed`}
+              className="w-full aspect-video rounded-lg border-0"
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              title={`Lokasi ${property.title}`}
+            ></iframe>
+            <a 
+              href={property.map_url} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="absolute top-4 right-4 bg-white/90 hover:bg-white text-gray-800 font-medium py-2 px-4 rounded-md shadow flex items-center gap-2 transition-all"
+            >
+              <ExternalLink size={16} />
+              Buka di Maps
+            </a>
+          </div>
         );
       }
     }

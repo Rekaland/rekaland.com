@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import MainLayout from "@/layouts/MainLayout";
@@ -5,7 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle2, Heart, MapPin, Home, Phone, Calendar, Check, ArrowRight, ChevronLeft, Share2, Loader2 } from "lucide-react";
+import { 
+  CheckCircle2, Heart, MapPin, Home, Phone, Calendar, 
+  Check, ArrowRight, ChevronLeft, Share2, Loader2, Map,
+  ExternalLink
+} from "lucide-react";
 import { usePropertyDetail } from "@/hooks/useProperties";
 import { useProductContent } from "@/hooks/useProductContent";
 import { useRealTimeSync } from "@/hooks/useRealTimeSync";
@@ -110,21 +115,41 @@ const ProductDetailPage = () => {
           />
         );
       } else {
-        // It's just a URL, create an iframe
+        // It's just a URL, create a clickable iframe with open in maps button
         return (
-          <iframe
-            src={property.map_url}
-            className="w-full aspect-video rounded-lg border-0 mb-4"
-            allowFullScreen
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-            title={`Lokasi ${property.title}`}
-          ></iframe>
+          <div className="relative">
+            <iframe
+              src={property.map_url.includes('maps.google') || property.map_url.includes('maps.app.goo.gl') ? 
+                property.map_url : 
+                `https://www.google.com/maps?q=${encodeURIComponent(property.address || property.location)}&output=embed`}
+              className="w-full aspect-video rounded-lg border-0 mb-4"
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              title={`Lokasi ${property.title}`}
+            ></iframe>
+            <a 
+              href={property.map_url} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="absolute top-4 right-4 bg-white/90 hover:bg-white text-gray-800 font-medium py-2 px-4 rounded-md shadow flex items-center gap-2 transition-all"
+            >
+              <ExternalLink size={16} />
+              Buka di Maps
+            </a>
+          </div>
         );
       }
     }
     
-    return null;
+    return (
+      <div className="aspect-video bg-gray-100 dark:bg-gray-700 flex items-center justify-center rounded-lg mb-4">
+        <div className="text-center">
+          <MapPin className="h-10 w-10 text-gray-400 mb-2 mx-auto" />
+          <p className="text-gray-500 dark:text-gray-400">Peta lokasi belum tersedia</p>
+        </div>
+      </div>
+    );
   };
 
   if (isLoading) {
@@ -322,14 +347,6 @@ const ProductDetailPage = () => {
                   
                   <TabsContent value="lokasi">
                     {renderMap()}
-                    <div className="aspect-video bg-gray-100 dark:bg-gray-700 flex items-center justify-center rounded-lg mb-4">
-                      <div className="text-center">
-                        <MapPin className="h-10 w-10 text-gray-400 mb-2 mx-auto" />
-                        <p className="text-gray-500 dark:text-gray-400">
-                          {property.map_url ? "" : "Peta lokasi akan segera tersedia"}
-                        </p>
-                      </div>
-                    </div>
                     <div className="flex flex-col gap-2">
                       <div className="flex items-start">
                         <MapPin className="h-5 w-5 text-orange-500 mt-0.5 mr-2 flex-shrink-0" />
