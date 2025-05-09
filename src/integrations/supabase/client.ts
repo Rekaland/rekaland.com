@@ -90,3 +90,15 @@ export type Inquiry = {
 export type GenericTable = 'property_managers' | 'contents' | 'inquiries' | 'properties' | 
   'product_contents' | 'profiles' | 'saved_properties' | 'settings' | 
   'user_activities' | 'user_roles';
+
+// Helper type for Supabase tables with any data structure
+export type AnyTable = GenericTable;
+
+// This helper type lets us use tables not yet in the schema definition
+export type SupabaseAnyQuery<T = any> = {
+  data: T;
+  error: any;
+  count: number | null;
+  status: number;
+  statusText: string;
+};

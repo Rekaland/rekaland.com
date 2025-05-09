@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -20,7 +21,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { supabase, GenericTable } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 // Create schema for form validation
@@ -89,7 +90,8 @@ const AdminRegisterPage = () => {
 
       if (authData.user) {
         // Using a SQL RPC function to create the property manager
-        const { error: rpcError } = await supabase.rpc('create_property_manager', {
+        // We need to cast to any to bypass TypeScript's checking
+        const { error: rpcError } = await (supabase.rpc as any)('create_property_manager', {
           p_user_id: authData.user.id,
           p_full_name: values.name,
           p_email: values.email,
@@ -100,8 +102,8 @@ const AdminRegisterPage = () => {
 
         if (rpcError) {
           // Fall back to direct insert using type assertion
-          const { error: insertError } = await (supabase
-            .from('property_managers') as any)
+          const { error: insertError } = await (supabase as any)
+            .from('property_managers')
             .insert({
               user_id: authData.user.id, 
               full_name: values.name,

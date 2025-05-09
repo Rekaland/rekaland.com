@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -80,15 +79,14 @@ const PropertyManagerVerification = () => {
   async function fetchManagers() {
     setLoading(true);
     try {
-      // Use any type to bypass TypeScript checking since 'property_managers' is not in the schema types yet
-      const { data, error } = await (supabase
-        .from('property_managers') as any)
+      // We need to cast to 'any' to bypass TypeScript type checking
+      const { data, error } = await (supabase as any)
+        .from('property_managers')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       
-      // Use type assertion to tell TypeScript this is the expected type
       setManagers(data as PropertyManager[]);
       setFilteredManagers(data as PropertyManager[]);
     } catch (error: any) {
@@ -105,8 +103,8 @@ const PropertyManagerVerification = () => {
 
   async function updateManagerStatus(id: string, status: 'approved' | 'rejected') {
     try {
-      const { error } = await (supabase
-        .from('property_managers') as any)
+      const { error } = await (supabase as any)
+        .from('property_managers')
         .update({ status })
         .eq('id', id);
 
@@ -151,7 +149,7 @@ const PropertyManagerVerification = () => {
   }
 
   // Render status badge
-  const renderStatusBadge = (status: string) => {
+  function renderStatusBadge(status: string) {
     switch (status) {
       case 'pending':
         return (
@@ -182,7 +180,7 @@ const PropertyManagerVerification = () => {
   };
 
   // Format date
-  const formatDate = (dateString: string) => {
+  function formatDate(dateString: string) {
     return new Date(dateString).toLocaleDateString('id-ID', {
       year: 'numeric',
       month: 'long',

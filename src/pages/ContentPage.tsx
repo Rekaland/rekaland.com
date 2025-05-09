@@ -1,9 +1,11 @@
 import React, { useEffect } from "react";
 import MainLayout from "@/layouts/MainLayout";
 import ContentDisplay from "@/components/content/ContentDisplay";
+import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription } from "@/components/ui/card";
 import { useParams, useNavigate } from "react-router-dom";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useContentBySlug } from "@/hooks/useContentBySlug";
