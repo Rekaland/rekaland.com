@@ -69,6 +69,44 @@ const PropertyDetail: React.FC<PropertyDetailProps> = ({ property }) => {
     });
   };
   
+  // Function to render map safely
+  const renderMap = () => {
+    if (property.map_url) {
+      // Check if it's a full embed code or just a URL
+      if (property.map_url.trim().startsWith('<iframe')) {
+        // It's an iframe embed code, use it directly
+        return (
+          <div 
+            className="aspect-video w-full rounded-lg overflow-hidden"
+            dangerouslySetInnerHTML={{ __html: property.map_url }}
+          />
+        );
+      } else {
+        // It's just a URL, create an iframe
+        return (
+          <iframe
+            src={property.map_url}
+            className="w-full aspect-video rounded-lg border-0"
+            allowFullScreen
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            title={`Lokasi ${property.title}`}
+          ></iframe>
+        );
+      }
+    }
+    
+    // No map URL provided
+    return (
+      <div className="aspect-video bg-gray-100 dark:bg-gray-700 flex items-center justify-center rounded-lg mb-4">
+        <div className="text-center">
+          <Map className="h-10 w-10 text-gray-400 mb-2 mx-auto" />
+          <p className="text-gray-500 dark:text-gray-400">Peta lokasi belum tersedia</p>
+        </div>
+      </div>
+    );
+  };
+  
   return (
     <div className="space-y-6">
       {/* Judul dan info utama */}
@@ -192,6 +230,28 @@ const PropertyDetail: React.FC<PropertyDetailProps> = ({ property }) => {
                 </span>
               </div>
             )}
+          </div>
+        </div>
+      </div>
+      
+      <Separator />
+      
+      {/* Info Lokasi */}
+      <div>
+        <h2 className="text-lg font-semibold mb-4">Lokasi Properti</h2>
+        <div className="space-y-4">
+          {renderMap()}
+          
+          <div className="flex flex-col gap-2">
+            <div className="flex items-start">
+              <Map className="h-5 w-5 text-orange-500 mt-0.5 mr-2 flex-shrink-0" />
+              <div>
+                <h4 className="font-medium mb-1">Alamat Lengkap</h4>
+                <p className="text-gray-600 dark:text-gray-300 whitespace-pre-line">
+                  {property.address || `${property.location}, Indonesia`}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

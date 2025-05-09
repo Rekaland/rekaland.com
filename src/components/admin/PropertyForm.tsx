@@ -38,6 +38,7 @@ interface Property {
   status: 'available' | 'sold' | 'pending';
   featured: boolean;
   images?: string[] | null;
+  map_url?: string | null;
 }
 
 interface PropertyFormProps {
@@ -61,6 +62,7 @@ const propertySchema = z.object({
   status: z.enum(['available', 'sold', 'pending']).default('available'),
   featured: z.boolean().default(false),
   images: z.array(z.string()).optional().nullable(),
+  map_url: z.string().optional().nullable(),
 });
 
 const PropertyForm: React.FC<PropertyFormProps> = ({ property, onSubmit, onCancel, isSubmitting }) => {
@@ -84,6 +86,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ property, onSubmit, onCance
       status: property?.status || "available",
       featured: property?.featured || false,
       images: property?.images || [],
+      map_url: property?.map_url || "",
     },
   });
 
@@ -109,6 +112,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ property, onSubmit, onCance
       status: data.status,
       featured: data.featured,
       images: images,
+      map_url: data.map_url,
     };
     
     if (property?.id) {
@@ -205,8 +209,15 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ property, onSubmit, onCance
                 <FormItem>
                   <FormLabel>Alamat Lengkap</FormLabel>
                   <FormControl>
-                    <Input placeholder="Masukkan alamat lengkap" {...field} />
+                    <Textarea 
+                      placeholder="Masukkan alamat lengkap properti" 
+                      {...field} 
+                      rows={3}
+                    />
                   </FormControl>
+                  <FormDescription>
+                    Masukkan alamat lengkap properti yang akan ditampilkan pada halaman detail
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -356,6 +367,28 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ property, onSubmit, onCance
                       Properti ini akan ditampilkan di bagian properti unggulan pada halaman beranda
                     </FormDescription>
                   </div>
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="map_url"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>URL Embed Peta</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Masukkan URL embed Google Maps atau peta lainnya" 
+                      {...field} 
+                      rows={3}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Salin URL embed dari Google Maps untuk menampilkan lokasi properti
+                    (contoh: https://www.google.com/maps/embed?pb=...)
+                  </FormDescription>
+                  <FormMessage />
                 </FormItem>
               )}
             />
