@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/dialog";
 import { AlertCircle, CheckCircle, Clock, Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import type { PropertyManager, GenericTable } from "@/integrations/supabase/client";
+import type { PropertyManager } from "@/integrations/supabase/client";
 
 const PropertyManagerVerification = () => {
   const { toast } = useToast();
@@ -80,14 +80,15 @@ const PropertyManagerVerification = () => {
   async function fetchManagers() {
     setLoading(true);
     try {
-      // Use type assertion with the GenericTable type
-      const { data, error } = await supabase
-        .from('property_managers' as GenericTable)
+      // Use any type to bypass TypeScript checking since 'property_managers' is not in the schema types yet
+      const { data, error } = await (supabase
+        .from('property_managers') as any)
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       
+      // Use type assertion to tell TypeScript this is the expected type
       setManagers(data as PropertyManager[]);
       setFilteredManagers(data as PropertyManager[]);
     } catch (error: any) {
@@ -104,8 +105,8 @@ const PropertyManagerVerification = () => {
 
   async function updateManagerStatus(id: string, status: 'approved' | 'rejected') {
     try {
-      const { error } = await supabase
-        .from('property_managers' as GenericTable)
+      const { error } = await (supabase
+        .from('property_managers') as any)
         .update({ status })
         .eq('id', id);
 

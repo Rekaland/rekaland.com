@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -101,8 +100,8 @@ const AdminRegisterPage = () => {
 
         if (rpcError) {
           // Fall back to direct insert using type assertion
-          const { error: insertError } = await supabase
-            .from('property_managers' as GenericTable)
+          const { error: insertError } = await (supabase
+            .from('property_managers') as any)
             .insert({
               user_id: authData.user.id, 
               full_name: values.name,

@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import MainLayout from "@/layouts/MainLayout";
 import ContentDisplay from "@/components/content/ContentDisplay";
@@ -8,6 +7,7 @@ import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useContentBySlug } from "@/hooks/useContentBySlug";
+import { Clock, MapPin } from "lucide-react";
 
 // Data untuk konten sampel jika data dari database tidak ditemukan
 const sampleContents = {
