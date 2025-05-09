@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -44,11 +43,8 @@ const InformationPage = () => {
   const [faqs, setFAQs] = useState<FAQ[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // Setup real-time sync untuk konten
-  const { isSubscribed } = useRealTimeSync('contents', loadContents);
-  
-  // Fungsi untuk memuat konten
-  const loadContents = async () => {
+  // Define loadContents as useCallback to prevent linting warnings
+  const loadContents = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -147,12 +143,15 @@ const InformationPage = () => {
     } finally {
       setLoading(false);
     }
-  };
-
+  }, [toast]);
+  
+  // Setup real-time sync untuk konten
+  const { isSubscribed } = useRealTimeSync('contents', loadContents);
+  
   // Load konten saat komponen dimuat
   useEffect(() => {
     loadContents();
-  }, []);
+  }, [loadContents]);
 
   return (
     <MainLayout>

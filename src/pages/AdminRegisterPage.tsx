@@ -21,7 +21,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, GenericTable } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 // Create schema for form validation
@@ -101,8 +101,8 @@ const AdminRegisterPage = () => {
 
         if (rpcError) {
           // Fall back to direct insert using type assertion
-          const { error: insertError } = await (supabase
-            .from('property_managers') as any)
+          const { error: insertError } = await supabase
+            .from('property_managers' as GenericTable)
             .insert({
               user_id: authData.user.id, 
               full_name: values.name,

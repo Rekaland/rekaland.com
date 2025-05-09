@@ -21,7 +21,9 @@ export const usePropertySync = () => {
     // Remove any existing channel with the same name
     const existingChannels = supabase.getChannels();
     for (const channel of existingChannels) {
-      if (channel.opts?.name === channelName) {
+      // Use a safer way to check channel names
+      const channelConfig = channel as any;
+      if (channelConfig && channelConfig.config && channelConfig.config.name === channelName) {
         supabase.removeChannel(channel);
       }
     }

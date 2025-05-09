@@ -85,3 +85,8 @@ export type Inquiry = {
   created_at: string;
   updated_at: string;
 };
+
+// Helper type for dealing with tables that aren't in the TypeScript definitions yet
+export type GenericTable = 'property_managers' | 'contents' | 'inquiries' | 'properties' | 
+  'product_contents' | 'profiles' | 'saved_properties' | 'settings' | 
+  'user_activities' | 'user_roles';

@@ -84,7 +84,9 @@ const RealTimeSync = ({ onInitialSync }: RealTimeSyncProps) => {
       // Remove any existing channel with matching name
       const existingChannels = supabase.getChannels();
       for (const channel of existingChannels) {
-        if (channel.opts?.name === channelName) {
+        // Check channel name using a safer approach
+        const channelConfig = channel as any;
+        if (channelConfig && channelConfig.config && channelConfig.config.name === channelName) {
           supabase.removeChannel(channel);
         }
       }
