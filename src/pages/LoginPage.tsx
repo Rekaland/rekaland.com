@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -10,15 +10,21 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import Layout from "@/components/layout/Layout";
 import { FcGoogle } from "react-icons/fc";
 import { Loader2 } from "lucide-react";
+import ReCAPTCHA from "react-google-recaptcha";
+
+// Set your reCAPTCHA site key here
+const RECAPTCHA_SITE_KEY = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"; // This is a test key. Replace with your actual key
 
 const LoginPage = () => {
   const [email, setEmail] = useState("rekaland.idn@gmail.com"); // Prefill admin email
   const [password, setPassword] = useState("rekaland123"); // Prefill admin password
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const { login, loginWithGoogle, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
   
   // Get redirect_to from URL query
   const queryParams = new URLSearchParams(location.search);
@@ -32,13 +38,26 @@ const LoginPage = () => {
     }
   }, [isAuthenticated, navigate, redirectTo]);
 
+  const handleReCaptchaChange = (token: string | null) => {
+    setRecaptchaToken(token);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    
+    // Check if reCAPTCHA is completed
+    if (!recaptchaToken) {
+      setError("Mohon selesaikan reCAPTCHA terlebih dahulu.");
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
       console.log("Attempting login with:", email, password);
+      console.log("ReCAPTCHA token:", recaptchaToken);
+      
       const success = await login(email, password);
       console.log("Login success:", success);
       
@@ -49,11 +68,21 @@ const LoginPage = () => {
       setError(err.message || "Terjadi kesalahan saat login.");
     } finally {
       setIsLoading(false);
+      // Reset reCAPTCHA
+      recaptchaRef.current?.reset();
+      setRecaptchaToken(null);
     }
   };
 
   const handleGoogleLogin = async () => {
     setError("");
+    
+    // Check if reCAPTCHA is completed for Google login as well
+    if (!recaptchaToken) {
+      setError("Mohon selesaikan reCAPTCHA terlebih dahulu.");
+      return;
+    }
+    
     setIsLoading(true);
     try {
       await loginWithGoogle();
@@ -63,6 +92,9 @@ const LoginPage = () => {
       setError(err.message || "Terjadi kesalahan saat login dengan Google.");
     } finally {
       setIsLoading(false);
+      // Reset reCAPTCHA
+      recaptchaRef.current?.reset();
+      setRecaptchaToken(null);
     }
   };
 
@@ -107,6 +139,14 @@ const LoginPage = () => {
                 />
               </div>
               
+              <div className="flex justify-center my-2">
+                <ReCAPTCHA
+                  ref={recaptchaRef}
+                  sitekey={RECAPTCHA_SITE_KEY}
+                  onChange={handleReCaptchaChange}
+                />
+              </div>
+              
               {error && (
                 <Alert variant="destructive">
                   <AlertDescription>{error}</AlertDescription>
@@ -116,7 +156,7 @@ const LoginPage = () => {
               <Button 
                 type="submit" 
                 className="w-full bg-rekaland-orange hover:bg-orange-600"
-                disabled={isLoading}
+                disabled={isLoading || !recaptchaToken}
               >
                 {isLoading ? (
                   <>
@@ -143,7 +183,7 @@ const LoginPage = () => {
               variant="outline" 
               className="w-full flex items-center justify-center gap-2"
               onClick={handleGoogleLogin}
-              disabled={isLoading}
+              disabled={isLoading || !recaptchaToken}
             >
               <FcGoogle className="h-5 w-5" />
               Masuk dengan Google
