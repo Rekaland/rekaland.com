@@ -12,13 +12,14 @@ import { FcGoogle } from "react-icons/fc";
 import { Loader2 } from "lucide-react";
 import ReCAPTCHA from "react-google-recaptcha";
 
-// Replace with your actual production reCAPTCHA site key
-// You can get a site key from https://www.google.com/recaptcha/admin
-const RECAPTCHA_SITE_KEY = "YOUR_RECAPTCHA_SITE_KEY"; 
+// Use a real reCAPTCHA site key for production
+// For testing, the reCAPTCHA v2 site key below works for localhost and 127.0.0.1
+// For production, replace with your own site key from https://www.google.com/recaptcha/admin
+const RECAPTCHA_SITE_KEY = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"; 
 
 const LoginPage = () => {
-  const [email, setEmail] = useState("rekaland.idn@gmail.com"); // Prefill admin email
-  const [password, setPassword] = useState("rekaland123"); // Prefill admin password
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
@@ -205,4 +206,3 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
-
