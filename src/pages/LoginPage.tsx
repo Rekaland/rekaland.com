@@ -2,12 +2,20 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import Layout from "@/components/layout/Layout";
+import { FcGoogle } from "react-icons/fc";
+import { Loader2 } from "lucide-react";
 import ReCAPTCHA from "react-google-recaptcha";
-import { ReCaptchaComponent } from "@/components/auth/ReCaptchaComponent";
-import { EmailLoginForm } from "@/components/auth/EmailLoginForm";
-import { GoogleLoginButton } from "@/components/auth/GoogleLoginButton";
+
+// Use a real reCAPTCHA site key for production
+// For testing, the reCAPTCHA v2 site key below works for localhost and 127.0.0.1
+// For production, replace with your own site key from https://www.google.com/recaptcha/admin
+const RECAPTCHA_SITE_KEY = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"; 
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -101,18 +109,67 @@ const LoginPage = () => {
             <CardDescription>Masukkan kredensial Anda untuk mengakses akun</CardDescription>
           </CardHeader>
           <CardContent>
-            <EmailLoginForm
-              email={email}
-              setEmail={setEmail}
-              password={password}
-              setPassword={setPassword}
-              isLoading={isLoading}
-              error={error}
-              recaptchaToken={recaptchaToken}
-              onSubmit={handleSubmit}
-            />
-            
-            <ReCaptchaComponent ref={recaptchaRef} onChange={handleReCaptchaChange} />
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input 
+                  id="email" 
+                  type="email" 
+                  placeholder="Email Anda" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Kata Sandi</Label>
+                  <Link to="/reset-password" className="text-sm text-rekaland-orange hover:underline">
+                    Lupa kata sandi?
+                  </Link>
+                </div>
+                <Input 
+                  id="password" 
+                  type="password" 
+                  placeholder="Kata Sandi Anda" 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+              
+              <div className="flex justify-center my-2">
+                <ReCAPTCHA
+                  ref={recaptchaRef}
+                  sitekey={RECAPTCHA_SITE_KEY}
+                  onChange={handleReCaptchaChange}
+                />
+              </div>
+              
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+              
+              <Button 
+                type="submit" 
+                className="w-full bg-rekaland-orange hover:bg-orange-600"
+                disabled={isLoading || !recaptchaToken}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Memproses...
+                  </>
+                ) : (
+                  "Masuk"
+                )}
+              </Button>
+            </form>
             
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
@@ -123,10 +180,16 @@ const LoginPage = () => {
               </div>
             </div>
             
-            <GoogleLoginButton 
+            <Button 
+              type="button" 
+              variant="outline" 
+              className="w-full flex items-center justify-center gap-2"
               onClick={handleGoogleLogin}
               disabled={isLoading || !recaptchaToken}
-            />
+            >
+              <FcGoogle className="h-5 w-5" />
+              Masuk dengan Google
+            </Button>
           </CardContent>
           <CardFooter className="flex justify-center">
             <div className="text-sm text-gray-600">
