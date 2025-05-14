@@ -30,7 +30,7 @@ const LoginPage = () => {
   
   // Get redirect_to from URL query
   const queryParams = new URLSearchParams(location.search);
-  const redirectTo = queryParams.get('redirect_to') || '/admin';
+  const redirectTo = queryParams.get('redirect_to') || '/';
 
   // Redirect to main page if already logged in
   useEffect(() => {
@@ -46,8 +46,6 @@ const LoginPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    sessionStorage.setItem("justLoggedIn", "true");
-
     setError("");
     
     // Check if reCAPTCHA is completed

@@ -24,7 +24,6 @@ export const UserProfileMenu = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleLogout = () => {
-    sessionStorage.setItem("justLoggedOut", "true");
     logout();
     toast({
       title: "Berhasil Keluar",
