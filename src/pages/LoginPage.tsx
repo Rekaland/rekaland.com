@@ -15,7 +15,7 @@ import ReCAPTCHA from "react-google-recaptcha";
 // Use a real reCAPTCHA site key for production
 // For testing, the reCAPTCHA v2 site key below works for localhost and 127.0.0.1
 // For production, replace with your own site key from https://www.google.com/recaptcha/admin
-const RECAPTCHA_SITE_KEY = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"; 
+const RECAPTCHA_SITE_KEY = "6LdOuzUrAAAAAJvMnHrFF565P0julsShM5AtIjaL"; 
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
