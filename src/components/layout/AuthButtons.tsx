@@ -24,7 +24,7 @@ export const AuthButtons = () => {
       ) : (
         <div className="flex items-center gap-2">
           <motion.div whileHover={{ scale: 1.05 }}>
-            <Link to="/login?redirect_to=/produk">
+            <Link to="/login?">
               <Button 
                 variant="ghost" 
                 className="text-gray-700 hover:text-rekaland-orange hover:bg-orange-50 flex items-center gap-1.5 shadow-sm hover:shadow-md transition-all duration-200"

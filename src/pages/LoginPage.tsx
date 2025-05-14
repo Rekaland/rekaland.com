@@ -46,6 +46,8 @@ const LoginPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    sessionStorage.setItem("justLoggedIn", "true");
+
     setError("");
     
     // Check if reCAPTCHA is completed
