@@ -360,5 +360,3 @@ const AdminRegisterPage = () => {
 };
 
 export default AdminRegisterPage;
-
-</edits_to_apply>
