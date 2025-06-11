@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import Layout from "@/components/layout/Layout";
 import { FcGoogle } from "react-icons/fc";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ArrowLeft } from "lucide-react";
 
 const RegisterPage = () => {
   const [name, setName] = useState("");
@@ -41,9 +42,24 @@ const RegisterPage = () => {
     navigate("/");
   };
 
+  const handleBack = () => {
+    navigate(-1); // Go back to the previous page
+  };
+
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-12 flex justify-center items-center min-h-[80vh]">
+      <div className="container mx-auto px-4 py-12 flex flex-col justify-center items-center min-h-[80vh]">
+        <div className="w-full max-w-md mb-4">
+          <Button 
+            variant="ghost" 
+            onClick={handleBack} 
+            className="flex items-center gap-2 hover:bg-gray-100"
+            size="sm"
+          >
+            <ArrowLeft size={18} />
+            <span>Kembali</span>
+          </Button>
+        </div>
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl text-rekaland-black">Daftar ke REKA<span className="text-rekaland-orange">LAND</span></CardTitle>

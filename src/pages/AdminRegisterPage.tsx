@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import Layout from "@/components/layout/Layout";
 import { Checkbox } from "@/components/ui/checkbox";
-import { AlertCircle, FileText } from "lucide-react";
+import { AlertCircle, FileText, ArrowLeft } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { useForm } from "react-hook-form";
@@ -139,10 +138,26 @@ const AdminRegisterPage = () => {
     }
   }
 
+  const handleBack = () => {
+    navigate(-1); // Go back to the previous page
+  };
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-3xl mx-auto">
+          <div className="mb-4">
+            <Button 
+              variant="ghost" 
+              onClick={handleBack} 
+              className="flex items-center gap-2 hover:bg-gray-100"
+              size="sm"
+            >
+              <ArrowLeft size={18} />
+              <span>Kembali</span>
+            </Button>
+          </div>
+          
           <Card className="border-t-4 border-t-orange-500 shadow-lg">
             <CardHeader className="space-y-1">
               <CardTitle className="text-2xl text-center">
@@ -345,3 +360,5 @@ const AdminRegisterPage = () => {
 };
 
 export default AdminRegisterPage;
+
+</edits_to_apply>
