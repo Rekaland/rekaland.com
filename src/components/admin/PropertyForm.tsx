@@ -54,9 +54,9 @@ const propertySchema = z.object({
   description: z.string().optional().nullable(),
   price: z.coerce.number().positive("Harga harus berupa angka positif"),
   location: z.string().min(1, "Lokasi wajib diisi"),
-  address: z.string().optional().nullable(),
-  land_size: z.coerce.number().min(1, "Luas tanah harus lebih dari 0 m²").optional().nullable(),
-  building_size: z.coerce.number().min(1, "Luas bangunan harus lebih dari 0 m²").optional().nullable(),
+  address: z.string().optional(),
+  land_size: z.coerce.number().min(1, "Luas tanah harus lebih dari 0 m²").optional(),
+  building_size: z.coerce.number().min(1, "Luas bangunan harus lebih dari 0 m²").optional(),
   bedrooms: z.coerce.number().int().min(0).optional().nullable(),
   bathrooms: z.coerce.number().int().min(0).optional().nullable(),
   category: z.enum(['empty_lot', 'semi_finished', 'ready_to_occupy']),
@@ -209,7 +209,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ property, onSubmit, onCance
               name="address"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Alamat Lengkap</FormLabel>
+                  <FormLabel>Alamat Lengkap <span class="text-red-500">*</span></FormLabel>
                   <FormControl>
                     <Textarea 
                       placeholder="Masukkan alamat lengkap properti" 
@@ -234,7 +234,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ property, onSubmit, onCance
                 name="land_size"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Luas Tanah (m²)</FormLabel>
+                    <FormLabel>Luas Tanah (m²) <span class="text-red-500">*</span></FormLabel>
                     <FormControl>
                       <Input 
                         type="number" 
@@ -242,7 +242,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ property, onSubmit, onCance
                         {...field}
                         value={field.value || ""}
                         min="1"
-                        step="0.01"
+                        step="1"
                       />
                     </FormControl>
                     <FormMessage />
@@ -255,7 +255,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ property, onSubmit, onCance
                 name="building_size"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Luas Bangunan (m²)</FormLabel>
+                    <FormLabel>Luas Bangunan (m²) <span class="text-red-500">*</span></FormLabel>
                     <FormControl>
                       <Input 
                         type="number" 
@@ -263,7 +263,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ property, onSubmit, onCance
                         {...field}
                         value={field.value || ""}
                         min="1"
-                        step="0.01"
+                        step="1"
                       />
                     </FormControl>
                     <FormMessage />
