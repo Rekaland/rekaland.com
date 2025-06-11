@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -54,8 +55,8 @@ const propertySchema = z.object({
   price: z.coerce.number().positive("Harga harus berupa angka positif"),
   location: z.string().min(1, "Lokasi wajib diisi"),
   address: z.string().optional().nullable(),
-  land_size: z.coerce.number().positive("Luas tanah harus berupa angka positif").optional().nullable(),
-  building_size: z.coerce.number().positive("Luas bangunan harus berupa angka positif").optional().nullable(),
+  land_size: z.coerce.number().min(1, "Luas tanah harus lebih dari 0 m²").optional().nullable(),
+  building_size: z.coerce.number().min(1, "Luas bangunan harus lebih dari 0 m²").optional().nullable(),
   bedrooms: z.coerce.number().int().min(0).optional().nullable(),
   bathrooms: z.coerce.number().int().min(0).optional().nullable(),
   category: z.enum(['empty_lot', 'semi_finished', 'ready_to_occupy']),
@@ -141,7 +142,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ property, onSubmit, onCance
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Judul Properti</FormLabel>
+                  <FormLabel>Judul Properti <span className="text-red-500">*</span></FormLabel>
                   <FormControl>
                     <Input placeholder="Masukkan judul properti" {...field} />
                   </FormControl>
@@ -174,12 +175,13 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ property, onSubmit, onCance
                 name="price"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Harga (Rp)</FormLabel>
+                    <FormLabel>Harga (Rp) <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
                       <Input 
                         type="number" 
                         placeholder="Masukkan harga properti" 
                         {...field}
+                        min="1"
                       />
                     </FormControl>
                     <FormMessage />
@@ -192,7 +194,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ property, onSubmit, onCance
                 name="location"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Lokasi</FormLabel>
+                    <FormLabel>Lokasi <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
                       <Input placeholder="Masukkan lokasi properti" {...field} />
                     </FormControl>
@@ -239,6 +241,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ property, onSubmit, onCance
                         placeholder="Masukkan luas tanah" 
                         {...field}
                         value={field.value || ""}
+                        min="1"
+                        step="0.01"
                       />
                     </FormControl>
                     <FormMessage />
@@ -258,6 +262,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ property, onSubmit, onCance
                         placeholder="Masukkan luas bangunan" 
                         {...field}
                         value={field.value || ""}
+                        min="1"
+                        step="0.01"
                       />
                     </FormControl>
                     <FormMessage />
@@ -279,6 +285,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ property, onSubmit, onCance
                         placeholder="Masukkan jumlah kamar tidur" 
                         {...field}
                         value={field.value || ""}
+                        min="0"
                       />
                     </FormControl>
                     <FormMessage />
@@ -298,6 +305,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ property, onSubmit, onCance
                         placeholder="Masukkan jumlah kamar mandi" 
                         {...field}
                         value={field.value || ""}
+                        min="0"
                       />
                     </FormControl>
                     <FormMessage />
@@ -312,7 +320,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ property, onSubmit, onCance
                 name="category"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Kategori</FormLabel>
+                    <FormLabel>Kategori <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
                       <select 
                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -333,7 +341,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ property, onSubmit, onCance
                 name="status"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Status</FormLabel>
+                    <FormLabel>Status <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
                       <select 
                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -405,7 +413,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ property, onSubmit, onCance
               disabled={isSubmitting}
             />
             <p className="text-sm text-muted-foreground mt-2">
-              Unggah foto properti untuk ditampilkan kepada calon pembeli
+              Unggah foto properti untuk ditampilkan kepada calon pembeli <span className="text-red-500">*</span>
             </p>
           </TabsContent>
         </Tabs>
